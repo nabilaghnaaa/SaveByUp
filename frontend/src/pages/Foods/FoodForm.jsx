@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import API from '../../services/api';
-import FoodCard from './FoodCard';
 import './foods.css';
 
 function IconArrowLeft() {
@@ -69,15 +68,6 @@ function IconSparkle() {
     <svg viewBox="0 0 24 24" className="food-form-svg">
       <path d="M12 3l1.4 5.1L18.5 9.5l-5.1 1.4L12 16l-1.4-5.1-5.1-1.4 5.1-1.4L12 3z" />
       <path d="M18 14l.8 2.8L21.5 18l-2.7.8L18 21.5l-.8-2.7-2.7-.8 2.7-1.2L18 14z" />
-    </svg>
-  );
-}
-
-function IconSearch() {
-  return (
-    <svg viewBox="0 0 24 24" className="foods-input-icon">
-      <circle cx="11" cy="11" r="7" />
-      <path d="M20 20l-3.5-3.5" />
     </svg>
   );
 }
@@ -150,16 +140,10 @@ function FoodForm() {
     expiry_date: '',
   });
 
-  const [foods, setFoods] = useState([]);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('semua');
-  const [priorityFilter, setPriorityFilter] = useState('semua');
-
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('success');
   const [loading, setLoading] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(isEdit);
-  const [loadingFoods, setLoadingFoods] = useState(true);
 
   const preview = useMemo(() => getExpiryPreview(form.expiry_date), [form.expiry_date]);
 
@@ -173,20 +157,6 @@ function FoodForm() {
       unit: '',
       expiry_date: '',
     });
-  };
-
-  const fetchFoods = async () => {
-    try {
-      setLoadingFoods(true);
-      const response = await API.get('/foods');
-      setFoods(response.data.data || []);
-    } catch (error) {
-      console.error('Gagal mengambil data makanan:', error);
-      setMessageType('error');
-      setMessage('Gagal mengambil data inventaris makanan');
-    } finally {
-      setLoadingFoods(false);
-    }
   };
 
   const fetchFoodDetail = async () => {
@@ -211,8 +181,6 @@ function FoodForm() {
   };
 
   useEffect(() => {
-    fetchFoods();
-
     if (isEdit) {
       fetchFoodDetail();
     }
@@ -223,34 +191,6 @@ function FoodForm() {
       ...form,
       [e.target.name]: e.target.value,
     });
-  };
-
-  const handleDelete = async (foodId) => {
-    const confirmDelete = window.confirm('Yakin ingin menghapus data makanan ini?');
-
-    if (!confirmDelete) return;
-
-    try {
-      await API.delete(`/foods/${foodId}`);
-
-      setMessageType('success');
-      setMessage('Data makanan berhasil dihapus');
-
-      if (Number(id) === Number(foodId)) {
-        resetForm();
-        navigate('/foods/add', { replace: true });
-      }
-
-      fetchFoods();
-
-      setTimeout(() => {
-        setMessage('');
-      }, 2500);
-    } catch (error) {
-      console.error('Gagal menghapus makanan:', error);
-      setMessageType('error');
-      setMessage(error.response?.data?.message || 'Gagal menghapus makanan');
-    }
   };
 
   const handleSubmit = async (e) => {
@@ -272,11 +212,8 @@ function FoodForm() {
         setMessageType('success');
         setMessage('Data makanan berhasil diperbarui');
 
-        await fetchFoods();
-
         setTimeout(() => {
-          resetForm();
-          navigate('/foods/add', { replace: true });
+          navigate('/dashboard');
         }, 800);
       } else {
         await API.post('/foods', form);
@@ -285,11 +222,10 @@ function FoodForm() {
         setMessage('Data makanan berhasil ditambahkan');
 
         resetForm();
-        await fetchFoods();
 
         setTimeout(() => {
-          setMessage('');
-        }, 2500);
+          navigate('/dashboard');
+        }, 800);
       }
     } catch (error) {
       console.error('Gagal menyimpan data makanan:', error);
@@ -299,28 +235,6 @@ function FoodForm() {
       setLoading(false);
     }
   };
-
-  const filteredFoods = useMemo(() => {
-    return foods.filter((food) => {
-      const keyword = search.toLowerCase();
-
-      const matchSearch =
-        food.name?.toLowerCase().includes(keyword) ||
-        food.category?.toLowerCase().includes(keyword) ||
-        food.unit?.toLowerCase().includes(keyword);
-
-      const matchStatus = statusFilter === 'semua' || food.status === statusFilter;
-      const matchPriority = priorityFilter === 'semua' || food.priority === priorityFilter;
-
-      return matchSearch && matchStatus && matchPriority;
-    });
-  }, [foods, search, statusFilter, priorityFilter]);
-
-  const totalAman = foods.filter((food) => food.status === 'aman').length;
-  const totalMendekati = foods.filter(
-    (food) => food.status === 'mendekati_kedaluwarsa'
-  ).length;
-  const totalKedaluwarsa = foods.filter((food) => food.status === 'kedaluwarsa').length;
 
   if (loadingDetail) {
     return (
@@ -346,7 +260,11 @@ function FoodForm() {
 
       <div className="foods-shell">
         <header className="food-form-topbar">
-          <button className="foods-back-button dark" onClick={() => navigate('/dashboard')}>
+          <button
+            type="button"
+            className="foods-back-button dark"
+            onClick={() => navigate('/dashboard')}
+          >
             <IconArrowLeft />
             Kembali ke Dashboard
           </button>
@@ -366,8 +284,8 @@ function FoodForm() {
             <h1>{isEdit ? 'Perbarui data makanan' : 'Tambahkan makanan baru'}</h1>
 
             <p>
-              Masukkan data makanan dengan lengkap. Setelah disimpan, daftar
-              inventaris langsung muncul di bawah form ini.
+              Masukkan data makanan dengan lengkap. Setelah disimpan, data akan
+              tampil pada inventaris di Dashboard.
             </p>
           </div>
 
@@ -407,7 +325,7 @@ function FoodForm() {
           </div>
         </section>
 
-        <section className="food-form-layout premium-form-layout">
+        <section className="food-form-layout premium-form-layout only-form-layout">
           <div className="food-form-card premium-form-card">
             <div className="form-card-heading">
               <div className="form-heading-icon">
@@ -504,10 +422,7 @@ function FoodForm() {
                 <button
                   type="button"
                   className="cancel-btn"
-                  onClick={() => {
-                    resetForm();
-                    navigate('/foods/add', { replace: true });
-                  }}
+                  onClick={resetForm}
                 >
                   Reset
                 </button>
@@ -563,130 +478,13 @@ function FoodForm() {
             </div>
 
             <div className="info-note premium-note">
-              <strong>Alur halaman</strong>
+              <strong>Setelah disimpan</strong>
               <p>
-                Setelah tambah atau edit makanan, inventaris di bawah form akan
-                langsung diperbarui tanpa perlu pindah halaman.
+                Data makanan akan tersimpan dan tampil di bagian inventaris pada
+                Dashboard.
               </p>
             </div>
           </aside>
-        </section>
-
-        <section className="inline-inventory-section">
-          <div className="inline-inventory-heading">
-            <div>
-              <span>Inventaris Langsung</span>
-              <h2>Daftar makanan tersimpan</h2>
-              <p>
-                Data di bawah ini langsung terhubung dengan form di atas. Kamu bisa
-                edit atau hapus makanan dari sini.
-              </p>
-            </div>
-
-            <div className="inline-inventory-stats">
-              <div>
-                <strong>{foods.length}</strong>
-                <span>Total</span>
-              </div>
-              <div>
-                <strong>{totalAman}</strong>
-                <span>Aman</span>
-              </div>
-              <div>
-                <strong>{totalMendekati}</strong>
-                <span>Mendekati</span>
-              </div>
-              <div>
-                <strong>{totalKedaluwarsa}</strong>
-                <span>Kedaluwarsa</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="foods-toolbar compact-toolbar">
-            <div className="foods-search-box">
-              <IconSearch />
-              <input
-                type="text"
-                placeholder="Cari makanan, kategori, atau satuan..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </div>
-
-            <div className="foods-filter-group">
-              <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
-                <option value="semua">Semua Status</option>
-                <option value="aman">Aman</option>
-                <option value="mendekati_kedaluwarsa">Mendekati Kedaluwarsa</option>
-                <option value="kedaluwarsa">Kedaluwarsa</option>
-                <option value="dijual">Dijual</option>
-                <option value="terjual">Terjual</option>
-              </select>
-
-              <select
-                value={priorityFilter}
-                onChange={(e) => setPriorityFilter(e.target.value)}
-              >
-                <option value="semua">Semua Prioritas</option>
-                <option value="tinggi">Prioritas Tinggi</option>
-                <option value="sedang">Prioritas Sedang</option>
-                <option value="rendah">Prioritas Rendah</option>
-                <option value="tidak_layak">Tidak Layak</option>
-              </select>
-            </div>
-          </div>
-
-          {loadingFoods ? (
-            <div className="foods-loading">
-              <div className="foods-spinner"></div>
-              <div>
-                <h3>Memuat inventaris...</h3>
-                <p>Sedang mengambil daftar makanan tersimpan.</p>
-              </div>
-            </div>
-          ) : foods.length === 0 ? (
-            <div className="empty-foods inline-empty">
-              <div className="empty-icon">
-                <IconBox />
-              </div>
-
-              <h2>Belum ada makanan tercatat</h2>
-              <p>Tambahkan makanan pertama melalui form di atas.</p>
-            </div>
-          ) : filteredFoods.length === 0 ? (
-            <div className="empty-foods inline-empty">
-              <div className="empty-icon">
-                <IconSearch />
-              </div>
-
-              <h2>Data tidak ditemukan</h2>
-              <p>Coba gunakan kata kunci lain atau reset filter.</p>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setSearch('');
-                  setStatusFilter('semua');
-                  setPriorityFilter('semua');
-                }}
-              >
-                Reset Filter
-              </button>
-            </div>
-          ) : (
-            <section className="food-grid inline-food-grid">
-              {filteredFoods.map((food, index) => (
-                <FoodCard
-                  key={food.id}
-                  food={food}
-                  index={index}
-                  onEdit={() => navigate(`/foods/edit/${food.id}`)}
-                  onDelete={() => handleDelete(food.id)}
-                />
-              ))}
-            </section>
-          )}
         </section>
       </div>
     </div>

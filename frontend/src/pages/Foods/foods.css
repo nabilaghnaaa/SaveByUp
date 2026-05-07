@@ -1872,3 +1872,13 @@
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* FOOD FORM ONLY MODE */
+
+.only-form-layout {
+  padding-bottom: 42px;
+}
+
+.only-form-layout .premium-form-card {
+  min-height: auto;
+}

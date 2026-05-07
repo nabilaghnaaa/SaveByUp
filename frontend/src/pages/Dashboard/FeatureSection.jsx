@@ -1,5 +1,3 @@
-import { useNavigate } from 'react-router-dom';
-
 function IconInventory() {
   return (
     <svg viewBox="0 0 24 24" className="card-svg-icon">
@@ -32,19 +30,28 @@ function IconReputation() {
 }
 
 function FeatureSection() {
-  const navigate = useNavigate();
+  const scrollToInventory = () => {
+    const inventorySection = document.getElementById('dashboard-inventory');
+
+    if (inventorySection) {
+      inventorySection.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+  };
 
   const features = [
     {
       title: 'Inventaris Makanan',
       description:
-        'Tambah, edit, hapus, dan pantau stok makanan pribadi dalam satu halaman form inventaris.',
+        'Tambah, edit, hapus, dan pantau stok makanan langsung dari dashboard.',
       icon: <IconInventory />,
       status: 'Aktif',
-      buttonText: 'Kelola Inventaris',
+      buttonText: 'Lihat Inventaris',
       color: 'feature-green',
       disabled: false,
-      action: () => navigate('/foods/add'),
+      action: scrollToInventory,
     },
     {
       title: 'Marketplace COD',

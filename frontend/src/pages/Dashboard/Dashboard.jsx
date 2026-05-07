@@ -3,9 +3,9 @@ import API from '../../services/api';
 
 import DashboardHeader from './DashboardHeader';
 import InfoBanner from './InfoBanner';
-import SummaryGrid from './SummaryGrid';
-import PrioritySection from './PrioritySection';
 import FeatureSection from './FeatureSection';
+import SummaryGrid from './SummaryGrid';
+import DashboardInventory from './DashboardInventory';
 import './dashboard.css';
 
 function Dashboard() {
@@ -21,6 +21,7 @@ function Dashboard() {
     total_prioritas_rendah: 0,
   });
 
+  const [refreshKey, setRefreshKey] = useState(0);
   const [loading, setLoading] = useState(true);
 
   const fetchSummary = async () => {
@@ -42,6 +43,11 @@ function Dashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const refreshDashboard = () => {
+    fetchSummary();
+    setRefreshKey((prev) => prev + 1);
   };
 
   useEffect(() => {
@@ -70,9 +76,14 @@ function Dashboard() {
           </div>
         ) : (
           <>
-            <SummaryGrid summary={summary} />
-            <PrioritySection summary={summary} />
             <FeatureSection />
+
+            <SummaryGrid summary={summary} />
+
+            <DashboardInventory
+              refreshKey={refreshKey}
+              onInventoryChange={refreshDashboard}
+            />
           </>
         )}
       </div>

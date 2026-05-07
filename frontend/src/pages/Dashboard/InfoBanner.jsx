@@ -59,8 +59,19 @@ function IconPlus() {
 function InfoBanner() {
   const navigate = useNavigate();
 
+  const scrollToInventory = () => {
+    const inventorySection = document.getElementById('dashboard-inventory');
+
+    if (inventorySection) {
+      inventorySection.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+    }
+  };
+
   return (
-    <section className="hero-pro">
+    <section className="hero-pro hero-banner-full">
       <div className="hero-left">
         <div className="hero-badge">
           <span className="pulse-dot"></span>
@@ -93,7 +104,7 @@ function InfoBanner() {
           <button
             type="button"
             className="hero-secondary-btn"
-            onClick={() => navigate('/foods')}
+            onClick={scrollToInventory}
           >
             <span className="button-icon-svg">
               <IconCart />
@@ -107,10 +118,12 @@ function InfoBanner() {
             <strong>COD</strong>
             <span>Transaksi langsung</span>
           </div>
+
           <div>
             <strong>Rating</strong>
             <span>Reputasi pengguna</span>
           </div>
+
           <div>
             <strong>Priority</strong>
             <span>Deteksi kedaluwarsa</span>
