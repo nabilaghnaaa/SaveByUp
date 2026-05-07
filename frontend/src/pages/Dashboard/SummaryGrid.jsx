@@ -1,31 +1,69 @@
+function IconBox() {
+  return (
+    <svg viewBox="0 0 24 24" className="card-svg-icon">
+      <path d="M4 8l8-4 8 4-8 4-8-4z" />
+      <path d="M4 8v8l8 4 8-4V8" />
+      <path d="M12 12v8" />
+    </svg>
+  );
+}
+
+function IconCheck() {
+  return (
+    <svg viewBox="0 0 24 24" className="card-svg-icon">
+      <circle cx="12" cy="12" r="8" />
+      <path d="M8.5 12.2l2.2 2.2 4.8-5" />
+    </svg>
+  );
+}
+
+function IconClock() {
+  return (
+    <svg viewBox="0 0 24 24" className="card-svg-icon">
+      <circle cx="12" cy="12" r="8" />
+      <path d="M12 7.5V12l3 2" />
+    </svg>
+  );
+}
+
+function IconWarning() {
+  return (
+    <svg viewBox="0 0 24 24" className="card-svg-icon">
+      <path d="M12 4l8 15H4L12 4z" />
+      <path d="M12 9v4" />
+      <path d="M12 16h.01" />
+    </svg>
+  );
+}
+
 function SummaryGrid({ summary }) {
   const summaryItems = [
     {
       title: 'Total Makanan',
       value: summary.total_foods,
       description: 'Semua stok makanan yang tercatat',
-      icon: '📦',
+      icon: <IconBox />,
       color: 'green',
     },
     {
       title: 'Makanan Aman',
       value: summary.total_aman,
       description: 'Masih jauh dari tanggal kedaluwarsa',
-      icon: '✅',
+      icon: <IconCheck />,
       color: 'blue',
     },
     {
       title: 'Hampir Kedaluwarsa',
       value: summary.total_mendekati,
       description: 'Perlu segera dikonsumsi atau dijual',
-      icon: '⏰',
+      icon: <IconClock />,
       color: 'orange',
     },
     {
       title: 'Kedaluwarsa',
       value: summary.total_kedaluwarsa,
       description: 'Tidak layak untuk dikonsumsi',
-      icon: '⚠️',
+      icon: <IconWarning />,
       color: 'red',
     },
   ];

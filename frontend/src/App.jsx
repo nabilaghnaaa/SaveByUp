@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard/Dashboard';
+import FoodForm from './pages/Foods/FoodForm';
 
 function App() {
   const token = localStorage.getItem('token');
@@ -26,6 +27,21 @@ function App() {
       <Route
         path="/dashboard"
         element={token ? <Dashboard /> : <Navigate to="/login" />}
+      />
+
+      <Route
+        path="/foods/add"
+        element={token ? <FoodForm /> : <Navigate to="/login" />}
+      />
+
+      <Route
+        path="/foods/edit/:id"
+        element={token ? <FoodForm /> : <Navigate to="/login" />}
+      />
+
+      <Route
+        path="*"
+        element={<Navigate to={token ? '/dashboard' : '/login'} />}
       />
     </Routes>
   );

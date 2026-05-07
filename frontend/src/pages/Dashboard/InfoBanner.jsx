@@ -1,4 +1,64 @@
-function InfoBanner({ user }) {
+import { useNavigate } from 'react-router-dom';
+
+function IconClock() {
+  return (
+    <svg viewBox="0 0 24 24" className="mini-svg-icon">
+      <circle cx="12" cy="12" r="8" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  );
+}
+
+function IconStar() {
+  return (
+    <svg viewBox="0 0 24 24" className="mini-svg-icon">
+      <path d="M12 4l2.4 5 5.4.8-3.9 3.8.9 5.4-4.8-2.6L7.2 19l.9-5.4-3.9-3.8 5.4-.8L12 4z" />
+    </svg>
+  );
+}
+
+function IconLeaf() {
+  return (
+    <svg viewBox="0 0 24 24" className="mini-svg-icon">
+      <path d="M19 5c-7.5.3-12 3.8-12 9.5 0 2.5 1.7 4.5 4.4 4.5 5.4 0 7.6-6.6 7.6-14z" />
+      <path d="M7 19c2.5-4.7 5.5-7.5 9-9" />
+    </svg>
+  );
+}
+
+function IconFood() {
+  return (
+    <svg viewBox="0 0 24 24" className="phone-svg-icon">
+      <path d="M7 3v18" />
+      <path d="M5 3v5a2 2 0 0 0 4 0V3" />
+      <path d="M15 3v18" />
+      <path d="M15 3c3 1.2 4.5 3.5 4.5 7 0 2.5-1.3 4-4.5 4" />
+    </svg>
+  );
+}
+
+function IconCart() {
+  return (
+    <svg viewBox="0 0 24 24" className="mini-svg-icon">
+      <circle cx="9" cy="19" r="1.5" />
+      <circle cx="17" cy="19" r="1.5" />
+      <path d="M3 5h2l2.2 10h9.8l2-7H7" />
+    </svg>
+  );
+}
+
+function IconPlus() {
+  return (
+    <svg viewBox="0 0 24 24" className="mini-svg-icon">
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
+    </svg>
+  );
+}
+
+function InfoBanner() {
+  const navigate = useNavigate();
+
   return (
     <section className="hero-pro">
       <div className="hero-left">
@@ -19,14 +79,26 @@ function InfoBanner({ user }) {
         </p>
 
         <div className="hero-actions">
-          <button className="hero-primary-btn">
-            <span>＋</span>
+          <button
+            type="button"
+            className="hero-primary-btn"
+            onClick={() => navigate('/foods/add')}
+          >
+            <span className="button-icon-svg">
+              <IconPlus />
+            </span>
             Tambah Stok Makanan
           </button>
 
-          <button className="hero-secondary-btn">
-            <span>🛒</span>
-            Lihat Marketplace
+          <button
+            type="button"
+            className="hero-secondary-btn"
+            onClick={() => navigate('/foods')}
+          >
+            <span className="button-icon-svg">
+              <IconCart />
+            </span>
+            Lihat Inventaris
           </button>
         </div>
 
@@ -51,7 +123,10 @@ function InfoBanner({ user }) {
           <div className="phone-top"></div>
 
           <div className="phone-card food-card-main">
-            <div className="food-icon">🥗</div>
+            <div className="food-icon">
+              <IconFood />
+            </div>
+
             <div>
               <strong>Smart Inventory</strong>
               <span>Monitoring makanan harian</span>
@@ -60,7 +135,7 @@ function InfoBanner({ user }) {
 
           <div className="phone-list">
             <div className="phone-list-item">
-              <span>🍞</span>
+              <span className="list-dot red-dot"></span>
               <div>
                 <strong>Roti Tawar</strong>
                 <p>Prioritas tinggi</p>
@@ -69,7 +144,7 @@ function InfoBanner({ user }) {
             </div>
 
             <div className="phone-list-item">
-              <span>🥛</span>
+              <span className="list-dot yellow-dot"></span>
               <div>
                 <strong>Susu Kotak</strong>
                 <p>Prioritas sedang</p>
@@ -78,7 +153,7 @@ function InfoBanner({ user }) {
             </div>
 
             <div className="phone-list-item">
-              <span>🍜</span>
+              <span className="list-dot green-dot"></span>
               <div>
                 <strong>Mi Instan</strong>
                 <p>Aman dikonsumsi</p>
@@ -89,7 +164,10 @@ function InfoBanner({ user }) {
         </div>
 
         <div className="floating-widget widget-top">
-          <span>⏰</span>
+          <span className="floating-icon-wrap">
+            <IconClock />
+          </span>
+
           <div>
             <strong>Reminder Aktif</strong>
             <p>Makanan mendekati kedaluwarsa</p>
@@ -97,11 +175,18 @@ function InfoBanner({ user }) {
         </div>
 
         <div className="floating-widget widget-bottom">
-          <span>⭐</span>
+          <span className="floating-icon-wrap">
+            <IconStar />
+          </span>
+
           <div>
             <strong>Reputasi</strong>
             <p>Rating setelah COD selesai</p>
           </div>
+        </div>
+
+        <div className="floating-leaf">
+          <IconLeaf />
         </div>
       </div>
     </section>

@@ -26,15 +26,16 @@ function Dashboard() {
   const fetchSummary = async () => {
     try {
       const response = await API.get('/foods/summary');
+      const data = response.data.data || {};
 
       setSummary({
-        total_foods: response.data.data.total_foods || 0,
-        total_aman: response.data.data.total_aman || 0,
-        total_mendekati: response.data.data.total_mendekati || 0,
-        total_kedaluwarsa: response.data.data.total_kedaluwarsa || 0,
-        total_prioritas_tinggi: response.data.data.total_prioritas_tinggi || 0,
-        total_prioritas_sedang: response.data.data.total_prioritas_sedang || 0,
-        total_prioritas_rendah: response.data.data.total_prioritas_rendah || 0,
+        total_foods: data.total_foods || 0,
+        total_aman: data.total_aman || 0,
+        total_mendekati: data.total_mendekati || 0,
+        total_kedaluwarsa: data.total_kedaluwarsa || 0,
+        total_prioritas_tinggi: data.total_prioritas_tinggi || 0,
+        total_prioritas_sedang: data.total_prioritas_sedang || 0,
+        total_prioritas_rendah: data.total_prioritas_rendah || 0,
       });
     } catch (error) {
       console.error('Gagal mengambil data dashboard:', error);
@@ -61,6 +62,7 @@ function Dashboard() {
         {loading ? (
           <div className="dashboard-loading-card">
             <div className="dashboard-spinner"></div>
+
             <div>
               <h3>Memuat dashboard...</h3>
               <p>Sedang mengambil data inventaris makanan kamu.</p>
