@@ -1,0 +1,65 @@
+.login-page {
+  position: relative;
+  min-height: 100vh;
+  padding: clamp(18px, 3vw, 34px);
+  overflow: hidden;
+  color: var(--login-text);
+  background:
+    radial-gradient(circle at 12% 12%, rgba(111, 143, 114, 0.16), transparent 28%),
+    radial-gradient(circle at 88% 10%, rgba(231, 237, 220, 0.52), transparent 26%),
+    linear-gradient(135deg, #f7fbf7 0%, #ffffff 48%, #f4f7ef 100%);
+  display: grid;
+  place-items: center;
+}
+
+.login-noise {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.15;
+  background-image:
+    linear-gradient(rgba(15, 35, 24, 0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 35, 24, 0.04) 1px, transparent 1px);
+  background-size: 42px 42px;
+}
+
+.login-orb {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+  filter: blur(10px);
+}
+
+.login-orb-one {
+  width: 320px;
+  height: 320px;
+  left: -130px;
+  top: 12%;
+  background: rgba(111, 143, 114, 0.16);
+}
+
+.login-orb-two {
+  width: 420px;
+  height: 420px;
+  right: -170px;
+  bottom: -110px;
+  background: rgba(231, 237, 220, 0.72);
+}
+
+.login-shell {
+  position: relative;
+  z-index: 2;
+  width: min(1180px, 100%);
+  min-height: min(720px, calc(100vh - 60px));
+  display: grid;
+  grid-template-columns: minmax(0, 0.92fr) minmax(420px, 1.08fr);
+  gap: 24px;
+  align-items: stretch;
+}
+
+.login-left {
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  gap: 24px;
+}

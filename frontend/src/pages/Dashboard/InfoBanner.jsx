@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { logoutUser } from '../../services/authService';
 
 function IconClock() {
   return (
@@ -60,11 +61,18 @@ function IconMarket() {
 function InfoBanner({ user }) {
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
-    window.location.reload();
+  const handleLogout = async () => {
+    try {
+      await logoutUser();
+      navigate('/login');
+      window.location.reload();
+    } catch (error) {
+      console.error('Gagal logout:', error);
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      navigate('/login');
+      window.location.reload();
+    }
   };
 
   const scrollToInventory = () => {

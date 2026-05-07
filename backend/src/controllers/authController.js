@@ -41,6 +41,7 @@ const register = async (req, res) => {
     });
   } catch (error) {
     console.error('Register error:', error);
+
     return res.status(500).json({
       message: 'Terjadi kesalahan pada server',
     });
@@ -101,8 +102,23 @@ const login = async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
+
     return res.status(500).json({
       message: 'Terjadi kesalahan pada server',
+    });
+  }
+};
+
+const logout = async (req, res) => {
+  try {
+    return res.status(200).json({
+      message: 'Logout berhasil',
+    });
+  } catch (error) {
+    console.error('Logout error:', error);
+
+    return res.status(500).json({
+      message: 'Terjadi kesalahan saat logout',
     });
   }
 };
@@ -110,4 +126,5 @@ const login = async (req, res) => {
 module.exports = {
   register,
   login,
+  logout,
 };

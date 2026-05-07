@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import API from '../../services/api';
 
-import DashboardHeader from './DashboardHeader';
 import InfoBanner from './InfoBanner';
 import SummaryGrid from './SummaryGrid';
 import DashboardInventory from './DashboardInventory';
+
+import { getFoodSummary } from '../../services/foodService';
+
 import './dashboard.css';
 
 function Dashboard() {
@@ -27,20 +28,8 @@ function Dashboard() {
 
   const fetchSummary = async () => {
     try {
-      const response = await API.get('/foods/summary');
-      const data = response.data.data || {};
-
-      setSummary({
-        total_foods: Number(data.total_foods || 0),
-        total_aman: Number(data.total_aman || 0),
-        total_mendekati: Number(data.total_mendekati || 0),
-        total_kedaluwarsa: Number(data.total_kedaluwarsa || 0),
-        total_dibuang: Number(data.total_dibuang || 0),
-        total_digunakan: Number(data.total_digunakan || 0),
-        total_prioritas_tinggi: Number(data.total_prioritas_tinggi || 0),
-        total_prioritas_sedang: Number(data.total_prioritas_sedang || 0),
-        total_prioritas_rendah: Number(data.total_prioritas_rendah || 0),
-      });
+      const data = await getFoodSummary();
+      setSummary(data);
     } catch (error) {
       console.error('Gagal mengambil data dashboard:', error);
     } finally {
@@ -68,8 +57,6 @@ function Dashboard() {
       <div className="dashboard-background-orb orb-four"></div>
 
       <div className="dashboard-shell">
-        <DashboardHeader user={user} />
-
         <InfoBanner user={user} />
 
         {loading ? (

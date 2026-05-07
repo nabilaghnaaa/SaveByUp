@@ -1,0 +1,73 @@
+:root {
+  --login-green-dark: #173b2a;
+  --login-green: #6f8f72;
+  --login-green-soft: #e7eddc;
+  --login-cream: #fffaf0;
+  --login-bg: #f7fbf7;
+  --login-text: #102318;
+  --login-muted: #64748b;
+  --login-border: rgba(15, 35, 24, 0.09);
+  --login-shadow: 0 30px 90px rgba(15, 35, 24, 0.12);
+}
+
+.login-page,
+.login-page * {
+  box-sizing: border-box;
+}
+
+.login-brand-icon,
+.login-input-icon,
+.login-button-icon,
+.login-mini-icon {
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.9;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.login-brand-icon {
+  width: 28px;
+  height: 28px;
+}
+
+.login-input-icon {
+  width: 20px;
+  height: 20px;
+}
+
+.login-button-icon,
+.login-mini-icon {
+  width: 19px;
+  height: 19px;
+}
+
+@keyframes loginFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes loginFloat {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes loginSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}

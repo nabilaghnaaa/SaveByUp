@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import API from '../../services/api';
 import FoodCard from '../Foods/FoodCard';
+
+import {
+  deleteFood,
+  getFoods,
+  updateFoodStatus,
+} from '../../services/foodService';
 
 function IconSearch() {
   return (
@@ -63,8 +68,10 @@ function DashboardInventory({ refreshKey, onInventoryChange }) {
   const fetchFoods = async () => {
     try {
       setLoading(true);
-      const response = await API.get('/foods');
-      setFoods(response.data.data || []);
+
+      const data = await getFoods();
+
+      setFoods(data);
     } catch (error) {
       console.error('Gagal mengambil data makanan:', error);
       setMessage('Gagal mengambil data inventaris makanan');
@@ -85,6 +92,12 @@ function DashboardInventory({ refreshKey, onInventoryChange }) {
     }
   };
 
+  const clearMessageAfterDelay = () => {
+    setTimeout(() => {
+      setMessage('');
+    }, 2500);
+  };
+
   const handleRefresh = async () => {
     await syncInventory();
   };
@@ -95,14 +108,13 @@ function DashboardInventory({ refreshKey, onInventoryChange }) {
     if (!confirmDelete) return;
 
     try {
-      await API.delete(`/foods/${id}`);
+      await deleteFood(id);
+
       setMessage('Data makanan berhasil dihapus');
 
       await syncInventory();
 
-      setTimeout(() => {
-        setMessage('');
-      }, 2500);
+      clearMessageAfterDelay();
     } catch (error) {
       console.error('Gagal menghapus makanan:', error);
       setMessage(error.response?.data?.message || 'Gagal menghapus makanan');
@@ -111,21 +123,13 @@ function DashboardInventory({ refreshKey, onInventoryChange }) {
 
   const handleUpdateFoodStatus = async (food, status, successMessage) => {
     try {
-      await API.put(`/foods/${food.id}`, {
-        name: food.name,
-        category: food.category,
-        quantity: food.quantity,
-        unit: food.unit,
-        expiry_date: food.expiry_date,
-        status,
-      });
+      await updateFoodStatus(food, status);
 
       setMessage(successMessage);
+
       await syncInventory();
 
-      setTimeout(() => {
-        setMessage('');
-      }, 2500);
+      clearMessageAfterDelay();
     } catch (error) {
       console.error('Gagal mengubah status makanan:', error);
       setMessage(error.response?.data?.message || 'Gagal mengubah status makanan');
@@ -242,7 +246,9 @@ function DashboardInventory({ refreshKey, onInventoryChange }) {
               >
                 <option value="semua">Semua Status</option>
                 <option value="aman">Aman</option>
-                <option value="mendekati_kedaluwarsa">Mendekati Kedaluwarsa</option>
+                <option value="mendekati_kedaluwarsa">
+                  Mendekati Kedaluwarsa
+                </option>
                 <option value="kedaluwarsa">Kedaluwarsa</option>
                 <option value="dijual">Dijual</option>
                 <option value="terjual">Terjual</option>
@@ -283,8 +289,8 @@ function DashboardInventory({ refreshKey, onInventoryChange }) {
               <h3>Belum ada makanan tercatat</h3>
 
               <p>
-                Tambahkan makanan pertama kamu agar sistem bisa membantu memantau stok
-                dan tanggal kedaluwarsa.
+                Tambahkan makanan pertama kamu agar sistem bisa membantu memantau
+                stok dan tanggal kedaluwarsa.
               </p>
 
               <button type="button" onClick={() => navigate('/foods/add')}>
