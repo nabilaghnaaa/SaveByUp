@@ -40,6 +40,15 @@ function IconBox() {
   );
 }
 
+function IconSparkle() {
+  return (
+    <svg viewBox="0 0 24 24" className="dashboard-inventory-icon">
+      <path d="M12 3l1.4 5.1L18.5 9.5l-5.1 1.4L12 16l-1.4-5.1-5.1-1.4 5.1-1.4L12 3z" />
+      <path d="M18 14l.8 2.8L21.5 18l-2.7.8L18 21.5l-.8-2.7-2.7-.8 2.7-1.2L18 14z" />
+    </svg>
+  );
+}
+
 function DashboardInventory({ refreshKey, onInventoryChange }) {
   const navigate = useNavigate();
 
@@ -123,8 +132,13 @@ function DashboardInventory({ refreshKey, onInventoryChange }) {
     <section className="dashboard-inventory-section" id="dashboard-inventory">
       <div className="dashboard-inventory-heading">
         <div>
-          <span>Inventaris Makanan</span>
+          <span>
+            <IconSparkle />
+            Inventaris Makanan
+          </span>
+
           <h2>Daftar stok makanan kamu</h2>
+
           <p>
             Kelola semua makanan yang sudah kamu input. Kamu bisa tambah, edit,
             hapus, dan memantau status kedaluwarsa langsung dari dashboard.
@@ -155,6 +169,7 @@ function DashboardInventory({ refreshKey, onInventoryChange }) {
       <div className="dashboard-inventory-toolbar">
         <div className="dashboard-search-box">
           <IconSearch />
+
           <input
             type="text"
             placeholder="Cari makanan, kategori, atau satuan..."
@@ -207,6 +222,7 @@ function DashboardInventory({ refreshKey, onInventoryChange }) {
           </div>
 
           <h3>Belum ada makanan tercatat</h3>
+
           <p>
             Tambahkan makanan pertama kamu agar sistem bisa membantu memantau stok
             dan tanggal kedaluwarsa.
@@ -224,6 +240,7 @@ function DashboardInventory({ refreshKey, onInventoryChange }) {
           </div>
 
           <h3>Data tidak ditemukan</h3>
+
           <p>Coba ubah kata kunci pencarian atau reset filter.</p>
 
           <button

@@ -36,6 +36,15 @@ function IconWarning() {
   );
 }
 
+function IconSparkle() {
+  return (
+    <svg viewBox="0 0 24 24" className="dashboard-inventory-icon">
+      <path d="M12 3l1.4 5.1L18.5 9.5l-5.1 1.4L12 16l-1.4-5.1-5.1-1.4 5.1-1.4L12 3z" />
+      <path d="M18 14l.8 2.8L21.5 18l-2.7.8L18 21.5l-.8-2.7-2.7-.8 2.7-1.2L18 14z" />
+    </svg>
+  );
+}
+
 function SummaryGrid({ summary }) {
   const summaryItems = [
     {
@@ -44,6 +53,8 @@ function SummaryGrid({ summary }) {
       description: 'Semua stok makanan yang tercatat',
       icon: <IconBox />,
       color: 'green',
+      meta: 'Inventory',
+      progress: '100%',
     },
     {
       title: 'Makanan Aman',
@@ -51,6 +62,8 @@ function SummaryGrid({ summary }) {
       description: 'Masih jauh dari tanggal kedaluwarsa',
       icon: <IconCheck />,
       color: 'blue',
+      meta: 'Safe Stock',
+      progress: '78%',
     },
     {
       title: 'Hampir Kedaluwarsa',
@@ -58,6 +71,8 @@ function SummaryGrid({ summary }) {
       description: 'Perlu segera dikonsumsi atau dijual',
       icon: <IconClock />,
       color: 'orange',
+      meta: 'Urgent',
+      progress: '52%',
     },
     {
       title: 'Kedaluwarsa',
@@ -65,6 +80,8 @@ function SummaryGrid({ summary }) {
       description: 'Tidak layak untuk dikonsumsi',
       icon: <IconWarning />,
       color: 'red',
+      meta: 'Expired',
+      progress: '24%',
     },
   ];
 
@@ -72,7 +89,11 @@ function SummaryGrid({ summary }) {
     <section className="dashboard-section">
       <div className="section-heading-pro">
         <div>
-          <span>Ringkasan Inventaris</span>
+          <span>
+            <IconSparkle />
+            Ringkasan Inventaris
+          </span>
+
           <h2>Status stok makanan</h2>
         </div>
 
@@ -88,13 +109,25 @@ function SummaryGrid({ summary }) {
           >
             <div className="summary-top">
               <div className="summary-icon-pro">{item.icon}</div>
+
               <div className="summary-glow"></div>
             </div>
 
-            <div>
+            <div className="summary-content">
+              <div className="summary-meta">{item.meta}</div>
+
               <p>{item.title}</p>
+
               <h3>{item.value}</h3>
+
               <span>{item.description}</span>
+            </div>
+
+            <div className="summary-progress-track">
+              <div
+                className="summary-progress-fill"
+                style={{ width: item.progress }}
+              ></div>
             </div>
           </div>
         ))}

@@ -1,0 +1,160 @@
+.dashboard-inventory-section {
+  margin-top: 36px;
+  padding-bottom: 54px;
+}
+
+.dashboard-inventory-toolbar {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 28px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 14px;
+  align-items: center;
+}
+
+.dashboard-search-box {
+  min-height: 54px;
+  padding: 0 16px;
+  border-radius: 19px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(236, 252, 203, 0.86);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dashboard-search-box input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.dashboard-search-box input::placeholder {
+  color: rgba(226, 232, 240, 0.46);
+}
+
+.dashboard-filter-group {
+  display: flex;
+  gap: 12px;
+}
+
+.dashboard-filter-group select {
+  min-height: 54px;
+  min-width: 198px;
+  padding: 0 14px;
+  border-radius: 19px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-weight: 850;
+  outline: none;
+  cursor: pointer;
+}
+
+.dashboard-filter-group select option {
+  color: #111827;
+  background: #ffffff;
+}
+
+.dashboard-inventory-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.inventory-outline-button,
+.inventory-primary-button {
+  min-height: 52px;
+  padding: 0 17px;
+  border-radius: 18px;
+  font-weight: 950;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  transition: 0.25s ease;
+}
+
+.inventory-outline-button {
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.inventory-primary-button {
+  background: linear-gradient(135deg, #bef264, #22c55e 60%, #14b8a6);
+  color: #04130d;
+  border: none;
+  box-shadow: 0 18px 36px rgba(34, 197, 94, 0.2);
+}
+
+.inventory-outline-button:hover,
+.inventory-primary-button:hover {
+  transform: translateY(-3px);
+}
+
+.dashboard-inventory-message {
+  margin-top: 16px;
+  padding: 15px 17px;
+  border-radius: 20px;
+  color: #dcfce7;
+  font-weight: 900;
+}
+
+.dashboard-inventory-empty {
+  min-height: 340px;
+  margin-top: 18px;
+  padding: 42px;
+  border-radius: 32px;
+  text-align: center;
+  display: grid;
+  place-items: center;
+}
+
+.dashboard-empty-icon {
+  width: 82px;
+  height: 82px;
+  border-radius: 28px;
+  background: rgba(190, 242, 100, 0.13);
+  color: #bef264;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(190, 242, 100, 0.2);
+}
+
+.dashboard-inventory-empty h3 {
+  margin: 18px 0 10px;
+  color: white;
+  font-size: 28px;
+  letter-spacing: -0.04em;
+}
+
+.dashboard-inventory-empty p {
+  max-width: 610px;
+  margin: 0 auto;
+  color: rgba(226, 232, 240, 0.62);
+  line-height: 1.7;
+}
+
+.dashboard-inventory-empty button {
+  margin-top: 22px;
+  width: auto;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 18px;
+  background: linear-gradient(135deg, #bef264, #22c55e);
+  color: #04130d;
+  font-weight: 950;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+}

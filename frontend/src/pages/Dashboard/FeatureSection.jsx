@@ -29,6 +29,15 @@ function IconReputation() {
   );
 }
 
+function IconSparkle() {
+  return (
+    <svg viewBox="0 0 24 24" className="dashboard-inventory-icon">
+      <path d="M12 3l1.4 5.1L18.5 9.5l-5.1 1.4L12 16l-1.4-5.1-5.1-1.4 5.1-1.4L12 3z" />
+      <path d="M18 14l.8 2.8L21.5 18l-2.7.8L18 21.5l-.8-2.7-2.7-.8 2.7-1.2L18 14z" />
+    </svg>
+  );
+}
+
 function FeatureSection() {
   const scrollToInventory = () => {
     const inventorySection = document.getElementById('dashboard-inventory');
@@ -60,7 +69,7 @@ function FeatureSection() {
       icon: <IconMarket />,
       status: 'Segera dibuat',
       buttonText: 'Buka Marketplace',
-      color: 'feature-orange',
+      color: 'feature-mint',
       disabled: true,
       action: null,
     },
@@ -71,7 +80,7 @@ function FeatureSection() {
       icon: <IconReputation />,
       status: 'Segera dibuat',
       buttonText: 'Lihat Reputasi',
-      color: 'feature-blue',
+      color: 'feature-emerald',
       disabled: true,
       action: null,
     },
@@ -79,40 +88,52 @@ function FeatureSection() {
 
   return (
     <section className="dashboard-section feature-section-pro">
-      <div className="section-heading-pro">
-        <div>
-          <span>Fitur Sistem</span>
-          <h2>Modul utama SaveByUp</h2>
+      <div className="feature-section-inner">
+        <div className="section-heading-pro feature-heading-pro">
+          <div>
+            <span>
+              <IconSparkle />
+              Fitur Sistem
+            </span>
+
+            <h2>Modul utama SaveByUp</h2>
+          </div>
+
+          <p>Fitur dikembangkan bertahap sesuai konsep penelitian.</p>
         </div>
 
-        <p>Fitur dikembangkan bertahap sesuai konsep penelitian.</p>
-      </div>
-
-      <div className="feature-grid-pro">
-        {features.map((feature, index) => (
-          <div
-            className={`feature-card-pro ${feature.color}`}
-            key={feature.title}
-            style={{ animationDelay: `${index * 0.1}s` }}
-          >
-            <div className="feature-card-header">
-              <div className="feature-icon-pro">{feature.icon}</div>
-              <span>{feature.status}</span>
-            </div>
-
-            <h3>{feature.title}</h3>
-            <p>{feature.description}</p>
-
-            <button
-              type="button"
-              disabled={feature.disabled}
-              onClick={feature.action}
+        <div className="feature-grid-pro">
+          {features.map((feature, index) => (
+            <div
+              className={`feature-card-pro ${feature.color}`}
+              key={feature.title}
+              style={{ animationDelay: `${index * 0.1}s` }}
             >
-              {feature.buttonText}
-              <span>→</span>
-            </button>
-          </div>
-        ))}
+              <div className="feature-card-bg"></div>
+
+              <div className="feature-card-header">
+                <div className="feature-icon-pro">{feature.icon}</div>
+
+                <span>{feature.status}</span>
+              </div>
+
+              <div className="feature-card-content">
+                <h3>{feature.title}</h3>
+
+                <p>{feature.description}</p>
+              </div>
+
+              <button
+                type="button"
+                disabled={feature.disabled}
+                onClick={feature.action}
+              >
+                {feature.buttonText}
+                <span>→</span>
+              </button>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

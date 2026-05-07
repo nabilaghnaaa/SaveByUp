@@ -1,0 +1,146 @@
+.summary-grid-pro {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.summary-card-pro {
+  position: relative;
+  min-height: 198px;
+  padding: 24px;
+  border-radius: 32px;
+  overflow: hidden;
+  animation: fadeUp 0.7s ease both;
+  transition: 0.28s ease;
+}
+
+.summary-card-pro::after {
+  width: 150px;
+  height: 150px;
+  right: -68px;
+  top: -68px;
+}
+
+.summary-card-pro.green::after {
+  background: #22c55e;
+}
+
+.summary-card-pro.blue::after {
+  background: #22d3ee;
+}
+
+.summary-card-pro.orange::after {
+  background: #f59e0b;
+}
+
+.summary-card-pro.red::after {
+  background: #ef4444;
+}
+
+.summary-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.summary-icon-pro {
+  width: 54px;
+  height: 54px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.11);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  display: grid;
+  place-items: center;
+}
+
+.summary-card-pro.green .summary-icon-pro {
+  color: #86efac;
+}
+
+.summary-card-pro.blue .summary-icon-pro {
+  color: #67e8f9;
+}
+
+.summary-card-pro.orange .summary-icon-pro {
+  color: #fbbf24;
+}
+
+.summary-card-pro.red .summary-icon-pro {
+  color: #fca5a5;
+}
+
+.summary-glow {
+  width: 48px;
+  height: 48px;
+  border-radius: 999px;
+  background: rgba(190, 242, 100, 0.12);
+  filter: blur(16px);
+}
+
+.summary-card-pro p {
+  margin: 22px 0 8px;
+  color: rgba(226, 232, 240, 0.72);
+  font-weight: 900;
+}
+
+.summary-card-pro h3 {
+  margin: 0;
+  font-size: 50px;
+  line-height: 1;
+  letter-spacing: -0.07em;
+}
+
+.summary-card-pro span {
+  display: block;
+  margin-top: 10px;
+  color: rgba(226, 232, 240, 0.58);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.summary-card-pro.green h3 {
+  color: #86efac;
+}
+
+.summary-card-pro.blue h3 {
+  color: #67e8f9;
+}
+
+.summary-card-pro.orange h3 {
+  color: #fbbf24;
+}
+
+.summary-card-pro.red h3 {
+  color: #fca5a5;
+}
+
+.summary-content {
+  position: relative;
+  z-index: 2;
+}
+
+.summary-meta {
+  margin-top: 22px;
+  color: rgba(190, 242, 100, 0.72);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.summary-progress-track {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  height: 7px;
+  margin-top: 18px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.09);
+}
+
+.summary-progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #bef264, #22c55e, #22d3ee);
+}

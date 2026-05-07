@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import API from '../../services/api';
 
-import DashboardHeader from './DashboardHeader';
 import InfoBanner from './InfoBanner';
 import FeatureSection from './FeatureSection';
 import SummaryGrid from './SummaryGrid';
@@ -56,13 +55,14 @@ function Dashboard() {
 
   return (
     <div className="dashboard-page">
+      <div className="dashboard-grid-bg"></div>
+      <div className="dashboard-noise"></div>
+
       <div className="dashboard-background-orb orb-one"></div>
       <div className="dashboard-background-orb orb-two"></div>
       <div className="dashboard-background-orb orb-three"></div>
 
       <div className="dashboard-shell">
-        <DashboardHeader user={user} />
-
         <InfoBanner user={user} />
 
         {loading ? (

@@ -17,15 +17,6 @@ function IconStar() {
   );
 }
 
-function IconLeaf() {
-  return (
-    <svg viewBox="0 0 24 24" className="mini-svg-icon">
-      <path d="M19 5c-7.5.3-12 3.8-12 9.5 0 2.5 1.7 4.5 4.4 4.5 5.4 0 7.6-6.6 7.6-14z" />
-      <path d="M7 19c2.5-4.7 5.5-7.5 9-9" />
-    </svg>
-  );
-}
-
 function IconFood() {
   return (
     <svg viewBox="0 0 24 24" className="phone-svg-icon">
@@ -56,8 +47,17 @@ function IconPlus() {
   );
 }
 
-function InfoBanner() {
+function InfoBanner({ user }) {
   const navigate = useNavigate();
+
+  const initial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    navigate('/login');
+    window.location.reload();
+  };
 
   const scrollToInventory = () => {
     const inventorySection = document.getElementById('dashboard-inventory');
@@ -72,6 +72,28 @@ function InfoBanner() {
 
   return (
     <section className="hero-pro hero-banner-full">
+      <div className="hero-topbar">
+        <div className="hero-brand">
+          <div className="hero-brand-mark">S</div>
+          <span>SaveByUp</span>
+        </div>
+
+        <div className="hero-user-actions">
+          <div className="hero-user-card">
+            <div className="hero-user-avatar">{initial}</div>
+
+            <div>
+              <strong>{user?.name || 'User'}</strong>
+              <span>Mahasiswa Kos UMY</span>
+            </div>
+          </div>
+
+          <button type="button" className="hero-logout-btn" onClick={handleLogout}>
+            Logout
+          </button>
+        </div>
+      </div>
+
       <div className="hero-left">
         <div className="hero-badge">
           <span className="pulse-dot"></span>
@@ -132,74 +154,79 @@ function InfoBanner() {
       </div>
 
       <div className="hero-right">
-        <div className="phone-mockup">
-          <div className="phone-top"></div>
+        <div className="hero-visual-wrap">
+          <div className="phone-mockup">
+            <div className="phone-glow"></div>
+            <div className="phone-top"></div>
 
-          <div className="phone-card food-card-main">
-            <div className="food-icon">
-              <IconFood />
+            <div className="phone-card food-card-main">
+              <div className="food-icon">
+                <IconFood />
+              </div>
+
+              <div>
+                <strong>Smart Inventory</strong>
+                <span>Monitoring makanan harian</span>
+              </div>
             </div>
+
+            <div className="phone-list">
+              <div className="phone-list-item">
+                <span className="list-dot red-dot"></span>
+
+                <div>
+                  <strong>Roti Tawar</strong>
+                  <p>Prioritas tinggi</p>
+                </div>
+
+                <b>1 hari</b>
+              </div>
+
+              <div className="phone-list-item">
+                <span className="list-dot yellow-dot"></span>
+
+                <div>
+                  <strong>Susu Kotak</strong>
+                  <p>Prioritas sedang</p>
+                </div>
+
+                <b>3 hari</b>
+              </div>
+
+              <div className="phone-list-item">
+                <span className="list-dot green-dot"></span>
+
+                <div>
+                  <strong>Mi Instan</strong>
+                  <p>Aman dikonsumsi</p>
+                </div>
+
+                <b>14 hari</b>
+              </div>
+            </div>
+          </div>
+
+          <div className="floating-widget widget-top">
+            <span className="floating-icon-wrap">
+              <IconClock />
+            </span>
 
             <div>
-              <strong>Smart Inventory</strong>
-              <span>Monitoring makanan harian</span>
+              <strong>Reminder Aktif</strong>
+              <p>Makanan mendekati kedaluwarsa</p>
             </div>
           </div>
 
-          <div className="phone-list">
-            <div className="phone-list-item">
-              <span className="list-dot red-dot"></span>
-              <div>
-                <strong>Roti Tawar</strong>
-                <p>Prioritas tinggi</p>
-              </div>
-              <b>1 hari</b>
-            </div>
+          <div className="floating-widget widget-bottom">
+            <span className="floating-icon-wrap">
+              <IconStar />
+            </span>
 
-            <div className="phone-list-item">
-              <span className="list-dot yellow-dot"></span>
-              <div>
-                <strong>Susu Kotak</strong>
-                <p>Prioritas sedang</p>
-              </div>
-              <b>3 hari</b>
-            </div>
-
-            <div className="phone-list-item">
-              <span className="list-dot green-dot"></span>
-              <div>
-                <strong>Mi Instan</strong>
-                <p>Aman dikonsumsi</p>
-              </div>
-              <b>14 hari</b>
+            <div>
+              <strong>Reputasi</strong>
+              <p>Rating setelah COD selesai</p>
             </div>
           </div>
-        </div>
-
-        <div className="floating-widget widget-top">
-          <span className="floating-icon-wrap">
-            <IconClock />
-          </span>
-
-          <div>
-            <strong>Reminder Aktif</strong>
-            <p>Makanan mendekati kedaluwarsa</p>
-          </div>
-        </div>
-
-        <div className="floating-widget widget-bottom">
-          <span className="floating-icon-wrap">
-            <IconStar />
-          </span>
-
-          <div>
-            <strong>Reputasi</strong>
-            <p>Rating setelah COD selesai</p>
-          </div>
-        </div>
-
-        <div className="floating-leaf">
-          <IconLeaf />
         </div>
       </div>
     </section>

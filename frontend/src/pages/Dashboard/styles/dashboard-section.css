@@ -1,0 +1,43 @@
+.dashboard-section,
+.dashboard-inventory-section {
+  width: min(1520px, calc(100% - clamp(28px, 7vw, 108px)));
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.dashboard-section {
+  margin-top: 34px;
+}
+
+.section-heading-pro,
+.dashboard-inventory-heading {
+  margin-bottom: 18px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 18px;
+}
+
+.section-heading-pro span,
+.dashboard-inventory-heading span {
+  background: rgba(190, 242, 100, 0.12);
+  color: #d9f99d;
+  border: 1px solid rgba(190, 242, 100, 0.2);
+}
+
+.section-heading-pro h2,
+.dashboard-inventory-heading h2 {
+  margin: 12px 0 0;
+  color: #ffffff;
+  font-size: clamp(25px, 3vw, 36px);
+  letter-spacing: -0.06em;
+}
+
+.section-heading-pro p,
+.dashboard-inventory-heading p {
+  margin: 0;
+  max-width: 430px;
+  color: rgba(226, 232, 240, 0.64);
+  line-height: 1.7;
+  font-size: 14px;
+}

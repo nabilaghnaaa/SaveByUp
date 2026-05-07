@@ -1,0 +1,148 @@
+@media (max-width: 1180px) {
+  .hero-pro {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .hero-right {
+    height: 420px;
+  }
+
+  .feature-grid-pro,
+  .dashboard-food-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .summary-grid-pro {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .dashboard-inventory-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-filter-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dashboard-filter-group select {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 820px) {
+  .dashboard-header-inner,
+  .section-heading-pro,
+  .dashboard-inventory-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .header-action-area {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .user-card-mini {
+    flex: 1;
+  }
+
+  .hero-pro,
+  .dashboard-section,
+  .dashboard-inventory-section,
+  .dashboard-loading-card,
+  .dashboard-inventory-loading {
+    width: calc(100% - 28px);
+  }
+
+  .hero-pro {
+    padding: 28px;
+    border-radius: 30px;
+  }
+
+  .hero-pro h2 {
+    font-size: clamp(40px, 13vw, 68px);
+  }
+
+  .hero-right {
+    height: 380px;
+  }
+
+  .floating-widget {
+    min-width: 205px;
+  }
+
+  .widget-top {
+    right: -4px;
+  }
+
+  .widget-bottom {
+    left: -4px;
+  }
+
+  .feature-grid-pro,
+  .summary-grid-pro,
+  .dashboard-food-grid,
+  .dashboard-filter-group {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+  .dashboard-header-pro {
+    padding: 12px 14px;
+  }
+
+  .header-brand-area {
+    align-items: flex-start;
+  }
+
+  .app-logo {
+    width: 50px;
+    height: 50px;
+    border-radius: 18px;
+  }
+
+  .dashboard-header-pro h1 {
+    white-space: normal;
+  }
+
+  .header-action-area,
+  .hero-actions,
+  .dashboard-inventory-actions,
+  .food-card-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .logout-pro-btn,
+  .hero-primary-btn,
+  .hero-secondary-btn,
+  .inventory-outline-button,
+  .inventory-primary-button {
+    width: 100%;
+  }
+
+  .user-card-mini {
+    width: 100%;
+  }
+
+  .hero-pro,
+  .feature-card-pro,
+  .summary-card-pro,
+  .dashboard-inventory-empty,
+  .food-card {
+    border-radius: 26px;
+  }
+
+  .phone-mockup {
+    width: 252px;
+  }
+
+  .floating-widget {
+    display: none;
+  }
+}
