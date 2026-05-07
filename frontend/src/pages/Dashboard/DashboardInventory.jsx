@@ -77,12 +77,16 @@ function DashboardInventory({ refreshKey, onInventoryChange }) {
     fetchFoods();
   }, [refreshKey]);
 
-  const handleRefresh = async () => {
+  const syncInventory = async () => {
     await fetchFoods();
 
     if (onInventoryChange) {
       onInventoryChange();
     }
+  };
+
+  const handleRefresh = async () => {
+    await syncInventory();
   };
 
   const handleDelete = async (id) => {
@@ -94,11 +98,7 @@ function DashboardInventory({ refreshKey, onInventoryChange }) {
       await API.delete(`/foods/${id}`);
       setMessage('Data makanan berhasil dihapus');
 
-      await fetchFoods();
-
-      if (onInventoryChange) {
-        onInventoryChange();
-      }
+      await syncInventory();
 
       setTimeout(() => {
         setMessage('');
@@ -107,6 +107,61 @@ function DashboardInventory({ refreshKey, onInventoryChange }) {
       console.error('Gagal menghapus makanan:', error);
       setMessage(error.response?.data?.message || 'Gagal menghapus makanan');
     }
+  };
+
+  const handleUpdateFoodStatus = async (food, status, successMessage) => {
+    try {
+      await API.put(`/foods/${food.id}`, {
+        name: food.name,
+        category: food.category,
+        quantity: food.quantity,
+        unit: food.unit,
+        expiry_date: food.expiry_date,
+        status,
+      });
+
+      setMessage(successMessage);
+      await syncInventory();
+
+      setTimeout(() => {
+        setMessage('');
+      }, 2500);
+    } catch (error) {
+      console.error('Gagal mengubah status makanan:', error);
+      setMessage(error.response?.data?.message || 'Gagal mengubah status makanan');
+    }
+  };
+
+  const handleUsed = async (food) => {
+    const confirmUsed = window.confirm(
+      'Tandai produk ini sebagai sudah digunakan sampai habis?'
+    );
+
+    if (!confirmUsed) return;
+
+    await handleUpdateFoodStatus(
+      food,
+      'digunakan',
+      'Produk berhasil ditandai sudah digunakan'
+    );
+  };
+
+  const handleDiscard = async (food) => {
+    const confirmDiscard = window.confirm(
+      'Tandai produk ini sebagai dibuang karena kondisi tidak habis?'
+    );
+
+    if (!confirmDiscard) return;
+
+    await handleUpdateFoodStatus(
+      food,
+      'dibuang',
+      'Produk berhasil ditandai dibuang'
+    );
+  };
+
+  const handleSell = (food) => {
+    navigate(`/marketplace/sell/${food.id}`);
   };
 
   const filteredFoods = useMemo(() => {
@@ -130,143 +185,152 @@ function DashboardInventory({ refreshKey, onInventoryChange }) {
 
   return (
     <section className="dashboard-inventory-section" id="dashboard-inventory">
-      <div className="dashboard-inventory-heading">
-        <div>
-          <span>
-            <IconSparkle />
-            Inventaris Makanan
-          </span>
+      <div className="dashboard-inventory-inner">
+        <div className="dashboard-inventory-heading">
+          <div className="inventory-heading-copy">
+            <span>
+              <IconSparkle />
+              Inventaris Makanan
+            </span>
 
-          <h2>Daftar stok makanan kamu</h2>
+            <h2>Daftar stok makanan kamu</h2>
 
-          <p>
-            Kelola semua makanan yang sudah kamu input. Kamu bisa tambah, edit,
-            hapus, dan memantau status kedaluwarsa langsung dari dashboard.
-          </p>
+            <p>
+              Kelola semua makanan yang sudah kamu input. Tambah, edit, hapus,
+              jual produk, dan pantau status kedaluwarsa dari satu tempat.
+            </p>
+          </div>
+
+          <div className="dashboard-inventory-actions">
+            <button
+              type="button"
+              className="inventory-outline-button"
+              onClick={handleRefresh}
+            >
+              <IconRefresh />
+              Refresh
+            </button>
+
+            <button
+              type="button"
+              className="inventory-primary-button"
+              onClick={() => navigate('/foods/add')}
+            >
+              <IconPlus />
+              Tambah Makanan
+            </button>
+          </div>
         </div>
 
-        <div className="dashboard-inventory-actions">
-          <button
-            type="button"
-            className="inventory-outline-button"
-            onClick={handleRefresh}
-          >
-            <IconRefresh />
-            Refresh
-          </button>
+        <div className="dashboard-inventory-panel">
+          <div className="dashboard-inventory-toolbar">
+            <div className="dashboard-search-box">
+              <IconSearch />
 
-          <button
-            type="button"
-            className="inventory-primary-button"
-            onClick={() => navigate('/foods/add')}
-          >
-            <IconPlus />
-            Tambah Makanan
-          </button>
+              <input
+                type="text"
+                placeholder="Cari makanan, kategori, atau satuan..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
+
+            <div className="dashboard-filter-group">
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="semua">Semua Status</option>
+                <option value="aman">Aman</option>
+                <option value="mendekati_kedaluwarsa">Mendekati Kedaluwarsa</option>
+                <option value="kedaluwarsa">Kedaluwarsa</option>
+                <option value="dijual">Dijual</option>
+                <option value="terjual">Terjual</option>
+                <option value="digunakan">Sudah Digunakan</option>
+                <option value="dibuang">Dibuang</option>
+              </select>
+
+              <select
+                value={priorityFilter}
+                onChange={(e) => setPriorityFilter(e.target.value)}
+              >
+                <option value="semua">Semua Prioritas</option>
+                <option value="tinggi">Prioritas Tinggi</option>
+                <option value="sedang">Prioritas Sedang</option>
+                <option value="rendah">Prioritas Rendah</option>
+                <option value="tidak_layak">Tidak Layak</option>
+              </select>
+            </div>
+          </div>
+
+          {message && <div className="dashboard-inventory-message">{message}</div>}
+
+          {loading ? (
+            <div className="dashboard-inventory-loading">
+              <div className="dashboard-spinner"></div>
+
+              <div>
+                <h3>Memuat inventaris...</h3>
+                <p>Sedang mengambil daftar makanan tersimpan.</p>
+              </div>
+            </div>
+          ) : foods.length === 0 ? (
+            <div className="dashboard-inventory-empty">
+              <div className="dashboard-empty-icon">
+                <IconBox />
+              </div>
+
+              <h3>Belum ada makanan tercatat</h3>
+
+              <p>
+                Tambahkan makanan pertama kamu agar sistem bisa membantu memantau stok
+                dan tanggal kedaluwarsa.
+              </p>
+
+              <button type="button" onClick={() => navigate('/foods/add')}>
+                <IconPlus />
+                Tambah Makanan Pertama
+              </button>
+            </div>
+          ) : filteredFoods.length === 0 ? (
+            <div className="dashboard-inventory-empty">
+              <div className="dashboard-empty-icon">
+                <IconSearch />
+              </div>
+
+              <h3>Data tidak ditemukan</h3>
+
+              <p>Coba ubah kata kunci pencarian atau reset filter.</p>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch('');
+                  setStatusFilter('semua');
+                  setPriorityFilter('semua');
+                }}
+              >
+                Reset Filter
+              </button>
+            </div>
+          ) : (
+            <div className="dashboard-food-grid">
+              {filteredFoods.map((food, index) => (
+                <FoodCard
+                  key={food.id}
+                  food={food}
+                  index={index}
+                  onEdit={() => navigate(`/foods/edit/${food.id}`)}
+                  onDelete={() => handleDelete(food.id)}
+                  onUsed={() => handleUsed(food)}
+                  onDiscard={() => handleDiscard(food)}
+                  onSell={() => handleSell(food)}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
-
-      <div className="dashboard-inventory-toolbar">
-        <div className="dashboard-search-box">
-          <IconSearch />
-
-          <input
-            type="text"
-            placeholder="Cari makanan, kategori, atau satuan..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-
-        <div className="dashboard-filter-group">
-          <select
-            value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-          >
-            <option value="semua">Semua Status</option>
-            <option value="aman">Aman</option>
-            <option value="mendekati_kedaluwarsa">Mendekati Kedaluwarsa</option>
-            <option value="kedaluwarsa">Kedaluwarsa</option>
-            <option value="dijual">Dijual</option>
-            <option value="terjual">Terjual</option>
-          </select>
-
-          <select
-            value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value)}
-          >
-            <option value="semua">Semua Prioritas</option>
-            <option value="tinggi">Prioritas Tinggi</option>
-            <option value="sedang">Prioritas Sedang</option>
-            <option value="rendah">Prioritas Rendah</option>
-            <option value="tidak_layak">Tidak Layak</option>
-          </select>
-        </div>
-      </div>
-
-      {message && <div className="dashboard-inventory-message">{message}</div>}
-
-      {loading ? (
-        <div className="dashboard-inventory-loading">
-          <div className="dashboard-spinner"></div>
-
-          <div>
-            <h3>Memuat inventaris...</h3>
-            <p>Sedang mengambil daftar makanan tersimpan.</p>
-          </div>
-        </div>
-      ) : foods.length === 0 ? (
-        <div className="dashboard-inventory-empty">
-          <div className="dashboard-empty-icon">
-            <IconBox />
-          </div>
-
-          <h3>Belum ada makanan tercatat</h3>
-
-          <p>
-            Tambahkan makanan pertama kamu agar sistem bisa membantu memantau stok
-            dan tanggal kedaluwarsa.
-          </p>
-
-          <button type="button" onClick={() => navigate('/foods/add')}>
-            <IconPlus />
-            Tambah Makanan Pertama
-          </button>
-        </div>
-      ) : filteredFoods.length === 0 ? (
-        <div className="dashboard-inventory-empty">
-          <div className="dashboard-empty-icon">
-            <IconSearch />
-          </div>
-
-          <h3>Data tidak ditemukan</h3>
-
-          <p>Coba ubah kata kunci pencarian atau reset filter.</p>
-
-          <button
-            type="button"
-            onClick={() => {
-              setSearch('');
-              setStatusFilter('semua');
-              setPriorityFilter('semua');
-            }}
-          >
-            Reset Filter
-          </button>
-        </div>
-      ) : (
-        <div className="dashboard-food-grid">
-          {filteredFoods.map((food, index) => (
-            <FoodCard
-              key={food.id}
-              food={food}
-              index={index}
-              onEdit={() => navigate(`/foods/edit/${food.id}`)}
-              onDelete={() => handleDelete(food.id)}
-            />
-          ))}
-        </div>
-      )}
     </section>
   );
 }

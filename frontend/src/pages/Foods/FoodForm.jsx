@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import API from '../../services/api';
-import './foods.css';
+import './styles/foods.css';
 
 function IconArrowLeft() {
   return (
@@ -68,6 +68,16 @@ function IconSparkle() {
     <svg viewBox="0 0 24 24" className="food-form-svg">
       <path d="M12 3l1.4 5.1L18.5 9.5l-5.1 1.4L12 16l-1.4-5.1-5.1-1.4 5.1-1.4L12 3z" />
       <path d="M18 14l.8 2.8L21.5 18l-2.7.8L18 21.5l-.8-2.7-2.7-.8 2.7-1.2L18 14z" />
+    </svg>
+  );
+}
+
+function IconImage() {
+  return (
+    <svg viewBox="0 0 24 24" className="food-form-svg">
+      <rect x="4" y="5" width="16" height="14" rx="2" />
+      <circle cx="9" cy="10" r="1.5" />
+      <path d="M4 16l4-4 3 3 2-2 7 6" />
     </svg>
   );
 }
@@ -140,14 +150,21 @@ function FoodForm() {
     expiry_date: '',
   });
 
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
+
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('success');
   const [loading, setLoading] = useState(false);
   const [loadingDetail, setLoadingDetail] = useState(isEdit);
 
-  const preview = useMemo(() => getExpiryPreview(form.expiry_date), [form.expiry_date]);
+  const preview = useMemo(
+    () => getExpiryPreview(form.expiry_date),
+    [form.expiry_date]
+  );
 
-  const isFormComplete = form.name && form.quantity && form.unit && form.expiry_date;
+  const isFormComplete =
+    form.name && form.quantity && form.unit && form.expiry_date;
 
   const resetForm = () => {
     setForm({
@@ -157,6 +174,9 @@ function FoodForm() {
       unit: '',
       expiry_date: '',
     });
+
+    setImageFile(null);
+    setImagePreview('');
   };
 
   const fetchFoodDetail = async () => {
@@ -171,6 +191,8 @@ function FoodForm() {
         unit: food.unit || '',
         expiry_date: food.expiry_date ? food.expiry_date.slice(0, 10) : '',
       });
+
+      setImagePreview(food.image_url || food.image || food.photo_url || food.photo || '');
     } catch (error) {
       console.error('Gagal mengambil detail makanan:', error);
       setMessageType('error');
@@ -193,6 +215,32 @@ function FoodForm() {
     });
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    setImageFile(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const buildPayload = () => {
+    if (!imageFile) {
+      return form;
+    }
+
+    const formData = new FormData();
+
+    formData.append('name', form.name);
+    formData.append('category', form.category);
+    formData.append('quantity', form.quantity);
+    formData.append('unit', form.unit);
+    formData.append('expiry_date', form.expiry_date);
+    formData.append('image', imageFile);
+
+    return formData;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setMessage('');
@@ -206,8 +254,10 @@ function FoodForm() {
     setLoading(true);
 
     try {
+      const payload = buildPayload();
+
       if (isEdit) {
-        await API.put(`/foods/${id}`, form);
+        await API.put(`/foods/${id}`, payload);
 
         setMessageType('success');
         setMessage('Data makanan berhasil diperbarui');
@@ -216,7 +266,7 @@ function FoodForm() {
           navigate('/dashboard');
         }, 800);
       } else {
-        await API.post('/foods', form);
+        await API.post('/foods', payload);
 
         setMessageType('success');
         setMessage('Data makanan berhasil ditambahkan');
@@ -238,10 +288,11 @@ function FoodForm() {
 
   if (loadingDetail) {
     return (
-      <div className="foods-page">
+      <div className="foods-page food-form-page">
         <div className="foods-shell">
           <div className="foods-loading">
             <div className="foods-spinner"></div>
+
             <div>
               <h3>Memuat detail makanan...</h3>
               <p>Sedang mengambil data makanan yang akan diedit.</p>
@@ -253,240 +304,252 @@ function FoodForm() {
   }
 
   return (
-    <div className="foods-page">
+    <div className="foods-page food-form-page">
       <div className="foods-orb foods-orb-one"></div>
       <div className="foods-orb foods-orb-two"></div>
       <div className="foods-orb foods-orb-three"></div>
 
-      <div className="foods-shell">
-        <header className="food-form-topbar">
-          <button
-            type="button"
-            className="foods-back-button dark"
-            onClick={() => navigate('/dashboard')}
-          >
-            <IconArrowLeft />
-            Kembali ke Dashboard
-          </button>
+      <main className="food-form-main-section">
+        <div className="foods-shell">
+          <header className="food-form-topbar clean-form-topbar">
+            <button
+              type="button"
+              className="foods-back-button dark"
+              onClick={() => navigate('/dashboard')}
+            >
+              <IconArrowLeft />
+              Kembali ke Dashboard
+            </button>
 
-          <div className="form-topbar-badge">
-            <IconSparkle />
-            {isEdit ? 'Mode Edit Data' : 'Mode Tambah Data'}
-          </div>
-        </header>
-
-        <section className="food-form-hero-new">
-          <div className="food-form-hero-left">
-            <span className="foods-kicker">
-              {isEdit ? 'Edit Inventaris' : 'Tambah Inventaris'}
-            </span>
-
-            <h1>{isEdit ? 'Perbarui data makanan' : 'Tambahkan makanan baru'}</h1>
-
-            <p>
-              Masukkan data makanan dengan lengkap. Setelah disimpan, data akan
-              tampil pada inventaris di Dashboard.
-            </p>
-          </div>
-
-          <div className="food-form-preview-card">
-            <div className="preview-card-header">
-              <div className="preview-icon">
-                <IconFood />
-              </div>
-
-              <div>
-                <span>Preview Makanan</span>
-                <h3>{form.name || 'Nama makanan'}</h3>
-              </div>
+            <div className="form-topbar-badge">
+              <IconSparkle />
+              {isEdit ? 'Mode Edit Data' : 'Mode Tambah Data'}
             </div>
+          </header>
 
-            <div className="preview-data-grid">
-              <div>
-                <span>Kategori</span>
-                <strong>{form.category || 'Belum diisi'}</strong>
-              </div>
-
-              <div>
-                <span>Jumlah</span>
-                <strong>
-                  {form.quantity || '0'} {form.unit || 'satuan'}
-                </strong>
-              </div>
-            </div>
-
-            <div className={`preview-priority ${preview.className}`}>
-              <span></span>
-              <div>
-                <strong>{preview.label}</strong>
-                <p>{preview.status}</p>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="food-form-layout premium-form-layout only-form-layout">
-          <div className="food-form-card premium-form-card">
-            <div className="form-card-heading">
-              <div className="form-heading-icon">
-                <IconBox />
-              </div>
-
-              <div>
-                <span>Form Inventaris</span>
-                <h2>Data makanan</h2>
-              </div>
-            </div>
-
-            {message && <div className={`foods-message ${messageType}`}>{message}</div>}
-
-            <form onSubmit={handleSubmit}>
-              <div className="premium-form-group">
-                <label>Nama Makanan</label>
-                <div className="input-shell">
-                  <IconFood />
-                  <input
-                    type="text"
-                    name="name"
-                    placeholder="Contoh: Roti Tawar"
-                    value={form.name}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-
-              <div className="premium-form-group">
-                <label>Kategori</label>
-                <div className="input-shell">
+          <section className="food-form-layout premium-form-layout only-form-layout">
+            <div className="food-form-card premium-form-card">
+              <div className="form-card-heading">
+                <div className="form-heading-icon">
                   <IconBox />
-                  <input
-                    type="text"
-                    name="category"
-                    placeholder="Contoh: Roti, Minuman, Makanan Instan"
-                    value={form.category}
-                    onChange={handleChange}
-                  />
+                </div>
+
+                <div>
+                  <span>Form Inventaris</span>
+                  <h2>{isEdit ? 'Perbarui data makanan' : 'Tambah makanan baru'}</h2>
+                  <p>
+                    Isi data makanan dengan lengkap agar sistem bisa menghitung
+                    prioritas kedaluwarsa secara otomatis.
+                  </p>
                 </div>
               </div>
 
-              <div className="premium-form-row">
+              {message && (
+                <div className={`foods-message ${messageType}`}>{message}</div>
+              )}
+
+              <form onSubmit={handleSubmit}>
                 <div className="premium-form-group">
-                  <label>Jumlah</label>
-                  <div className="input-shell">
-                    <IconBox />
+                  <label>Foto Produk</label>
+
+                  <label className="image-upload-box">
                     <input
-                      type="number"
-                      name="quantity"
-                      placeholder="Contoh: 2"
-                      value={form.quantity}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                    />
+
+                    <div className="image-upload-preview">
+                      {imagePreview ? (
+                        <img src={imagePreview} alt="Preview produk" />
+                      ) : (
+                        <IconImage />
+                      )}
+                    </div>
+
+                    <div className="image-upload-text">
+                      <strong>
+                        {imagePreview ? 'Ganti foto produk' : 'Upload foto produk'}
+                      </strong>
+                      <span>Format JPG, PNG, atau WEBP</span>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="premium-form-group">
+                  <label>Nama Makanan</label>
+
+                  <div className="input-shell">
+                    <IconFood />
+
+                    <input
+                      type="text"
+                      name="name"
+                      placeholder="Contoh: Roti Tawar"
+                      value={form.name}
                       onChange={handleChange}
-                      min="1"
                     />
                   </div>
                 </div>
 
                 <div className="premium-form-group">
-                  <label>Satuan</label>
-                  <div className="input-shell select-shell">
+                  <label>Kategori</label>
+
+                  <div className="input-shell">
                     <IconBox />
-                    <select name="unit" value={form.unit} onChange={handleChange}>
-                      <option value="">Pilih satuan</option>
-                      <option value="pcs">pcs</option>
-                      <option value="bungkus">bungkus</option>
-                      <option value="botol">botol</option>
-                      <option value="kotak">kotak</option>
-                      <option value="porsi">porsi</option>
-                      <option value="kg">kg</option>
-                      <option value="gram">gram</option>
-                      <option value="liter">liter</option>
-                    </select>
+
+                    <input
+                      type="text"
+                      name="category"
+                      placeholder="Contoh: Roti, Minuman, Makanan Instan"
+                      value={form.category}
+                      onChange={handleChange}
+                    />
+                  </div>
+                </div>
+
+                <div className="premium-form-row">
+                  <div className="premium-form-group">
+                    <label>Jumlah</label>
+
+                    <div className="input-shell">
+                      <IconBox />
+
+                      <input
+                        type="number"
+                        name="quantity"
+                        placeholder="Contoh: 2"
+                        value={form.quantity}
+                        onChange={handleChange}
+                        min="1"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="premium-form-group">
+                    <label>Satuan</label>
+
+                    <div className="input-shell select-shell">
+                      <IconBox />
+
+                      <select
+                        name="unit"
+                        value={form.unit}
+                        onChange={handleChange}
+                      >
+                        <option value="">Pilih satuan</option>
+                        <option value="pcs">pcs</option>
+                        <option value="bungkus">bungkus</option>
+                        <option value="botol">botol</option>
+                        <option value="kotak">kotak</option>
+                        <option value="porsi">porsi</option>
+                        <option value="kg">kg</option>
+                        <option value="gram">gram</option>
+                        <option value="liter">liter</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="premium-form-group">
+                  <label>Tanggal Kedaluwarsa</label>
+
+                  <div className="input-shell">
+                    <IconCalendar />
+
+                    <input
+                      type="date"
+                      name="expiry_date"
+                      value={form.expiry_date}
+                      onChange={handleChange}
+                      min={getTodayDate()}
+                    />
+                  </div>
+                </div>
+
+                <div className={`preview-priority inline-preview ${preview.className}`}>
+                  <span></span>
+
+                  <div>
+                    <strong>{preview.label}</strong>
+                    <p>{preview.status}</p>
+                  </div>
+                </div>
+
+                <div className="form-actions premium-actions">
+                  <button
+                    type="button"
+                    className="cancel-btn"
+                    onClick={resetForm}
+                  >
+                    Reset
+                  </button>
+
+                  <button type="submit" className="save-btn" disabled={loading}>
+                    <IconSave />
+                    {loading
+                      ? 'Menyimpan...'
+                      : isEdit
+                        ? 'Simpan Perubahan'
+                        : 'Tambah Makanan'}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <aside className="food-form-info premium-info-panel">
+              <div className="info-icon">
+                <IconInfo />
+              </div>
+
+              <h3>Prioritas otomatis</h3>
+
+              <p>
+                Sistem membaca tanggal kedaluwarsa lalu menentukan prioritas makanan
+                secara otomatis.
+              </p>
+
+              <div className="priority-rules">
+                <div className="priority-rule danger">
+                  <span></span>
+
+                  <div>
+                    <strong>Prioritas Tinggi</strong>
+                    <p>Kedaluwarsa hari ini atau besok</p>
+                  </div>
+                </div>
+
+                <div className="priority-rule warning">
+                  <span></span>
+
+                  <div>
+                    <strong>Prioritas Sedang</strong>
+                    <p>Kedaluwarsa dalam 2–3 hari</p>
+                  </div>
+                </div>
+
+                <div className="priority-rule safe">
+                  <span></span>
+
+                  <div>
+                    <strong>Prioritas Rendah</strong>
+                    <p>Kedaluwarsa lebih dari 3 hari</p>
                   </div>
                 </div>
               </div>
 
-              <div className="premium-form-group">
-                <label>Tanggal Kedaluwarsa</label>
-                <div className="input-shell">
-                  <IconCalendar />
-                  <input
-                    type="date"
-                    name="expiry_date"
-                    value={form.expiry_date}
-                    onChange={handleChange}
-                    min={getTodayDate()}
-                  />
-                </div>
+              <div className="info-note premium-note">
+                <strong>Setelah disimpan</strong>
+
+                <p>
+                  Data makanan akan tersimpan dan tampil di bagian inventaris pada
+                  Dashboard.
+                </p>
               </div>
-
-              <div className="form-actions premium-actions">
-                <button
-                  type="button"
-                  className="cancel-btn"
-                  onClick={resetForm}
-                >
-                  Reset
-                </button>
-
-                <button type="submit" className="save-btn" disabled={loading}>
-                  <IconSave />
-                  {loading
-                    ? 'Menyimpan...'
-                    : isEdit
-                      ? 'Simpan Perubahan'
-                      : 'Tambah Makanan'}
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <aside className="food-form-info premium-info-panel">
-            <div className="info-icon">
-              <IconInfo />
-            </div>
-
-            <h3>Prioritas otomatis</h3>
-
-            <p>
-              Sistem membaca tanggal kedaluwarsa lalu menentukan prioritas makanan
-              secara otomatis.
-            </p>
-
-            <div className="priority-rules">
-              <div className="priority-rule danger">
-                <span></span>
-                <div>
-                  <strong>Prioritas Tinggi</strong>
-                  <p>Kedaluwarsa hari ini atau besok</p>
-                </div>
-              </div>
-
-              <div className="priority-rule warning">
-                <span></span>
-                <div>
-                  <strong>Prioritas Sedang</strong>
-                  <p>Kedaluwarsa dalam 2–3 hari</p>
-                </div>
-              </div>
-
-              <div className="priority-rule safe">
-                <span></span>
-                <div>
-                  <strong>Prioritas Rendah</strong>
-                  <p>Kedaluwarsa lebih dari 3 hari</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="info-note premium-note">
-              <strong>Setelah disimpan</strong>
-              <p>
-                Data makanan akan tersimpan dan tampil di bagian inventaris pada
-                Dashboard.
-              </p>
-            </div>
-          </aside>
-        </section>
-      </div>
+            </aside>
+          </section>
+        </div>
+      </main>
     </div>
   );
 }

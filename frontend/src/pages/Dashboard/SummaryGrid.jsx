@@ -45,7 +45,17 @@ function IconSparkle() {
   );
 }
 
+function getPercent(value, total) {
+  if (!total || total <= 0) return 0;
+
+  const percent = Math.round((value / total) * 100);
+
+  return Math.min(percent, 100);
+}
+
 function SummaryGrid({ summary }) {
+  const totalFoods = summary.total_foods || 0;
+
   const summaryItems = [
     {
       title: 'Total Makanan',
@@ -54,83 +64,92 @@ function SummaryGrid({ summary }) {
       icon: <IconBox />,
       color: 'green',
       meta: 'Inventory',
-      progress: '100%',
+      progress: totalFoods > 0 ? 100 : 0,
     },
     {
       title: 'Makanan Aman',
       value: summary.total_aman,
       description: 'Masih jauh dari tanggal kedaluwarsa',
       icon: <IconCheck />,
-      color: 'blue',
+      color: 'emerald',
       meta: 'Safe Stock',
-      progress: '78%',
+      progress: getPercent(summary.total_aman, totalFoods),
     },
     {
       title: 'Hampir Kedaluwarsa',
       value: summary.total_mendekati,
       description: 'Perlu segera dikonsumsi atau dijual',
       icon: <IconClock />,
-      color: 'orange',
+      color: 'lime',
       meta: 'Urgent',
-      progress: '52%',
+      progress: getPercent(summary.total_mendekati, totalFoods),
     },
     {
       title: 'Kedaluwarsa',
       value: summary.total_kedaluwarsa,
       description: 'Tidak layak untuk dikonsumsi',
       icon: <IconWarning />,
-      color: 'red',
+      color: 'danger',
       meta: 'Expired',
-      progress: '24%',
+      progress: getPercent(summary.total_kedaluwarsa, totalFoods),
     },
   ];
 
   return (
-    <section className="dashboard-section">
-      <div className="section-heading-pro">
-        <div>
-          <span>
-            <IconSparkle />
-            Ringkasan Inventaris
-          </span>
+    <section className="summary-section-pro">
+      <div className="summary-section-inner">
+        <div className="section-heading-pro summary-heading-pro">
+          <div>
+            <span>
+              <IconSparkle />
+              Ringkasan Inventaris
+            </span>
 
-          <h2>Status stok makanan</h2>
+            <h2>Status stok makanan</h2>
+          </div>
+
+          <p>Data otomatis berdasarkan makanan yang kamu input.</p>
         </div>
 
-        <p>Data otomatis berdasarkan makanan yang kamu input.</p>
-      </div>
+        <div className="summary-grid-pro">
+          {summaryItems.map((item, index) => (
+            <div
+              className={`summary-card-pro ${item.color}`}
+              key={`${item.title}-${index}`}
+              style={{ animationDelay: `${index * 0.08}s` }}
+            >
+              <div className="summary-card-shine"></div>
 
-      <div className="summary-grid-pro">
-        {summaryItems.map((item, index) => (
-          <div
-            className={`summary-card-pro ${item.color}`}
-            key={item.title}
-            style={{ animationDelay: `${index * 0.08}s` }}
-          >
-            <div className="summary-top">
-              <div className="summary-icon-pro">{item.icon}</div>
+              <div className="summary-top">
+                <div className="summary-icon-pro">{item.icon}</div>
 
-              <div className="summary-glow"></div>
+                <div className="summary-meta">{item.meta}</div>
+              </div>
+
+              <div className="summary-content">
+                <p>{item.title}</p>
+
+                <h3>{item.value || 0}</h3>
+
+                <span>{item.description}</span>
+              </div>
+
+              <div className="summary-progress-area">
+                <div className="summary-progress-info">
+                  <small>Proporsi data</small>
+                  <strong>{item.progress}%</strong>
+                </div>
+
+                <div className="summary-progress-track">
+                  <div
+                    className="summary-progress-fill"
+                    style={{ width: `${item.progress}%` }}
+                  ></div>
+                </div>
+              </div>
             </div>
-
-            <div className="summary-content">
-              <div className="summary-meta">{item.meta}</div>
-
-              <p>{item.title}</p>
-
-              <h3>{item.value}</h3>
-
-              <span>{item.description}</span>
-            </div>
-
-            <div className="summary-progress-track">
-              <div
-                className="summary-progress-fill"
-                style={{ width: item.progress }}
-              ></div>
-            </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </section>
   );

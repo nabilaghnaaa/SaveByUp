@@ -1,0 +1,134 @@
+@media (max-width: 1180px) {
+  .foods-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .foods-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .food-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .food-form-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .food-form-info {
+    position: static;
+  }
+
+  .foods-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .foods-filter-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .food-form-hero-new,
+  .premium-form-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .premium-info-panel {
+    position: static;
+  }
+
+  .inline-inventory-heading {
+    grid-template-columns: 1fr;
+  }
+
+  .inline-inventory-stats {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .foods-page {
+    padding: 16px;
+  }
+
+  .foods-hero {
+    padding: 30px;
+  }
+
+  .foods-hero h1 {
+    font-size: 38px;
+  }
+
+  .foods-hero-actions,
+  .form-actions {
+    flex-direction: column;
+  }
+
+  .foods-primary-button,
+  .foods-secondary-button,
+  .cancel-btn,
+  .save-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .foods-hero-visual {
+    display: none;
+  }
+
+  .foods-summary,
+  .food-grid,
+  .foods-filter-group {
+    grid-template-columns: 1fr;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .food-card-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .food-form-topbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .form-topbar-badge {
+    justify-content: center;
+  }
+
+  .food-form-hero-new {
+    padding: 30px;
+  }
+
+  .food-form-hero-new h1 {
+    font-size: 38px;
+  }
+
+  .food-form-preview-card {
+    animation: none;
+  }
+
+  .preview-data-grid,
+  .premium-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .premium-actions {
+    flex-direction: column;
+  }
+
+  .inline-inventory-heading {
+    padding: 22px;
+  }
+
+  .inline-inventory-heading h2 {
+    font-size: 28px;
+  }
+
+  .inline-inventory-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

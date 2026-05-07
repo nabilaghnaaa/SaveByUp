@@ -47,10 +47,18 @@ function IconPlus() {
   );
 }
 
+function IconMarket() {
+  return (
+    <svg viewBox="0 0 24 24" className="mini-svg-icon">
+      <path d="M5 9h14l-1 11H6L5 9z" />
+      <path d="M8 9a4 4 0 0 1 8 0" />
+      <path d="M9 14h6" />
+    </svg>
+  );
+}
+
 function InfoBanner({ user }) {
   const navigate = useNavigate();
-
-  const initial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -79,14 +87,13 @@ function InfoBanner({ user }) {
         </div>
 
         <div className="hero-user-actions">
-          <div className="hero-user-card">
-            <div className="hero-user-avatar">{initial}</div>
-
-            <div>
-              <strong>{user?.name || 'User'}</strong>
-              <span>Mahasiswa Kos UMY</span>
-            </div>
-          </div>
+          <button
+            type="button"
+            className="hero-profile-btn"
+            onClick={() => navigate('/profile')}
+          >
+            Profile
+          </button>
 
           <button type="button" className="hero-logout-btn" onClick={handleLogout}>
             Logout
@@ -133,23 +140,17 @@ function InfoBanner({ user }) {
             </span>
             Lihat Inventaris
           </button>
-        </div>
 
-        <div className="hero-stats-row">
-          <div>
-            <strong>COD</strong>
-            <span>Transaksi langsung</span>
-          </div>
-
-          <div>
-            <strong>Rating</strong>
-            <span>Reputasi pengguna</span>
-          </div>
-
-          <div>
-            <strong>Priority</strong>
-            <span>Deteksi kedaluwarsa</span>
-          </div>
+          <button
+            type="button"
+            className="hero-market-btn"
+            onClick={() => navigate('/marketplace')}
+          >
+            <span className="button-icon-svg">
+              <IconMarket />
+            </span>
+            Marketplace Kos
+          </button>
         </div>
       </div>
 

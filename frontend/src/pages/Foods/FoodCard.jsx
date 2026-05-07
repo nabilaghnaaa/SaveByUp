@@ -1,3 +1,6 @@
+import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
+
 function IconCalendar() {
   return (
     <svg viewBox="0 0 24 24" className="food-svg-icon">
@@ -41,6 +44,66 @@ function IconTrash() {
   );
 }
 
+function IconDots() {
+  return (
+    <svg viewBox="0 0 24 24" className="food-action-icon">
+      <path d="M12 5h.01" />
+      <path d="M12 12h.01" />
+      <path d="M12 19h.01" />
+    </svg>
+  );
+}
+
+function IconClose() {
+  return (
+    <svg viewBox="0 0 24 24" className="food-action-icon">
+      <path d="M18 6L6 18" />
+      <path d="M6 6l12 12" />
+    </svg>
+  );
+}
+
+function IconCheck() {
+  return (
+    <svg viewBox="0 0 24 24" className="food-action-icon">
+      <circle cx="12" cy="12" r="8" />
+      <path d="M8.5 12.5l2.5 2.5 5-6" />
+    </svg>
+  );
+}
+
+function IconDiscard() {
+  return (
+    <svg viewBox="0 0 24 24" className="food-action-icon">
+      <path d="M5 7h14" />
+      <path d="M9 7V5h6v2" />
+      <path d="M7 7l1 14h8l1-14" />
+      <path d="M10 11l4 4" />
+      <path d="M14 11l-4 4" />
+    </svg>
+  );
+}
+
+function IconSell() {
+  return (
+    <svg viewBox="0 0 24 24" className="food-action-icon">
+      <path d="M5 9h14l-1 10H6L5 9z" />
+      <path d="M8 9a4 4 0 0 1 8 0" />
+      <path d="M9 14h6" />
+    </svg>
+  );
+}
+
+function IconImage() {
+  return (
+    <svg viewBox="0 0 24 24" className="food-svg-icon">
+      <rect x="4" y="5" width="16" height="14" rx="2" />
+      <circle cx="9" cy="10" r="1.5" />
+      <path d="M4 16l4-4 3 3 2-2 7 6" />
+    </svg>
+  );
+}
+
 function formatDate(dateString) {
   if (!dateString) return '-';
 
@@ -60,9 +123,11 @@ function getStatusLabel(status) {
     kedaluwarsa: 'Kedaluwarsa',
     dijual: 'Dijual',
     terjual: 'Terjual',
+    digunakan: 'Sudah Digunakan',
+    dibuang: 'Dibuang',
   };
 
-  return labels[status] || status;
+  return labels[status] || status || 'Aman';
 }
 
 function getPriorityLabel(priority) {
@@ -73,7 +138,7 @@ function getPriorityLabel(priority) {
     tidak_layak: 'Tidak Layak',
   };
 
-  return labels[priority] || priority;
+  return labels[priority] || priority || 'Prioritas Rendah';
 }
 
 function getFoodAccent(status) {
@@ -81,77 +146,257 @@ function getFoodAccent(status) {
   if (status === 'mendekati_kedaluwarsa') return 'warning';
   if (status === 'dijual') return 'selling';
   if (status === 'terjual') return 'sold';
+  if (status === 'digunakan') return 'used';
+  if (status === 'dibuang') return 'discarded';
+
   return 'safe';
 }
 
-function FoodCard({ food, onEdit, onDelete, index = 0 }) {
-  const accent = getFoodAccent(food.status);
+function getImageSource(food) {
+  return food?.image_url || food?.image || food?.photo_url || food?.photo || '';
+}
+
+function FoodActionModal({
+  food,
+  onClose,
+  onEdit,
+  onDelete,
+  onUsed,
+  onDiscard,
+  onSell,
+}) {
+  const closeAndRun = (callback) => {
+    onClose();
+
+    if (callback) {
+      setTimeout(() => {
+        callback();
+      }, 120);
+    }
+  };
+
+  return createPortal(
+    <div
+      className="food-action-modal-overlay"
+      role="presentation"
+      onMouseDown={onClose}
+    >
+      <div
+        className="food-action-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`food-action-title-${food?.id || 'item'}`}
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <div className="food-action-modal-header">
+          <div>
+            <span>Pilih Aksi</span>
+            <h3 id={`food-action-title-${food?.id || 'item'}`}>
+              {food?.name || 'Produk'}
+            </h3>
+          </div>
+
+          <button
+            type="button"
+            className="food-action-close-btn"
+            onClick={onClose}
+            aria-label="Tutup popup aksi"
+          >
+            <IconClose />
+          </button>
+        </div>
+
+        <div className="food-action-modal-summary">
+          <div>
+            <small>Status</small>
+            <strong>{getStatusLabel(food?.status)}</strong>
+          </div>
+
+          <div>
+            <small>Prioritas</small>
+            <strong>{getPriorityLabel(food?.priority)}</strong>
+          </div>
+        </div>
+
+        <div className="food-action-modal-list">
+          <button type="button" onClick={() => closeAndRun(onEdit)}>
+            <span className="action-modal-icon">
+              <IconEdit />
+            </span>
+
+            <div>
+              <strong>Edit produk</strong>
+              <small>Ubah data makanan ini</small>
+            </div>
+          </button>
+
+          <button type="button" onClick={() => closeAndRun(onUsed)}>
+            <span className="action-modal-icon">
+              <IconCheck />
+            </span>
+
+            <div>
+              <strong>Produk sudah digunakan</strong>
+              <small>Tandai produk sudah habis dipakai</small>
+            </div>
+          </button>
+
+          <button type="button" onClick={() => closeAndRun(onDiscard)}>
+            <span className="action-modal-icon">
+              <IconDiscard />
+            </span>
+
+            <div>
+              <strong>Produk dibuang</strong>
+              <small>Tandai produk dibuang karena kondisi tidak habis</small>
+            </div>
+          </button>
+
+          <button type="button" onClick={() => closeAndRun(onSell)}>
+            <span className="action-modal-icon">
+              <IconSell />
+            </span>
+
+            <div>
+              <strong>Jual produk</strong>
+              <small>Masukkan produk ke marketplace</small>
+            </div>
+          </button>
+
+          <button
+            type="button"
+            className="danger-action"
+            onClick={() => closeAndRun(onDelete)}
+          >
+            <span className="action-modal-icon">
+              <IconTrash />
+            </span>
+
+            <div>
+              <strong>Hapus produk</strong>
+              <small>Hapus produk dari inventaris</small>
+            </div>
+          </button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+function FoodCard({
+  food,
+  onEdit,
+  onDelete,
+  onUsed,
+  onDiscard,
+  onSell,
+  index = 0,
+}) {
+  const accent = getFoodAccent(food?.status);
+  const imageSource = getImageSource(food);
+  const [showActionModal, setShowActionModal] = useState(false);
+
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setShowActionModal(false);
+      }
+    };
+
+    if (showActionModal) {
+      document.body.classList.add('food-action-modal-open');
+      document.addEventListener('keydown', handleEscape);
+    }
+
+    return () => {
+      document.body.classList.remove('food-action-modal-open');
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [showActionModal]);
 
   return (
-    <div
-      className={`food-card ${accent} ${food.priority}`}
-      style={{ animationDelay: `${index * 0.07}s` }}
-    >
-      <div className="food-card-pattern"></div>
+    <>
+      <article
+        className={`food-card food-card-horizontal ${accent} ${food?.priority || ''}`}
+        style={{ animationDelay: `${index * 0.06}s` }}
+      >
+        <div className="food-card-pattern"></div>
 
-      <div className="food-card-top">
-        <div className="food-icon-circle">
-          <IconBox />
-        </div>
-
-        <div className={`food-status ${food.status}`}>
-          {getStatusLabel(food.status)}
-        </div>
-      </div>
-
-      <div className="food-card-body">
-        <h3>{food.name}</h3>
-        <p>{food.category || 'Tanpa kategori'}</p>
-      </div>
-
-      <div className="food-info-list">
-        <div className="food-info-item">
-          <div className="food-info-icon">
-            <IconBox />
+        <div className="food-card-main">
+          <div className="food-product-photo">
+            {imageSource ? (
+              <img src={imageSource} alt={food?.name || 'Foto makanan'} />
+            ) : (
+              <IconImage />
+            )}
           </div>
 
-          <div>
-            <span>Jumlah Stok</span>
-            <strong>
-              {food.quantity} {food.unit}
-            </strong>
+          <div className="food-card-body">
+            <div className={`food-status ${food?.status || 'aman'}`}>
+              {getStatusLabel(food?.status)}
+            </div>
+
+            <h3>{food?.name || 'Tanpa nama'}</h3>
+            <p>{food?.category || 'Tanpa kategori'}</p>
           </div>
         </div>
 
-        <div className="food-info-item">
-          <div className="food-info-icon">
-            <IconCalendar />
+        <div className="food-info-list">
+          <div className="food-info-item">
+            <div className="food-info-icon">
+              <IconBox />
+            </div>
+
+            <div>
+              <span>Jumlah Stok</span>
+              <strong>
+                {food?.quantity || 0} {food?.unit || 'satuan'}
+              </strong>
+            </div>
           </div>
 
-          <div>
-            <span>Tanggal Kedaluwarsa</span>
-            <strong>{formatDate(food.expiry_date)}</strong>
+          <div className="food-info-item">
+            <div className="food-info-icon">
+              <IconCalendar />
+            </div>
+
+            <div>
+              <span>Tanggal Kedaluwarsa</span>
+              <strong>{formatDate(food?.expiry_date)}</strong>
+            </div>
           </div>
         </div>
-      </div>
 
-      <div className={`food-priority ${food.priority}`}>
-        <span></span>
-        {getPriorityLabel(food.priority)}
-      </div>
+        <div className="food-card-side">
+          <div className={`food-priority ${food?.priority || 'rendah'}`}>
+            <span></span>
+            {getPriorityLabel(food?.priority)}
+          </div>
 
-      <div className="food-card-actions">
-        <button className="edit-food-btn" onClick={onEdit}>
-          <IconEdit />
-          Edit
-        </button>
+          <button
+            type="button"
+            className="food-action-main-btn"
+            onClick={() => setShowActionModal(true)}
+          >
+            Aksi
+            <IconDots />
+          </button>
+        </div>
+      </article>
 
-        <button className="delete-food-btn" onClick={onDelete}>
-          <IconTrash />
-          Hapus
-        </button>
-      </div>
-    </div>
+      {showActionModal && (
+        <FoodActionModal
+          food={food}
+          onClose={() => setShowActionModal(false)}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onUsed={onUsed}
+          onDiscard={onDiscard}
+          onSell={onSell}
+        />
+      )}
+    </>
   );
 }
 

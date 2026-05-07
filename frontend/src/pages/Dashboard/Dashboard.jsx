@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import API from '../../services/api';
 
 import InfoBanner from './InfoBanner';
-import FeatureSection from './FeatureSection';
 import SummaryGrid from './SummaryGrid';
 import DashboardInventory from './DashboardInventory';
 import './dashboard.css';
@@ -76,8 +75,6 @@ function Dashboard() {
           </div>
         ) : (
           <>
-            <FeatureSection />
-
             <SummaryGrid summary={summary} />
 
             <DashboardInventory
