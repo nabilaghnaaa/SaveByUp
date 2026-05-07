@@ -79,8 +79,7 @@
   padding: 26px;
   border-radius: 30px;
   overflow: hidden;
-  background:
-    linear-gradient(180deg, #ffffff 0%, #fbfffb 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #fbfffb 100%);
   border: 1px solid rgba(15, 35, 24, 0.08);
   box-shadow:
     0 24px 70px rgba(15, 35, 24, 0.08),
@@ -200,6 +199,12 @@
   border-color: #fecdd3;
 }
 
+.summary-card-pro.lime .summary-meta {
+  color: #4d7c0f;
+  background: #f7fee7;
+  border-color: #d9f99d;
+}
+
 .summary-card-pro p {
   margin: 28px 0 8px;
   color: #617269;
@@ -249,6 +254,10 @@
 
 .summary-card-pro.danger .summary-progress-info strong {
   color: #b91c1c;
+}
+
+.summary-card-pro.lime .summary-progress-info strong {
+  color: #4d7c0f;
 }
 
 .summary-progress-track {

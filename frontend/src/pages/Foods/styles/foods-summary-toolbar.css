@@ -15,6 +15,7 @@
   border: 1px solid rgba(226, 232, 240, 0.95);
   box-shadow: 0 22px 55px rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   animation: foodsFadeUp 0.7s ease both;
   transition: 0.25s ease;
 }
@@ -40,15 +41,15 @@
 }
 
 .foods-summary-card.safe::after {
-  background: #2563eb;
+  background: #059669;
 }
 
-.foods-summary-card.warning::after {
-  background: #f59e0b;
-}
-
-.foods-summary-card.danger::after {
+.foods-summary-card.waste::after {
   background: #ef4444;
+}
+
+.foods-summary-card.used::after {
+  background: #84cc16;
 }
 
 .foods-summary-top {
@@ -72,18 +73,18 @@
 }
 
 .foods-summary-card.safe .foods-summary-icon {
-  background: #dbeafe;
-  color: #2563eb;
+  background: #d1fae5;
+  color: #047857;
 }
 
-.foods-summary-card.warning .foods-summary-icon {
-  background: #fef3c7;
-  color: #d97706;
-}
-
-.foods-summary-card.danger .foods-summary-icon {
+.foods-summary-card.waste .foods-summary-icon {
   background: #fee2e2;
   color: #dc2626;
+}
+
+.foods-summary-card.used .foods-summary-icon {
+  background: #ecfccb;
+  color: #4d7c0f;
 }
 
 .foods-summary-card span {
@@ -111,15 +112,15 @@
 }
 
 .foods-summary-card.safe h3 {
-  color: #2563eb;
+  color: #047857;
 }
 
-.foods-summary-card.warning h3 {
-  color: #d97706;
-}
-
-.foods-summary-card.danger h3 {
+.foods-summary-card.waste h3 {
   color: #dc2626;
+}
+
+.foods-summary-card.used h3 {
+  color: #4d7c0f;
 }
 
 .foods-toolbar {
@@ -130,6 +131,7 @@
   border: 1px solid rgba(226, 232, 240, 0.95);
   box-shadow: 0 22px 55px rgba(15, 23, 42, 0.07);
   backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 14px;
@@ -206,6 +208,7 @@
   gap: 16px;
   box-shadow: 0 22px 55px rgba(15, 23, 42, 0.08);
   backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .foods-loading h3 {
@@ -239,6 +242,7 @@
   display: grid;
   place-items: center;
   backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
 .empty-foods h2 {
@@ -275,4 +279,39 @@
   color: #166534;
   display: grid;
   place-items: center;
+}
+
+@media (max-width: 1180px) {
+  .foods-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .foods-toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .foods-filter-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .foods-filter-group select {
+    min-width: 0;
+    width: 100%;
+  }
+}
+
+@media (max-width: 760px) {
+  .foods-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .foods-filter-group {
+    grid-template-columns: 1fr;
+  }
+
+  .empty-foods {
+    padding: 32px 18px;
+    border-radius: 26px;
+  }
 }

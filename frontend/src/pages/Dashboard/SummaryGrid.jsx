@@ -17,21 +17,25 @@ function IconCheck() {
   );
 }
 
-function IconClock() {
+function IconTrash() {
   return (
     <svg viewBox="0 0 24 24" className="card-svg-icon">
-      <circle cx="12" cy="12" r="8" />
-      <path d="M12 7.5V12l3 2" />
+      <path d="M5 7h14" />
+      <path d="M9 7V5h6v2" />
+      <path d="M7 7l1 14h8l1-14" />
+      <path d="M10 11l4 4" />
+      <path d="M14 11l-4 4" />
     </svg>
   );
 }
 
-function IconWarning() {
+function IconUsed() {
   return (
     <svg viewBox="0 0 24 24" className="card-svg-icon">
-      <path d="M12 4l8 15H4L12 4z" />
-      <path d="M12 9v4" />
-      <path d="M12 16h.01" />
+      <circle cx="12" cy="12" r="8" />
+      <path d="M8.5 12.5l2.4 2.4 5-6" />
+      <path d="M12 4v2" />
+      <path d="M12 18v2" />
     </svg>
   );
 }
@@ -45,22 +49,35 @@ function IconSparkle() {
   );
 }
 
-function getPercent(value, total) {
-  if (!total || total <= 0) return 0;
+function getNumber(value) {
+  return Number(value || 0);
+}
 
-  const percent = Math.round((value / total) * 100);
+function getPercent(value, total) {
+  const numericValue = getNumber(value);
+  const numericTotal = getNumber(total);
+
+  if (!numericTotal || numericTotal <= 0) return 0;
+
+  const percent = Math.round((numericValue / numericTotal) * 100);
 
   return Math.min(percent, 100);
 }
 
 function SummaryGrid({ summary }) {
-  const totalFoods = summary.total_foods || 0;
+  const totalFoods = getNumber(summary.total_foods);
+  const totalAman = getNumber(summary.total_aman);
+  const totalKedaluwarsa = getNumber(summary.total_kedaluwarsa);
+  const totalDibuang = getNumber(summary.total_dibuang);
+  const totalDigunakan = getNumber(summary.total_digunakan);
+
+  const totalKedaluwarsaDibuang = totalKedaluwarsa + totalDibuang;
 
   const summaryItems = [
     {
       title: 'Total Makanan',
-      value: summary.total_foods,
-      description: 'Semua stok makanan yang tercatat',
+      value: totalFoods,
+      description: 'Semua stok makanan yang pernah tercatat',
       icon: <IconBox />,
       color: 'green',
       meta: 'Inventory',
@@ -68,30 +85,30 @@ function SummaryGrid({ summary }) {
     },
     {
       title: 'Makanan Aman',
-      value: summary.total_aman,
-      description: 'Masih jauh dari tanggal kedaluwarsa',
+      value: totalAman,
+      description: 'Masih layak dan jauh dari tanggal kedaluwarsa',
       icon: <IconCheck />,
       color: 'emerald',
       meta: 'Safe Stock',
-      progress: getPercent(summary.total_aman, totalFoods),
+      progress: getPercent(totalAman, totalFoods),
     },
     {
-      title: 'Hampir Kedaluwarsa',
-      value: summary.total_mendekati,
-      description: 'Perlu segera dikonsumsi atau dijual',
-      icon: <IconClock />,
-      color: 'lime',
-      meta: 'Urgent',
-      progress: getPercent(summary.total_mendekati, totalFoods),
-    },
-    {
-      title: 'Kedaluwarsa',
-      value: summary.total_kedaluwarsa,
-      description: 'Tidak layak untuk dikonsumsi',
-      icon: <IconWarning />,
+      title: 'Kedaluwarsa / Dibuang',
+      value: totalKedaluwarsaDibuang,
+      description: 'Tidak layak konsumsi atau dibuang karena kondisi makanan',
+      icon: <IconTrash />,
       color: 'danger',
-      meta: 'Expired',
-      progress: getPercent(summary.total_kedaluwarsa, totalFoods),
+      meta: 'Waste Track',
+      progress: getPercent(totalKedaluwarsaDibuang, totalFoods),
+    },
+    {
+      title: 'Digunakan',
+      value: totalDigunakan,
+      description: 'Produk yang sudah digunakan atau dikonsumsi sampai habis',
+      icon: <IconUsed />,
+      color: 'lime',
+      meta: 'Used Stock',
+      progress: getPercent(totalDigunakan, totalFoods),
     },
   ];
 
@@ -129,7 +146,7 @@ function SummaryGrid({ summary }) {
               <div className="summary-content">
                 <p>{item.title}</p>
 
-                <h3>{item.value || 0}</h3>
+                <h3>{item.value}</h3>
 
                 <span>{item.description}</span>
               </div>

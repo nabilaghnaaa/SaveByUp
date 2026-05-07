@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import API from '../../services/api';
 
+import DashboardHeader from './DashboardHeader';
 import InfoBanner from './InfoBanner';
 import SummaryGrid from './SummaryGrid';
 import DashboardInventory from './DashboardInventory';
@@ -14,6 +15,8 @@ function Dashboard() {
     total_aman: 0,
     total_mendekati: 0,
     total_kedaluwarsa: 0,
+    total_dibuang: 0,
+    total_digunakan: 0,
     total_prioritas_tinggi: 0,
     total_prioritas_sedang: 0,
     total_prioritas_rendah: 0,
@@ -28,13 +31,15 @@ function Dashboard() {
       const data = response.data.data || {};
 
       setSummary({
-        total_foods: data.total_foods || 0,
-        total_aman: data.total_aman || 0,
-        total_mendekati: data.total_mendekati || 0,
-        total_kedaluwarsa: data.total_kedaluwarsa || 0,
-        total_prioritas_tinggi: data.total_prioritas_tinggi || 0,
-        total_prioritas_sedang: data.total_prioritas_sedang || 0,
-        total_prioritas_rendah: data.total_prioritas_rendah || 0,
+        total_foods: Number(data.total_foods || 0),
+        total_aman: Number(data.total_aman || 0),
+        total_mendekati: Number(data.total_mendekati || 0),
+        total_kedaluwarsa: Number(data.total_kedaluwarsa || 0),
+        total_dibuang: Number(data.total_dibuang || 0),
+        total_digunakan: Number(data.total_digunakan || 0),
+        total_prioritas_tinggi: Number(data.total_prioritas_tinggi || 0),
+        total_prioritas_sedang: Number(data.total_prioritas_sedang || 0),
+        total_prioritas_rendah: Number(data.total_prioritas_rendah || 0),
       });
     } catch (error) {
       console.error('Gagal mengambil data dashboard:', error);
@@ -60,8 +65,11 @@ function Dashboard() {
       <div className="dashboard-background-orb orb-one"></div>
       <div className="dashboard-background-orb orb-two"></div>
       <div className="dashboard-background-orb orb-three"></div>
+      <div className="dashboard-background-orb orb-four"></div>
 
       <div className="dashboard-shell">
+        <DashboardHeader user={user} />
+
         <InfoBanner user={user} />
 
         {loading ? (
