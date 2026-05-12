@@ -1,0 +1,89 @@
+.marketplace-hero {
+  display: grid;
+  grid-template-columns: 1.5fr 0.8fr;
+  gap: 28px;
+  align-items: center;
+  padding: 34px;
+  border: 1px solid rgba(20, 32, 51, 0.08);
+  border-radius: 34px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 24px 70px rgba(20, 32, 51, 0.1);
+  backdrop-filter: blur(18px);
+}
+
+.marketplace-eyebrow {
+  width: fit-content;
+  margin: 0 0 14px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: #dff4df;
+  color: #2f7d32;
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.marketplace-hero h1 {
+  max-width: 760px;
+  margin: 0;
+  font-size: clamp(2.1rem, 5vw, 4.4rem);
+  line-height: 1.02;
+  letter-spacing: -0.05em;
+}
+
+.marketplace-hero-text {
+  max-width: 620px;
+  margin: 18px 0 0;
+  color: #5d6b7d;
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.marketplace-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.marketplace-primary-btn,
+.marketplace-secondary-btn {
+  border: none;
+  border-radius: 999px;
+  padding: 13px 22px;
+  font-weight: 800;
+}
+
+.marketplace-primary-btn {
+  background: #2f7d32;
+  color: #ffffff;
+  box-shadow: 0 12px 28px rgba(47, 125, 50, 0.24);
+}
+
+.marketplace-secondary-btn {
+  background: #ffffff;
+  color: #2f7d32;
+  border: 1px solid rgba(47, 125, 50, 0.18);
+}
+
+.marketplace-hero-card {
+  padding: 28px;
+  border-radius: 28px;
+  background: linear-gradient(160deg, #2f7d32, #68b36b);
+  color: #ffffff;
+  box-shadow: 0 18px 50px rgba(47, 125, 50, 0.25);
+}
+
+.marketplace-hero-card span {
+  font-size: 3.4rem;
+}
+
+.marketplace-hero-card h3 {
+  margin: 18px 0 8px;
+  font-size: 1.5rem;
+}
+
+.marketplace-hero-card p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  line-height: 1.6;
+}

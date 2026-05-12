@@ -4,6 +4,7 @@ import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import Dashboard from './pages/Dashboard/Dashboard';
 import FoodForm from './pages/Foods/FoodForm';
+import Marketplace from './pages/marketplace/Marketplace';
 
 function App() {
   const token = localStorage.getItem('token');
@@ -38,6 +39,11 @@ function App() {
       <Route
         path="/foods/edit/:id"
         element={token ? <FoodForm /> : <Navigate to="/login" />}
+      />
+
+      <Route
+        path="/marketplace"
+        element={token ? <Marketplace /> : <Navigate to="/login" />}
       />
 
       <Route
