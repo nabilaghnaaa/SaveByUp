@@ -1,11 +1,28 @@
+:root {
+  --register-green-dark: #173b2a;
+  --register-green: #6f8f72;
+  --register-green-soft: #e7eddc;
+  --register-cream: #fffaf0;
+  --register-bg: #f7fbf7;
+  --register-text: #102318;
+  --register-muted: #64748b;
+  --register-border: rgba(15, 35, 24, 0.09);
+  --register-shadow: 0 30px 90px rgba(15, 35, 24, 0.12);
+}
+
+.register-page,
+.register-page * {
+  box-sizing: border-box;
+}
+
 .register-page {
   position: relative;
   min-height: 100vh;
   overflow: hidden;
   background:
-    radial-gradient(circle at left top, rgba(86, 171, 47, 0.22), transparent 34%),
-    linear-gradient(135deg, #eef7ef 0%, #fbfff8 48%, #e6f4e8 100%);
-  color: #082018;
+    radial-gradient(circle at right top, rgba(111, 143, 114, 0.24), transparent 34%),
+    linear-gradient(135deg, #f7fbf7 0%, #fffaf0 48%, #edf5ea 100%);
+  color: var(--register-text);
   animation: registerPageEnter 0.6s ease both;
 }
 
@@ -68,5 +85,17 @@
   to {
     opacity: 0;
     transform: translateX(-36px);
+  }
+}
+
+@keyframes registerFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(22px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

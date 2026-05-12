@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
 import { registerUser } from '../../services/authService';
 
@@ -10,8 +9,6 @@ import RegisterVisual from './register/components/RegisterVisual';
 import './register/styles/register.css';
 
 function Register() {
-  const navigate = useNavigate();
-
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -35,7 +32,7 @@ function Register() {
     setLeaving(true);
 
     setTimeout(() => {
-      navigate('/login');
+      window.location.href = '/login';
     }, 450);
   };
 
@@ -59,21 +56,17 @@ function Register() {
     setLoading(true);
 
     try {
-      const payload = {
+      await registerUser({
         name: form.name,
         email: form.email,
         password: form.password,
-      };
-
-      await registerUser(payload);
+      });
 
       setMessageType('success');
       setMessage('Register berhasil. Mengalihkan ke login...');
 
-      setLeaving(true);
-
       setTimeout(() => {
-        navigate('/login');
+        window.location.replace('/login');
       }, 700);
     } catch (error) {
       console.error('Register error:', error);

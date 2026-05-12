@@ -8,13 +8,13 @@ function RegisterForm({
   onGoLogin,
 }) {
   return (
-    <form className="register-form" onSubmit={onSubmit}>
+    <form className="register-form-card" onSubmit={onSubmit}>
       <div className="register-form-header">
-        <p>Gabung Sekarang</p>
-        <h1>Buat Akun SaveByUp</h1>
+        <p>CREATE ACCOUNT</p>
+        <h1>Buat akunmu</h1>
         <span>
-          Daftar untuk mulai mengelola stok makanan, menemukan makanan layak
-          konsumsi, dan ikut mengurangi food waste.
+          Daftar untuk mulai mengelola stok makanan, pantau kedaluwarsa, dan
+          temukan makanan layak konsumsi.
         </span>
       </div>
 
@@ -73,13 +73,15 @@ function RegisterForm({
       </div>
 
       <button className="register-submit-btn" type="submit" disabled={loading}>
-        {loading ? 'Mendaftarkan...' : 'Daftar'}
+        {loading ? 'Mendaftarkan...' : 'Daftar Sekarang'}
       </button>
+
+      <div className="register-divider"></div>
 
       <p className="register-switch-text">
         Sudah punya akun?{' '}
         <button type="button" onClick={onGoLogin}>
-          Masuk di sini
+          Masuk sekarang
         </button>
       </p>
     </form>
