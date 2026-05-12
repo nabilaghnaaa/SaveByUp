@@ -1,0 +1,72 @@
+.register-page {
+  position: relative;
+  min-height: 100vh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at left top, rgba(86, 171, 47, 0.22), transparent 34%),
+    linear-gradient(135deg, #eef7ef 0%, #fbfff8 48%, #e6f4e8 100%);
+  color: #082018;
+  animation: registerPageEnter 0.6s ease both;
+}
+
+.register-page-leave {
+  animation: registerPageLeave 0.45s ease both;
+}
+
+.register-noise {
+  position: absolute;
+  inset: 0;
+  opacity: 0.08;
+  background-image:
+    linear-gradient(rgba(8, 32, 24, 0.2) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(8, 32, 24, 0.2) 1px, transparent 1px);
+  background-size: 42px 42px;
+  pointer-events: none;
+}
+
+.register-orb {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(10px);
+  opacity: 0.55;
+}
+
+.register-orb-one {
+  width: 260px;
+  height: 260px;
+  right: 6%;
+  top: 8%;
+  background: #b8e8c1;
+}
+
+.register-orb-two {
+  width: 190px;
+  height: 190px;
+  left: 8%;
+  bottom: 12%;
+  background: #f7d77b;
+}
+
+@keyframes registerPageEnter {
+  from {
+    opacity: 0;
+    transform: translateX(36px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes registerPageLeave {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: translateX(-36px);
+  }
+}

@@ -1,0 +1,119 @@
+.register-visual {
+  position: relative;
+  min-height: 720px;
+  overflow: hidden;
+  border-radius: 34px;
+  background:
+    linear-gradient(180deg, rgba(5, 25, 17, 0.08), rgba(5, 25, 17, 0.76)),
+    url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80');
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 30px 80px rgba(20, 32, 51, 0.18);
+  animation: registerVisualEnter 0.75s ease both;
+}
+
+.register-visual::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(130deg, rgba(21, 79, 54, 0.08), transparent 45%);
+}
+
+.register-visual-content {
+  position: absolute;
+  left: 48px;
+  right: 48px;
+  bottom: 76px;
+  z-index: 2;
+  color: #ffffff;
+}
+
+.register-visual-content span {
+  display: inline-block;
+  margin-bottom: 18px;
+  padding: 8px 14px;
+  border-radius: 999px;
+  background: rgba(237, 247, 220, 0.24);
+  color: #edf7dc;
+  font-size: 0.8rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+}
+
+.register-visual-content h2 {
+  max-width: 650px;
+  margin: 0;
+  color: #ffffff;
+  font-size: clamp(2.6rem, 5vw, 4.8rem);
+  line-height: 0.95;
+  letter-spacing: -0.07em;
+  font-weight: 950;
+}
+
+.register-visual-content p {
+  max-width: 620px;
+  margin: 24px 0 0;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 1.05rem;
+  line-height: 1.65;
+  font-weight: 700;
+}
+
+.register-visual-badge {
+  position: absolute;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 22px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 20px 48px rgba(20, 32, 51, 0.16);
+}
+
+.register-visual-badge span {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 16px;
+  background: #edf7dc;
+  color: #154f36;
+  font-weight: 900;
+}
+
+.register-visual-badge strong {
+  display: block;
+  color: #154f36;
+  font-size: 1rem;
+}
+
+.register-visual-badge p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.register-visual-badge-top {
+  top: 56px;
+  left: 56px;
+}
+
+.register-visual-badge-bottom {
+  right: 56px;
+  bottom: 110px;
+}
+
+@keyframes registerVisualEnter {
+  from {
+    opacity: 0;
+    transform: translateX(-42px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}

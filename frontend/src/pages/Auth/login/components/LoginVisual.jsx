@@ -1,4 +1,4 @@
-import loginImage from '../../../assets/images/login-food.jpg';
+import loginImage from '../../../../assets/images/login-food.jpg';
 
 function IconCheck() {
   return (

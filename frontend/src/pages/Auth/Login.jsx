@@ -2,11 +2,11 @@ import { useState } from 'react';
 
 import { loginUser } from '../../services/authService';
 
-import LoginBrand from './components/LoginBrand';
-import LoginForm from './components/LoginForm';
-import LoginVisual from './components/LoginVisual';
+import LoginBrand from './login/components/LoginBrand';
+import LoginForm from './login/components/LoginForm';
+import LoginVisual from './login/components/LoginVisual';
 
-import './styles/login.css';
+import './login/styles/login.css';
 
 function Login() {
   const [form, setForm] = useState({
@@ -17,6 +17,7 @@ function Login() {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('error');
   const [loading, setLoading] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   const handleChange = (event) => {
     setForm({
@@ -26,7 +27,11 @@ function Login() {
   };
 
   const handleGoRegister = () => {
-    window.location.href = '/register';
+    setLeaving(true);
+
+    setTimeout(() => {
+      window.location.href = '/register';
+    }, 450);
   };
 
   const handleSubmit = async (event) => {
@@ -71,7 +76,7 @@ function Login() {
   };
 
   return (
-    <main className="login-page">
+    <main className={`login-page ${leaving ? 'login-page-leave' : ''}`}>
       <div className="login-orb login-orb-one"></div>
       <div className="login-orb login-orb-two"></div>
       <div className="login-noise"></div>

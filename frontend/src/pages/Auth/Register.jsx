@@ -1,12 +1,17 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 import { registerUser } from '../../services/authService';
 
-import LoginBrand from './components/LoginBrand';
-import LoginVisual from './components/LoginVisual';
+import RegisterBrand from './register/components/RegisterBrand';
+import RegisterForm from './register/components/RegisterForm';
+import RegisterVisual from './register/components/RegisterVisual';
 
-import './styles/login.css';
+import './register/styles/register.css';
 
 function Register() {
+  const navigate = useNavigate();
+
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -17,6 +22,7 @@ function Register() {
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('error');
   const [loading, setLoading] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   const handleChange = (event) => {
     setForm({
@@ -26,7 +32,11 @@ function Register() {
   };
 
   const handleGoLogin = () => {
-    window.location.href = '/login';
+    setLeaving(true);
+
+    setTimeout(() => {
+      navigate('/login');
+    }, 450);
   };
 
   const handleSubmit = async (event) => {
@@ -60,8 +70,10 @@ function Register() {
       setMessageType('success');
       setMessage('Register berhasil. Mengalihkan ke login...');
 
+      setLeaving(true);
+
       setTimeout(() => {
-        window.location.replace('/login');
+        navigate('/login');
       }, 700);
     } catch (error) {
       console.error('Register error:', error);
@@ -74,93 +86,27 @@ function Register() {
   };
 
   return (
-    <main className="login-page">
-      <div className="login-orb login-orb-one"></div>
-      <div className="login-orb login-orb-two"></div>
-      <div className="login-noise"></div>
+    <main className={`register-page ${leaving ? 'register-page-leave' : ''}`}>
+      <div className="register-orb register-orb-one"></div>
+      <div className="register-orb register-orb-two"></div>
+      <div className="register-noise"></div>
 
-      <section className="login-shell">
-        <div className="login-left">
-          <LoginBrand />
+      <section className="register-shell">
+        <RegisterVisual />
 
-          <form className="login-form" onSubmit={handleSubmit}>
-            <div className="login-form-header">
-              <p>Mulai Sekarang</p>
-              <h1>Buat Akun SaveByUp</h1>
-              <span>
-                Daftar untuk mulai menyelamatkan makanan berlebih dan menemukan
-                penawaran hemat di sekitarmu.
-              </span>
-            </div>
+        <div className="register-right">
+          <RegisterBrand />
 
-            {message && (
-              <div className={`login-message ${messageType}`}>
-                {message}
-              </div>
-            )}
-
-            <div className="login-input-group">
-              <label htmlFor="name">Nama Lengkap</label>
-              <input
-                id="name"
-                type="text"
-                name="name"
-                placeholder="Masukkan nama lengkap"
-                value={form.name}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="login-input-group">
-              <label htmlFor="email">Email</label>
-              <input
-                id="email"
-                type="email"
-                name="email"
-                placeholder="Masukkan email"
-                value={form.email}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="login-input-group">
-              <label htmlFor="password">Password</label>
-              <input
-                id="password"
-                type="password"
-                name="password"
-                placeholder="Masukkan password"
-                value={form.password}
-                onChange={handleChange}
-              />
-            </div>
-
-            <div className="login-input-group">
-              <label htmlFor="confirmPassword">Konfirmasi Password</label>
-              <input
-                id="confirmPassword"
-                type="password"
-                name="confirmPassword"
-                placeholder="Ulangi password"
-                value={form.confirmPassword}
-                onChange={handleChange}
-              />
-            </div>
-
-            <button className="login-submit-btn" type="submit" disabled={loading}>
-              {loading ? 'Mendaftarkan...' : 'Daftar'}
-            </button>
-
-            <p className="login-switch-text">
-              Sudah punya akun?{' '}
-              <button type="button" onClick={handleGoLogin}>
-                Masuk di sini
-              </button>
-            </p>
-          </form>
+          <RegisterForm
+            form={form}
+            message={message}
+            messageType={messageType}
+            loading={loading}
+            onChange={handleChange}
+            onSubmit={handleSubmit}
+            onGoLogin={handleGoLogin}
+          />
         </div>
-
-        <LoginVisual />
       </section>
     </main>
   );
