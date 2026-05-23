@@ -1,7 +1,6 @@
-@import './styles/dashboard-base.css';
-@import './styles/dashboard-hero.css';
-@import './styles/dashboard-section.css';
-@import './styles/dashboard-summary.css';
-@import './styles/dashboard-inventory.css';
-@import './styles/dashboard-food-card.css';
-@import './styles/dashboard-responsive.css';
+@import "./dashboard-base.css";
+@import "./dashboard-hero.css";
+@import "./dashboard-section.css";
+@import "./dashboard-summary.css";
+@import "./dashboard-inventory.css";
+@import "./dashboard-responsive.css";

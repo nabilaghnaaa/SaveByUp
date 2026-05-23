@@ -1,39 +1,44 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
-import InfoBanner from './components/InfoBanner';
-import SummaryGrid from './components/SummaryGrid';
-import DashboardInventory from './components/DashboardInventory';
+import AppShell from "../../components/layout/AppShell";
+import { getFoodSummary } from "../../services/foodService";
+import DashboardInventory from "./components/DashboardInventory";
+import InfoBanner from "./components/InfoBanner";
+import SummaryGrid from "./components/SummaryGrid";
 
-import { getFoodSummary } from '../../services/foodService';
+import "./styles/dashboard.css";
 
-import './dashboard.css';
+const defaultSummary = {
+  total_foods: 0,
+  total_aman: 0,
+  total_mendekati: 0,
+  total_kedaluwarsa: 0,
+  total_dibuang: 0,
+  total_digunakan: 0,
+  total_prioritas_tinggi: 0,
+  total_prioritas_sedang: 0,
+  total_prioritas_rendah: 0,
+};
 
-function Dashboard() {
-  const user = JSON.parse(localStorage.getItem('user'));
+export default function Dashboard() {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  const [summary, setSummary] = useState({
-    total_foods: 0,
-    total_aman: 0,
-    total_mendekati: 0,
-    total_kedaluwarsa: 0,
-    total_dibuang: 0,
-    total_digunakan: 0,
-    total_prioritas_tinggi: 0,
-    total_prioritas_sedang: 0,
-    total_prioritas_rendah: 0,
-  });
-
+  const [summary, setSummary] = useState(defaultSummary);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loadingSummary, setLoadingSummary] = useState(true);
 
   const fetchSummary = async () => {
     try {
+      setLoadingSummary(true);
       const data = await getFoodSummary();
-      setSummary(data);
+      setSummary({
+        ...defaultSummary,
+        ...data,
+      });
     } catch (error) {
-      console.error('Gagal mengambil data dashboard:', error);
+      console.error("Gagal mengambil ringkasan makanan:", error);
     } finally {
-      setLoading(false);
+      setLoadingSummary(false);
     }
   };
 
@@ -47,40 +52,15 @@ function Dashboard() {
   }, []);
 
   return (
-    <div className="dashboard-page">
-      <div className="dashboard-grid-bg"></div>
-      <div className="dashboard-noise"></div>
-
-      <div className="dashboard-background-orb orb-one"></div>
-      <div className="dashboard-background-orb orb-two"></div>
-      <div className="dashboard-background-orb orb-three"></div>
-      <div className="dashboard-background-orb orb-four"></div>
-
-      <div className="dashboard-shell">
-        <InfoBanner user={user} />
-
-        {loading ? (
-          <div className="dashboard-loading-card">
-            <div className="dashboard-spinner"></div>
-
-            <div>
-              <h3>Memuat dashboard...</h3>
-              <p>Sedang mengambil data inventaris makanan kamu.</p>
-            </div>
-          </div>
-        ) : (
-          <>
-            <SummaryGrid summary={summary} />
-
-            <DashboardInventory
-              refreshKey={refreshKey}
-              onInventoryChange={refreshDashboard}
-            />
-          </>
-        )}
+    <AppShell>
+      <div className="dashboard-page">
+        <InfoBanner user={user} summary={summary} loading={loadingSummary} />
+        <SummaryGrid summary={summary} loading={loadingSummary} />
+        <DashboardInventory
+          refreshKey={refreshKey}
+          onInventoryChange={refreshDashboard}
+        />
       </div>
-    </div>
+    </AppShell>
   );
 }
-
-export default Dashboard;

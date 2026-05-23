@@ -1,245 +1,72 @@
-import { useNavigate } from 'react-router-dom';
-import { logoutUser } from '../../../services/authService';
+import { useNavigate } from "react-router-dom";
 
-function IconClock() {
-  return (
-    <svg viewBox="0 0 24 24" className="mini-svg-icon">
-      <circle cx="12" cy="12" r="8" />
-      <path d="M12 7v5l3 2" />
-    </svg>
-  );
-}
-
-function IconStar() {
-  return (
-    <svg viewBox="0 0 24 24" className="mini-svg-icon">
-      <path d="M12 4l2.4 5 5.4.8-3.9 3.8.9 5.4-4.8-2.6L7.2 19l.9-5.4-3.9-3.8 5.4-.8L12 4z" />
-    </svg>
-  );
-}
-
-function IconFood() {
-  return (
-    <svg viewBox="0 0 24 24" className="phone-svg-icon">
-      <path d="M7 3v18" />
-      <path d="M5 3v5a2 2 0 0 0 4 0V3" />
-      <path d="M15 3v18" />
-      <path d="M15 3c3 1.2 4.5 3.5 4.5 7 0 2.5-1.3 4-4.5 4" />
-    </svg>
-  );
-}
-
-function IconCart() {
-  return (
-    <svg viewBox="0 0 24 24" className="mini-svg-icon">
-      <circle cx="9" cy="19" r="1.5" />
-      <circle cx="17" cy="19" r="1.5" />
-      <path d="M3 5h2l2.2 10h9.8l2-7H7" />
-    </svg>
-  );
-}
-
-function IconPlus() {
-  return (
-    <svg viewBox="0 0 24 24" className="mini-svg-icon">
-      <path d="M12 5v14" />
-      <path d="M5 12h14" />
-    </svg>
-  );
-}
-
-function IconMarket() {
-  return (
-    <svg viewBox="0 0 24 24" className="mini-svg-icon">
-      <path d="M5 9h14l-1 11H6L5 9z" />
-      <path d="M8 9a4 4 0 0 1 8 0" />
-      <path d="M9 14h6" />
-    </svg>
-  );
-}
-
-function InfoBanner({ user }) {
+export default function InfoBanner({ user, summary, loading }) {
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    try {
-      await logoutUser();
-      navigate('/login');
-      window.location.reload();
-    } catch (error) {
-      console.error('Gagal logout:', error);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      navigate('/login');
-      window.location.reload();
-    }
-  };
+  const userName = user?.name || user?.nama || "Regina";
+  const totalFoods = Number(summary?.total_foods || 0);
+  const totalWarning = Number(summary?.total_mendekati || 0);
+  const totalExpired = Number(summary?.total_kedaluwarsa || 0);
 
   const scrollToInventory = () => {
-    const inventorySection = document.getElementById('dashboard-inventory');
-
-    if (inventorySection) {
-      inventorySection.scrollIntoView({
-        behavior: 'smooth',
-        block: 'start',
-      });
+    const target = document.getElementById("dashboard-inventory");
+    if (target) {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
   return (
-    <section className="hero-pro hero-banner-full">
-      <div className="hero-topbar">
-        <div className="hero-brand">
-          <div className="hero-brand-mark">S</div>
-          <span>SaveByUp</span>
-        </div>
+    <section className="dashboard-hero">
+      <div className="dashboard-hero-main">
+        <span className="dashboard-kicker">SaveByUp Dashboard</span>
 
-        <div className="hero-user-actions">
-          <button
-            type="button"
-            className="hero-profile-btn"
-            onClick={() => navigate('/profile')}
-          >
-            Profile
-          </button>
-
-          <button type="button" className="hero-logout-btn" onClick={handleLogout}>
-            Logout
-          </button>
-        </div>
-      </div>
-
-      <div className="hero-left">
-        <div className="hero-badge">
-          <span className="pulse-dot"></span>
-          Food Waste Prevention System
-        </div>
-
-        <h2>
-          Kelola makananmu,
-          <span> kurangi food waste.</span>
-        </h2>
+        <h1>Hai, {userName}. Kelola stok makanan kos sebelum terbuang.</h1>
 
         <p>
-          SaveByUp membantu mahasiswa kos mencatat stok makanan, memantau
-          kedaluwarsa, menentukan prioritas, dan memanfaatkan makanan layak
-          konsumsi melalui marketplace COD.
+          Catat stok makanan, pantau kedaluwarsa, tentukan prioritas konsumsi,
+          dan manfaatkan makanan yang masih layak melalui marketplace sederhana.
         </p>
 
-        <div className="hero-actions">
+        <div className="dashboard-hero-actions">
           <button
-            type="button"
-            className="hero-primary-btn"
-            onClick={() => navigate('/foods/add')}
+            className="sb-btn sb-btn-primary"
+            onClick={() => navigate("/foods/add")}
           >
-            <span className="button-icon-svg">
-              <IconPlus />
-            </span>
             Tambah Stok Makanan
           </button>
 
-          <button
-            type="button"
-            className="hero-secondary-btn"
-            onClick={scrollToInventory}
-          >
-            <span className="button-icon-svg">
-              <IconCart />
-            </span>
+          <button className="sb-btn sb-btn-ghost" onClick={scrollToInventory}>
             Lihat Inventaris
           </button>
 
           <button
-            type="button"
-            className="hero-market-btn"
-            onClick={() => navigate('/marketplace')}
+            className="sb-btn sb-btn-dark"
+            onClick={() => navigate("/marketplace")}
           >
-            <span className="button-icon-svg">
-              <IconMarket />
-            </span>
-            Marketplace Kos
+            Buka Marketplace
           </button>
         </div>
       </div>
 
-      <div className="hero-right">
-        <div className="hero-visual-wrap">
-          <div className="phone-mockup">
-            <div className="phone-glow"></div>
-            <div className="phone-top"></div>
+      <aside className="dashboard-hero-panel sb-glass">
+        <div className="hero-panel-label">
+          <span>Monitoring Aktif</span>
+          <strong>{loading ? "..." : totalFoods}</strong>
+          <p>Total makanan tercatat</p>
+        </div>
 
-            <div className="phone-card food-card-main">
-              <div className="food-icon">
-                <IconFood />
-              </div>
-
-              <div>
-                <strong>Smart Inventory</strong>
-                <span>Monitoring makanan harian</span>
-              </div>
-            </div>
-
-            <div className="phone-list">
-              <div className="phone-list-item">
-                <span className="list-dot red-dot"></span>
-
-                <div>
-                  <strong>Roti Tawar</strong>
-                  <p>Prioritas tinggi</p>
-                </div>
-
-                <b>1 hari</b>
-              </div>
-
-              <div className="phone-list-item">
-                <span className="list-dot yellow-dot"></span>
-
-                <div>
-                  <strong>Susu Kotak</strong>
-                  <p>Prioritas sedang</p>
-                </div>
-
-                <b>3 hari</b>
-              </div>
-
-              <div className="phone-list-item">
-                <span className="list-dot green-dot"></span>
-
-                <div>
-                  <strong>Mi Instan</strong>
-                  <p>Aman dikonsumsi</p>
-                </div>
-
-                <b>14 hari</b>
-              </div>
-            </div>
+        <div className="hero-mini-stats">
+          <div>
+            <span>Mendekati</span>
+            <strong>{loading ? "-" : totalWarning}</strong>
           </div>
 
-          <div className="floating-widget widget-top">
-            <span className="floating-icon-wrap">
-              <IconClock />
-            </span>
-
-            <div>
-              <strong>Reminder Aktif</strong>
-              <p>Makanan mendekati kedaluwarsa</p>
-            </div>
-          </div>
-
-          <div className="floating-widget widget-bottom">
-            <span className="floating-icon-wrap">
-              <IconStar />
-            </span>
-
-            <div>
-              <strong>Reputasi</strong>
-              <p>Rating setelah COD selesai</p>
-            </div>
+          <div>
+            <span>Kedaluwarsa</span>
+            <strong>{loading ? "-" : totalExpired}</strong>
           </div>
         </div>
-      </div>
+      </aside>
     </section>
   );
 }
-
-export default InfoBanner;
