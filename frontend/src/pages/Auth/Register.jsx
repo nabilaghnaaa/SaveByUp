@@ -43,7 +43,7 @@ function Register() {
 
     if (!form.name || !form.email || !form.password || !form.confirmPassword) {
       setMessageType('error');
-      setMessage('Nama, email, password, dan konfirmasi password wajib diisi.');
+      setMessage('Nama lengkap, email, password, dan konfirmasi password wajib diisi.');
       return;
     }
 
@@ -64,6 +64,8 @@ function Register() {
 
       setMessageType('success');
       setMessage('Register berhasil. Mengalihkan ke login...');
+
+      setLeaving(true);
 
       setTimeout(() => {
         window.location.replace('/login');

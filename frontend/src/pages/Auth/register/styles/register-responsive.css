@@ -1,7 +1,7 @@
-@media (max-width: 1100px) {
+@media (max-width: 1060px) {
   .register-shell {
     grid-template-columns: 1fr;
-    gap: 28px;
+    max-width: 720px;
   }
 
   .register-right {
@@ -10,36 +10,74 @@
 
   .register-visual {
     order: 2;
-    min-height: 520px;
+    min-height: 430px;
+  }
+
+  .register-image-card {
+    min-height: 430px;
+  }
+
+  .register-floating-top {
+    left: 18px;
+  }
+
+  .register-floating-bottom {
+    right: 18px;
+    bottom: 42px;
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 640px) {
+  .register-page {
+    padding: 14px;
+    place-items: start;
+  }
+
   .register-shell {
-    width: min(100% - 28px, 1280px);
-    padding: 28px 0;
+    min-height: auto;
+    gap: 18px;
+  }
+
+  .register-card {
+    border-radius: 28px;
+    padding: 24px;
+  }
+
+  .register-card-heading h1 {
+    font-size: 38px;
   }
 
   .register-brand {
-    margin-bottom: 36px;
+    margin-top: 4px;
   }
 
   .register-visual {
-    min-height: 460px;
-    border-radius: 26px;
+    min-height: 360px;
   }
 
-  .register-visual-content {
-    left: 26px;
-    right: 26px;
-    bottom: 42px;
+  .register-image-card {
+    min-height: 360px;
+    border-radius: 30px;
   }
 
-  .register-visual-badge {
-    display: none;
+  .register-floating-card {
+    position: relative;
+    left: auto;
+    right: auto;
+    top: auto;
+    bottom: auto;
+    width: 100%;
+    min-width: 0;
+    margin-top: 12px;
+    animation: none;
   }
 
-  .register-form-header h1 {
-    font-size: 2.4rem;
+  .register-visual {
+    display: block;
+  }
+
+  .register-login-row {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }
