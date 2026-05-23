@@ -1,6 +1,13 @@
-const db = require('../config/db');
+const db = require("../config/db");
 
-const calculateFoodStatus = (expiryDate) => {
+const calculateFoodStatus = (expiryDate, manualStatus = null) => {
+  if (["dijual", "terjual", "digunakan", "dibuang"].includes(manualStatus)) {
+    return {
+      status: manualStatus,
+      priority: manualStatus === "dibuang" ? "tidak_layak" : "rendah",
+    };
+  }
+
   const today = new Date();
   const expiry = new Date(expiryDate);
 
@@ -10,27 +17,21 @@ const calculateFoodStatus = (expiryDate) => {
   const diffTime = expiry.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-  let status = 'aman';
-  let priority = 'rendah';
+  let status = "aman";
+  let priority = "rendah";
 
   if (diffDays < 0) {
-    status = 'kedaluwarsa';
-    priority = 'tidak_layak';
-  } else if (diffDays <= 1) {
-    status = 'mendekati_kedaluwarsa';
-    priority = 'tinggi';
+    status = "kedaluwarsa";
+    priority = "tidak_layak";
   } else if (diffDays <= 3) {
-    status = 'mendekati_kedaluwarsa';
-    priority = 'sedang';
-  } else {
-    status = 'aman';
-    priority = 'rendah';
+    status = "mendekati_kedaluwarsa";
+    priority = "tinggi";
+  } else if (diffDays <= 7) {
+    status = "mendekati_kedaluwarsa";
+    priority = "sedang";
   }
 
-  return {
-    status,
-    priority,
-  };
+  return { status, priority };
 };
 
 const getFoods = async (req, res) => {
@@ -38,18 +39,18 @@ const getFoods = async (req, res) => {
     const userId = req.user.id;
 
     const [foods] = await db.query(
-      'SELECT * FROM foods WHERE user_id = ? ORDER BY expiry_date ASC',
+      "SELECT * FROM foods WHERE user_id = ? ORDER BY expiry_date ASC",
       [userId]
     );
 
     return res.status(200).json({
-      message: 'Data makanan berhasil diambil',
+      message: "Data makanan berhasil diambil",
       data: foods,
     });
   } catch (error) {
-    console.error('Get foods error:', error);
+    console.error("Get foods error:", error);
     return res.status(500).json({
-      message: 'Terjadi kesalahan pada server',
+      message: "Terjadi kesalahan pada server",
     });
   }
 };
@@ -60,24 +61,24 @@ const getFoodById = async (req, res) => {
     const { id } = req.params;
 
     const [foods] = await db.query(
-      'SELECT * FROM foods WHERE id = ? AND user_id = ?',
+      "SELECT * FROM foods WHERE id = ? AND user_id = ?",
       [id, userId]
     );
 
     if (foods.length === 0) {
       return res.status(404).json({
-        message: 'Data makanan tidak ditemukan',
+        message: "Data makanan tidak ditemukan",
       });
     }
 
     return res.status(200).json({
-      message: 'Detail makanan berhasil diambil',
+      message: "Detail makanan berhasil diambil",
       data: foods[0],
     });
   } catch (error) {
-    console.error('Get food by id error:', error);
+    console.error("Get food by id error:", error);
     return res.status(500).json({
-      message: 'Terjadi kesalahan pada server',
+      message: "Terjadi kesalahan pada server",
     });
   }
 };
@@ -85,45 +86,57 @@ const getFoodById = async (req, res) => {
 const createFood = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { name, category, quantity, unit, expiry_date } = req.body;
+
+    const {
+      name,
+      category,
+      quantity,
+      unit,
+      expiry_date,
+      note,
+      image_url,
+      status,
+    } = req.body;
 
     if (!name || !quantity || !unit || !expiry_date) {
       return res.status(400).json({
-        message: 'Nama makanan, jumlah, satuan, dan tanggal kedaluwarsa wajib diisi',
+        message: "Nama makanan, jumlah, satuan, dan tanggal kedaluwarsa wajib diisi",
       });
     }
 
     if (Number(quantity) <= 0) {
       return res.status(400).json({
-        message: 'Jumlah makanan harus lebih dari 0',
+        message: "Jumlah makanan harus lebih dari 0",
       });
     }
 
-    const { status, priority } = calculateFoodStatus(expiry_date);
+    const calculated = calculateFoodStatus(expiry_date, status);
 
     await db.query(
       `INSERT INTO foods 
-      (user_id, name, category, quantity, unit, expiry_date, status, priority) 
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      (user_id, name, category, quantity, unit, expiry_date, status, priority, note, image_url)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userId,
         name,
         category || null,
-        quantity,
+        Number(quantity),
         unit,
         expiry_date,
-        status,
-        priority,
+        calculated.status,
+        calculated.priority,
+        note || null,
+        image_url || null,
       ]
     );
 
     return res.status(201).json({
-      message: 'Data makanan berhasil ditambahkan',
+      message: "Data makanan berhasil ditambahkan",
     });
   } catch (error) {
-    console.error('Create food error:', error);
+    console.error("Create food error:", error);
     return res.status(500).json({
-      message: 'Terjadi kesalahan pada server',
+      message: "Terjadi kesalahan pada server",
     });
   }
 };
@@ -132,57 +145,121 @@ const updateFood = async (req, res) => {
   try {
     const userId = req.user.id;
     const { id } = req.params;
-    const { name, category, quantity, unit, expiry_date } = req.body;
+
+    const {
+      name,
+      category,
+      quantity,
+      unit,
+      expiry_date,
+      note,
+      image_url,
+      status,
+    } = req.body;
 
     if (!name || !quantity || !unit || !expiry_date) {
       return res.status(400).json({
-        message: 'Nama makanan, jumlah, satuan, dan tanggal kedaluwarsa wajib diisi',
+        message: "Nama makanan, jumlah, satuan, dan tanggal kedaluwarsa wajib diisi",
       });
     }
 
     if (Number(quantity) <= 0) {
       return res.status(400).json({
-        message: 'Jumlah makanan harus lebih dari 0',
+        message: "Jumlah makanan harus lebih dari 0",
       });
     }
 
     const [existingFood] = await db.query(
-      'SELECT * FROM foods WHERE id = ? AND user_id = ?',
+      "SELECT * FROM foods WHERE id = ? AND user_id = ?",
       [id, userId]
     );
 
     if (existingFood.length === 0) {
       return res.status(404).json({
-        message: 'Data makanan tidak ditemukan',
+        message: "Data makanan tidak ditemukan",
       });
     }
 
-    const { status, priority } = calculateFoodStatus(expiry_date);
+    const calculated = calculateFoodStatus(expiry_date, status);
 
     await db.query(
       `UPDATE foods 
-       SET name = ?, category = ?, quantity = ?, unit = ?, expiry_date = ?, status = ?, priority = ?
-       WHERE id = ? AND user_id = ?`,
+      SET name = ?, category = ?, quantity = ?, unit = ?, expiry_date = ?, 
+          status = ?, priority = ?, note = ?, image_url = ?
+      WHERE id = ? AND user_id = ?`,
       [
         name,
         category || null,
-        quantity,
+        Number(quantity),
         unit,
         expiry_date,
-        status,
-        priority,
+        calculated.status,
+        calculated.priority,
+        note || null,
+        image_url || null,
         id,
         userId,
       ]
     );
 
     return res.status(200).json({
-      message: 'Data makanan berhasil diperbarui',
+      message: "Data makanan berhasil diperbarui",
     });
   } catch (error) {
-    console.error('Update food error:', error);
+    console.error("Update food error:", error);
     return res.status(500).json({
-      message: 'Terjadi kesalahan pada server',
+      message: "Terjadi kesalahan pada server",
+    });
+  }
+};
+
+const updateFoodStatus = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const allowedStatus = [
+      "aman",
+      "mendekati_kedaluwarsa",
+      "kedaluwarsa",
+      "dijual",
+      "terjual",
+      "digunakan",
+      "dibuang",
+    ];
+
+    if (!allowedStatus.includes(status)) {
+      return res.status(400).json({
+        message: "Status makanan tidak valid",
+      });
+    }
+
+    const [foods] = await db.query(
+      "SELECT * FROM foods WHERE id = ? AND user_id = ?",
+      [id, userId]
+    );
+
+    if (foods.length === 0) {
+      return res.status(404).json({
+        message: "Data makanan tidak ditemukan",
+      });
+    }
+
+    const calculated = calculateFoodStatus(foods[0].expiry_date, status);
+
+    await db.query(
+      "UPDATE foods SET status = ?, priority = ? WHERE id = ? AND user_id = ?",
+      [calculated.status, calculated.priority, id, userId]
+    );
+
+    return res.status(200).json({
+      message: "Status makanan berhasil diperbarui",
+    });
+  } catch (error) {
+    console.error("Update food status error:", error);
+    return res.status(500).json({
+      message: "Terjadi kesalahan pada server",
     });
   }
 };
@@ -193,28 +270,25 @@ const deleteFood = async (req, res) => {
     const { id } = req.params;
 
     const [existingFood] = await db.query(
-      'SELECT * FROM foods WHERE id = ? AND user_id = ?',
+      "SELECT * FROM foods WHERE id = ? AND user_id = ?",
       [id, userId]
     );
 
     if (existingFood.length === 0) {
       return res.status(404).json({
-        message: 'Data makanan tidak ditemukan',
+        message: "Data makanan tidak ditemukan",
       });
     }
 
-    await db.query(
-      'DELETE FROM foods WHERE id = ? AND user_id = ?',
-      [id, userId]
-    );
+    await db.query("DELETE FROM foods WHERE id = ? AND user_id = ?", [id, userId]);
 
     return res.status(200).json({
-      message: 'Data makanan berhasil dihapus',
+      message: "Data makanan berhasil dihapus",
     });
   } catch (error) {
-    console.error('Delete food error:', error);
+    console.error("Delete food error:", error);
     return res.status(500).json({
-      message: 'Terjadi kesalahan pada server',
+      message: "Terjadi kesalahan pada server",
     });
   }
 };
@@ -224,27 +298,29 @@ const getFoodSummary = async (req, res) => {
     const userId = req.user.id;
 
     const [summary] = await db.query(
-      `SELECT 
+      `SELECT
         COUNT(*) AS total_foods,
         SUM(CASE WHEN status = 'aman' THEN 1 ELSE 0 END) AS total_aman,
         SUM(CASE WHEN status = 'mendekati_kedaluwarsa' THEN 1 ELSE 0 END) AS total_mendekati,
         SUM(CASE WHEN status = 'kedaluwarsa' THEN 1 ELSE 0 END) AS total_kedaluwarsa,
+        SUM(CASE WHEN status = 'dibuang' THEN 1 ELSE 0 END) AS total_dibuang,
+        SUM(CASE WHEN status = 'digunakan' THEN 1 ELSE 0 END) AS total_digunakan,
         SUM(CASE WHEN priority = 'tinggi' THEN 1 ELSE 0 END) AS total_prioritas_tinggi,
         SUM(CASE WHEN priority = 'sedang' THEN 1 ELSE 0 END) AS total_prioritas_sedang,
         SUM(CASE WHEN priority = 'rendah' THEN 1 ELSE 0 END) AS total_prioritas_rendah
-      FROM foods 
+      FROM foods
       WHERE user_id = ?`,
       [userId]
     );
 
     return res.status(200).json({
-      message: 'Ringkasan makanan berhasil diambil',
+      message: "Ringkasan makanan berhasil diambil",
       data: summary[0],
     });
   } catch (error) {
-    console.error('Get food summary error:', error);
+    console.error("Get food summary error:", error);
     return res.status(500).json({
-      message: 'Terjadi kesalahan pada server',
+      message: "Terjadi kesalahan pada server",
     });
   }
 };
@@ -254,6 +330,7 @@ module.exports = {
   getFoodById,
   createFood,
   updateFood,
+  updateFoodStatus,
   deleteFood,
   getFoodSummary,
 };
