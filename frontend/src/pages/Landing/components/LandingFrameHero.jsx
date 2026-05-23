@@ -7,14 +7,9 @@ gsap.registerPlugin(ScrollTrigger);
 
 const FRAME_COUNT = 60;
 
-const currentFrame = (index) => {
-  const frameNumber = String(index).padStart(3, "0");
-
-  return new URL(
-    `../../../assets/landing-frames/lemari-open_${frameNumber}.jpg`,
-    import.meta.url
-  ).href;
-};
+// Path langsung mengarah ke folder public (sangat stabil)
+const getFrameUrl = (index) =>
+  `/landing-frames/lemari-open_${String(index).padStart(3, "0")}.jpg`;
 
 export default function LandingFrameHero() {
   const sectionRef = useRef(null);
@@ -26,191 +21,142 @@ export default function LandingFrameHero() {
   useEffect(() => {
     const section = sectionRef.current;
     const canvas = canvasRef.current;
-    const dim = dimRef.current;
-    const content = contentRef.current;
-    const scrollHint = scrollHintRef.current;
-
-    if (!section || !canvas || !dim || !content || !scrollHint) return;
+    if (!section || !canvas) return;
 
     const context = canvas.getContext("2d");
     const images = [];
     const frame = { index: 1 };
-
-    let loadedImages = 0;
+    
     let gsapContext;
+    let loadedImages = 0;
 
+    // Set ukuran canvas yang responsif dan anti blur
     const setCanvasSize = () => {
-      const pixelRatio = window.devicePixelRatio || 1;
-
-      canvas.width = window.innerWidth * pixelRatio;
-      canvas.height = window.innerHeight * pixelRatio;
-
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
       canvas.style.width = `${window.innerWidth}px`;
       canvas.style.height = `${window.innerHeight}px`;
-
-      context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     };
 
-    const drawImageCover = (img) => {
-      if (!img || !img.complete) return;
-
-      const canvasWidth = window.innerWidth;
-      const canvasHeight = window.innerHeight;
-
-      const imageWidth = img.width;
-      const imageHeight = img.height;
-
-      const scale = Math.max(
-        canvasWidth / imageWidth,
-        canvasHeight / imageHeight
-      );
-
-      const drawWidth = imageWidth * scale;
-      const drawHeight = imageHeight * scale;
-
-      const x = (canvasWidth - drawWidth) / 2;
-      const y = (canvasHeight - drawHeight) / 2;
-
-      context.clearRect(0, 0, canvasWidth, canvasHeight);
-      context.drawImage(img, x, y, drawWidth, drawHeight);
-    };
-
+    // Fungsi menggambar yang memastikan frame selalu proporsional (cover)
     const render = () => {
       const currentIndex = Math.min(
         FRAME_COUNT,
         Math.max(1, Math.round(frame.index))
       );
+      
+      const img = images[currentIndex - 1]; // Array index mulai dari 0
+      
+      if (img && img.complete) {
+        const canvasWidth = canvas.width;
+        const canvasHeight = canvas.height;
+        const scale = Math.max(canvasWidth / img.width, canvasHeight / img.height);
+        
+        const drawWidth = img.width * scale;
+        const drawHeight = img.height * scale;
+        const x = (canvasWidth - drawWidth) / 2;
+        const y = (canvasHeight - drawHeight) / 2;
 
-      drawImageCover(images[currentIndex]);
+        context.clearRect(0, 0, canvasWidth, canvasHeight);
+        context.drawImage(img, x, y, drawWidth, drawHeight);
+      }
     };
 
-    const setupAnimation = () => {
-      if (gsapContext) {
-        gsapContext.revert();
-      }
-
+    const initAnimation = () => {
+      // Bungkus dalam gsap.context agar aman dari Strict Mode
       gsapContext = gsap.context(() => {
-        gsap.set(content, {
-          opacity: 0,
-          y: 35,
-          scale: 0.98,
-          filter: "blur(8px)",
-        });
-
-        gsap.set(dim, {
-          opacity: 0,
-        });
-
-        gsap.set(scrollHint, {
-          opacity: 1,
-          y: 0,
-        });
+        gsap.set(contentRef.current, { opacity: 0, y: 40, scale: 0.95 });
+        gsap.set(dimRef.current, { opacity: 0 });
+        gsap.set(scrollHintRef.current, { opacity: 1, y: 0 });
 
         const tl = gsap.timeline({
           scrollTrigger: {
             trigger: section,
             start: "top top",
-            end: "+=2200",
-            scrub: 0.6,
+            // Angka 2500 adalah jarak tempuh scroll (makin besar, makin pelan animasinya)
+            end: "+=2500", 
+            scrub: 0.5,
             pin: true,
-            anticipatePin: 1,
-            invalidateOnRefresh: true,
+            // pinSpacing true akan memastikan user mentok saat animasi selesai
+            pinSpacing: true, 
           },
         });
 
+        // 1. Putar Frame Gambar
         tl.to(frame, {
           index: FRAME_COUNT,
           snap: "index",
           ease: "none",
-          duration: 3,
           onUpdate: render,
-        });
+          duration: 3,
+        }, 0);
 
-        tl.to(
-          scrollHint,
-          {
-            opacity: 0,
-            y: 16,
-            duration: 0.35,
-            ease: "power2.out",
-          },
-          "-=0.75"
-        );
+        // 2. Sembunyikan Hint Scroll
+        tl.to(scrollHintRef.current, {
+          opacity: 0,
+          y: 20,
+          duration: 0.3,
+        }, 0);
 
-        tl.to(
-          dim,
-          {
-            opacity: 1,
-            duration: 0.45,
-            ease: "power2.out",
-          },
-          "-=0.45"
-        );
+        // 3. Gelapkan Background saat lemari mulai terbuka lebar
+        tl.to(dimRef.current, {
+          opacity: 1,
+          duration: 1,
+        }, 1.5);
 
-        tl.to(
-          content,
-          {
-            opacity: 1,
-            y: 0,
-            scale: 1,
-            filter: "blur(0px)",
-            duration: 0.55,
-            ease: "power3.out",
-          },
-          "-=0.25"
-        );
-      }, section);
+        // 4. Munculkan Teks + Tombol di akhir
+        tl.to(contentRef.current, {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 1,
+          ease: "power3.out",
+        }, 2);
+
+      }, sectionRef);
     };
 
+    // Preload semua gambar dulu sebelum animasi dimulai
     const preloadImages = () => {
+      setCanvasSize();
+      
+      // Paint warna hitam sesaat sambil nunggu gambar pertama
+      context.fillStyle = "#07140d";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+
       for (let i = 1; i <= FRAME_COUNT; i++) {
         const img = new Image();
-        img.src = currentFrame(i);
-
+        img.src = getFrameUrl(i);
+        
         img.onload = () => {
-          loadedImages += 1;
-
-          if (i === 1) {
-            frame.index = 1;
-            render();
-          }
-
+          loadedImages++;
+          
+          // Paksa render frame pertama sesegera mungkin (hindari black screen)
+          if (i === 1) render();
+          
+          // Jika semua gambar sudah ter-load, baru jalankan ScrollTrigger
           if (loadedImages === FRAME_COUNT) {
-            render();
-            setupAnimation();
+            initAnimation();
             ScrollTrigger.refresh();
           }
         };
-
-        img.onerror = () => {
-          console.error(`Gagal load frame: ${img.src}`);
-        };
-
-        images[i] = img;
+        
+        images.push(img);
       }
     };
-
-    setCanvasSize();
-
-    context.fillStyle = "#07140d";
-    context.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
     preloadImages();
 
     const handleResize = () => {
       setCanvasSize();
       render();
-      ScrollTrigger.refresh();
     };
 
     window.addEventListener("resize", handleResize);
 
     return () => {
       window.removeEventListener("resize", handleResize);
-
-      if (gsapContext) {
-        gsapContext.revert();
-      }
+      if (gsapContext) gsapContext.revert(); // Cleanup krusial
     };
   }, []);
 
@@ -235,9 +181,7 @@ export default function LandingFrameHero() {
 
       <div className="landing-hero-content" ref={contentRef}>
         <span className="landing-badge">Food Waste Prevention System</span>
-
         <h1>Kelola stok makananmu sebelum terbuang</h1>
-
         <p>
           Catat makanan di kos, pantau tanggal kedaluwarsa, dan manfaatkan
           makanan yang masih layak konsumsi melalui marketplace sederhana.
@@ -247,7 +191,6 @@ export default function LandingFrameHero() {
           <Link to="/register" className="landing-btn landing-btn-primary">
             Daftar Sekarang
           </Link>
-
           <Link to="/login" className="landing-btn landing-btn-secondary">
             Login
           </Link>

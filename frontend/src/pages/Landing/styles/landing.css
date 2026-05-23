@@ -4,6 +4,7 @@
   background: #07140d;
   color: #ffffff;
   overflow-x: hidden;
+  overscroll-behavior-y: none; /* Tambahkan baris ini */
 }
 
 .landing-hero-section {

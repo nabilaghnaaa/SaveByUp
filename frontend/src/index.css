@@ -72,3 +72,9 @@ select,
 button {
   outline: none;
 }
+
+html, body {
+  overscroll-behavior-y: none;
+  margin: 0;
+  padding: 0;
+}
