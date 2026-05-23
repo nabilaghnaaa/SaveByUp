@@ -1,55 +1,82 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from "react-router-dom";
 
-import Login from './pages/Auth/Login';
-import Register from './pages/Auth/Register';
-import Dashboard from './pages/Dashboard/Dashboard';
-import FoodForm from './pages/Foods/FoodForm';
-import Marketplace from './pages/marketplace/Marketplace';
+import Landing from "./pages/Landing/Landing";
+import Login from "./pages/Auth/Login";
+import Register from "./pages/Auth/Register";
+import Dashboard from "./pages/Dashboard/Dashboard";
+import FoodForm from "./pages/Foods/FoodForm";
+import Marketplace from "./pages/marketplace/Marketplace";
+
+import ProtectedRoute from "./routes/ProtectedRoute";
+import PublicRoute from "./routes/PublicRoute";
 
 function App() {
-  const token = localStorage.getItem('token');
-
   return (
     <Routes>
       <Route
         path="/"
-        element={token ? <Navigate to="/dashboard" /> : <Navigate to="/login" />}
+        element={
+          <PublicRoute>
+            <Landing />
+          </PublicRoute>
+        }
       />
 
       <Route
         path="/login"
-        element={token ? <Navigate to="/dashboard" /> : <Login />}
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
       />
 
       <Route
         path="/register"
-        element={token ? <Navigate to="/dashboard" /> : <Register />}
+        element={
+          <PublicRoute>
+            <Register />
+          </PublicRoute>
+        }
       />
 
       <Route
         path="/dashboard"
-        element={token ? <Dashboard /> : <Navigate to="/login" />}
+        element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        }
       />
 
       <Route
         path="/foods/add"
-        element={token ? <FoodForm /> : <Navigate to="/login" />}
+        element={
+          <ProtectedRoute>
+            <FoodForm />
+          </ProtectedRoute>
+        }
       />
 
       <Route
         path="/foods/edit/:id"
-        element={token ? <FoodForm /> : <Navigate to="/login" />}
+        element={
+          <ProtectedRoute>
+            <FoodForm />
+          </ProtectedRoute>
+        }
       />
 
       <Route
         path="/marketplace"
-        element={token ? <Marketplace /> : <Navigate to="/login" />}
+        element={
+          <ProtectedRoute>
+            <Marketplace />
+          </ProtectedRoute>
+        }
       />
 
-      <Route
-        path="*"
-        element={<Navigate to={token ? '/dashboard' : '/login'} />}
-      />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
