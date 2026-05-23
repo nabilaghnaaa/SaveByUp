@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 
-import InfoBanner from './InfoBanner';
-import SummaryGrid from './SummaryGrid';
-import DashboardInventory from './DashboardInventory';
+import InfoBanner from './components/InfoBanner';
+import SummaryGrid from './components/SummaryGrid';
+import DashboardInventory from './components/DashboardInventory';
 
 import { getFoodSummary } from '../../services/foodService';
 
