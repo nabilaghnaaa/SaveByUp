@@ -1,78 +1,19 @@
-@media (max-width: 1060px) {
-  .login-shell {
-    grid-template-columns: 1fr;
-    max-width: 720px;
-  }
-
+@media (max-width: 980px) {
   .login-visual {
-    min-height: 430px;
+    min-height: 360px;
   }
 
-  .login-image-card {
-    min-height: 430px;
-  }
-
-  .login-floating-top {
-    left: 18px;
-  }
-
-  .login-floating-bottom {
-    right: 18px;
-    bottom: 42px;
+  .login-floating-card {
+    display: none;
   }
 }
 
 @media (max-width: 640px) {
-  .login-page {
-    padding: 14px;
-    place-items: start;
+  .login-visual-grid {
+    grid-template-columns: 1fr;
   }
 
-  .login-shell {
-    min-height: auto;
-    gap: 18px;
-  }
-
-  .login-card {
-    border-radius: 28px;
-    padding: 24px;
-  }
-
-  .login-card-heading h1 {
-    font-size: 38px;
-  }
-
-  .login-brand {
-    margin-top: 4px;
-  }
-
-  .login-visual {
-    min-height: 360px;
-  }
-
-  .login-image-card {
-    min-height: 360px;
-    border-radius: 30px;
-  }
-
-  .login-floating-card {
-    position: relative;
-    left: auto;
-    right: auto;
-    top: auto;
-    bottom: auto;
-    width: 100%;
-    min-width: 0;
-    margin-top: 12px;
-    animation: none;
-  }
-
-  .login-visual {
-    display: block;
-  }
-
-  .login-register-row {
-    align-items: flex-start;
-    flex-direction: column;
+  .login-visual h2 {
+    letter-spacing: -1px;
   }
 }

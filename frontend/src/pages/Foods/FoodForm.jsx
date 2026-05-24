@@ -3,11 +3,13 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import AppShell from "../../components/layout/AppShell";
 import PageHeader from "../../components/ui/PageHeader";
+
 import {
   createFood,
   getFoodById,
   updateFood,
 } from "../../services/foodService";
+
 import { getAutoStatus } from "../../utils/foodStatus";
 
 import FoodFormFields from "./components/FoodFormFields";
@@ -38,7 +40,7 @@ export default function FoodForm() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
-  const previewStatus = useMemo(() => {
+  const autoStatus = useMemo(() => {
     return getAutoStatus(form.expiry_date, form.status);
   }, [form.expiry_date, form.status]);
 
@@ -48,6 +50,7 @@ export default function FoodForm() {
 
       try {
         setLoading(true);
+
         const data = await getFoodById(id);
 
         setForm({
@@ -55,14 +58,18 @@ export default function FoodForm() {
           category: data.category || "Snack",
           quantity: data.quantity || 1,
           unit: data.unit || "pcs",
-          expiry_date: data.expiry_date || "",
+          expiry_date: data.expiry_date
+            ? String(data.expiry_date).slice(0, 10)
+            : "",
           note: data.note || "",
           image_url: data.image_url || "",
           status: data.status || "aman",
         });
       } catch (error) {
         console.error("Gagal mengambil detail makanan:", error);
-        setMessage("Gagal mengambil detail makanan.");
+        setMessage(
+          error.response?.data?.message || "Gagal mengambil detail makanan."
+        );
       } finally {
         setLoading(false);
       }
@@ -80,7 +87,7 @@ export default function FoodForm() {
 
   const validateForm = () => {
     if (!form.name.trim()) return "Nama makanan wajib diisi.";
-    if (!form.category.trim()) return "Kategori wajib dipilih.";
+    if (!form.category.trim()) return "Kategori makanan wajib dipilih.";
     if (!form.quantity || Number(form.quantity) <= 0) {
       return "Jumlah stok harus lebih dari 0.";
     }
@@ -123,7 +130,9 @@ export default function FoodForm() {
       }, 700);
     } catch (error) {
       console.error("Gagal menyimpan makanan:", error);
-      setMessage(error.response?.data?.message || "Gagal menyimpan data makanan.");
+      setMessage(
+        error.response?.data?.message || "Gagal menyimpan data makanan."
+      );
     } finally {
       setSaving(false);
     }
@@ -134,9 +143,10 @@ export default function FoodForm() {
       <PageHeader
         label={isEdit ? "Edit Inventaris" : "Tambah Inventaris"}
         title={isEdit ? "Edit Data Makanan" : "Tambah Data Makanan"}
-        description="Isi data makanan dengan jelas agar stok dan tanggal kedaluwarsa bisa dimonitor dengan baik."
+        description="Isi data makanan dengan jelas agar SaveByUp dapat memantau stok, tanggal kedaluwarsa, dan prioritas konsumsi."
         action={
           <button
+            type="button"
             className="sb-btn sb-btn-ghost"
             onClick={() => navigate("/dashboard")}
           >
@@ -148,7 +158,7 @@ export default function FoodForm() {
       {loading ? (
         <section className="food-form-loading sb-glass">
           <h3>Memuat data makanan...</h3>
-          <p>Sedang mengambil detail makanan.</p>
+          <p>Sedang mengambil detail makanan dari inventaris.</p>
         </section>
       ) : (
         <form className="food-form-page" onSubmit={handleSubmit}>
@@ -166,17 +176,26 @@ export default function FoodForm() {
                 Batal
               </button>
 
-              <button type="submit" className="sb-btn sb-btn-primary" disabled={saving}>
-                {saving ? "Menyimpan..." : isEdit ? "Simpan Perubahan" : "Tambah Makanan"}
+              <button
+                type="submit"
+                className="sb-btn sb-btn-primary"
+                disabled={saving}
+              >
+                {saving
+                  ? "Menyimpan..."
+                  : isEdit
+                    ? "Simpan Perubahan"
+                    : "Tambah Makanan"}
               </button>
             </div>
           </div>
 
           <aside className="food-form-side">
             <FoodImageUpload form={form} onChange={handleChange} />
+
             <FoodStatusPreview
               expiryDate={form.expiry_date}
-              status={previewStatus}
+              autoStatus={autoStatus}
               currentStatus={form.status}
             />
           </aside>

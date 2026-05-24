@@ -1,65 +1,58 @@
-.register-page {
-  position: relative;
-  min-height: 100vh;
-  padding: clamp(18px, 3vw, 34px);
-  overflow: hidden;
-  color: var(--register-text);
-  background:
-    radial-gradient(circle at 88% 12%, rgba(111, 143, 114, 0.16), transparent 28%),
-    radial-gradient(circle at 12% 10%, rgba(231, 237, 220, 0.52), transparent 26%),
-    linear-gradient(135deg, #f7fbf7 0%, #ffffff 48%, #f4f7ef 100%);
+.register-brand {
   display: grid;
-  place-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
 }
 
-.register-noise {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  opacity: 0.15;
-  background-image:
-    linear-gradient(rgba(15, 35, 24, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(15, 35, 24, 0.04) 1px, transparent 1px);
-  background-size: 42px 42px;
+.register-brand > div:first-of-type + div strong {
+  display: block;
+  margin-top: 12px;
+  color: var(--sb-green-900);
+  font-size: 22px;
 }
 
-.register-orb {
-  position: absolute;
-  border-radius: 999px;
-  pointer-events: none;
-  filter: blur(10px);
+.register-brand > div:first-of-type + div span {
+  display: block;
+  margin-top: 4px;
+  color: var(--sb-muted);
+  font-size: 13px;
 }
 
-.register-orb-one {
-  width: 320px;
-  height: 320px;
-  right: -130px;
-  top: 12%;
-  background: rgba(111, 143, 114, 0.16);
+.register-heading {
+  margin-top: 20px;
 }
 
-.register-orb-two {
-  width: 420px;
-  height: 420px;
-  left: -170px;
-  bottom: -110px;
-  background: rgba(231, 237, 220, 0.72);
+.register-heading span {
+  display: inline-flex;
+  margin-bottom: 10px;
+  color: var(--sb-green-600);
+  font-size: 12px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
 }
 
-.register-shell {
-  position: relative;
-  z-index: 2;
-  width: min(1180px, 100%);
-  min-height: min(720px, calc(100vh - 60px));
-  display: grid;
-  grid-template-columns: minmax(420px, 1.08fr) minmax(0, 0.92fr);
-  gap: 24px;
-  align-items: stretch;
+.register-heading h1 {
+  margin: 0;
+  color: var(--sb-green-900);
+  font-size: clamp(30px, 5vw, 44px);
+  line-height: 1.05;
+  letter-spacing: -1.4px;
 }
 
-.register-right {
-  min-width: 0;
-  display: grid;
-  align-content: center;
-  gap: 24px;
+.register-heading p {
+  margin: 14px 0 0;
+  color: var(--sb-muted);
+  line-height: 1.7;
+}
+
+.register-switch {
+  margin: 8px 0 0;
+  color: var(--sb-muted);
+}
+
+.register-switch a {
+  color: var(--sb-green-700);
+  font-weight: 900;
+  text-decoration: none;
 }

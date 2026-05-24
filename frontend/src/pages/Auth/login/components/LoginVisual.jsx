@@ -1,64 +1,42 @@
-import loginImage from '../../../../assets/images/login-food.jpg';
-
-function IconCheck() {
+export default function LoginVisual() {
   return (
-    <svg viewBox="0 0 24 24" className="login-mini-icon">
-      <circle cx="12" cy="12" r="8" />
-      <path d="M8.5 12.2l2.2 2.2 4.8-5" />
-    </svg>
-  );
-}
+    <section className="login-visual">
+      <div className="login-visual-overlay" />
 
-function IconClock() {
-  return (
-    <svg viewBox="0 0 24 24" className="login-mini-icon">
-      <circle cx="12" cy="12" r="8" />
-      <path d="M12 7.5V12l3 2" />
-    </svg>
-  );
-}
+      <div className="login-visual-content">
+        <div className="login-visual-badge">Smart Food Inventory</div>
 
-function LoginVisual() {
-  return (
-    <aside className="login-visual">
-      <div className="login-image-card">
-        <img src={loginImage} alt="SaveByUp food inventory" />
+        <h2>Cegah makanan kos terbuang sia-sia.</h2>
 
-        <div className="login-image-overlay"></div>
+        <p>
+          SaveByUp membantu mahasiswa kos mencatat stok makanan, memantau
+          kedaluwarsa, menentukan prioritas, dan memanfaatkan makanan layak
+          konsumsi melalui marketplace.
+        </p>
 
-        <div className="login-visual-content">
-          <span>Smart Inventory</span>
-          <h2>Catat makanan sebelum terbuang sia-sia.</h2>
-          <p>
-            Sistem membantu mahasiswa kos memantau stok, kedaluwarsa, prioritas,
-            dan marketplace makanan layak konsumsi.
-          </p>
+        <div className="login-visual-grid">
+          <div>
+            <strong>H-7</strong>
+            <span>Reminder kedaluwarsa</span>
+          </div>
+
+          <div>
+            <strong>COD</strong>
+            <span>Marketplace aman</span>
+          </div>
+
+          <div>
+            <strong>WA</strong>
+            <span>Komunikasi setelah disetujui</span>
+          </div>
         </div>
       </div>
 
-      <div className="login-floating-card login-floating-top">
-        <div>
-          <IconClock />
-        </div>
-
-        <section>
-          <strong>Reminder Aktif</strong>
-          <span>Makanan mendekati kedaluwarsa</span>
-        </section>
+      <div className="login-floating-card">
+        <span>Prioritas Hari Ini</span>
+        <strong>Gunakan makanan mendekati kedaluwarsa</strong>
+        <p>Atau tawarkan ke marketplace jika masih layak konsumsi.</p>
       </div>
-
-      <div className="login-floating-card login-floating-bottom">
-        <div>
-          <IconCheck />
-        </div>
-
-        <section>
-          <strong>Food Saved</strong>
-          <span>Prioritas konsumsi otomatis</span>
-        </section>
-      </div>
-    </aside>
+    </section>
   );
 }
-
-export default LoginVisual;

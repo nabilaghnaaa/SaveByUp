@@ -1,0 +1,144 @@
+.incoming-message {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--sb-lime-soft);
+  border: 1px solid rgba(47, 122, 66, 0.14);
+  color: var(--sb-green-800);
+  font-weight: 800;
+}
+
+.incoming-state {
+  padding: 34px;
+  border-radius: 28px;
+  text-align: center;
+}
+
+.incoming-state h3 {
+  margin: 0 0 8px;
+  color: var(--sb-green-900);
+  font-size: 24px;
+}
+
+.incoming-state p {
+  margin: 0;
+  color: var(--sb-muted);
+}
+
+.incoming-list {
+  display: grid;
+  gap: 16px;
+}
+
+.request-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  padding: 22px;
+  border-radius: 28px;
+}
+
+.request-status {
+  display: inline-flex;
+  width: fit-content;
+  margin-bottom: 10px;
+  padding: 7px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.request-menunggu {
+  background: var(--sb-warning-soft);
+  color: #92400e;
+}
+
+.request-disetujui {
+  background: var(--sb-lime-soft);
+  color: var(--sb-green-800);
+}
+
+.request-ditolak {
+  background: var(--sb-danger-soft);
+  color: #b91c1c;
+}
+
+.request-card h3 {
+  margin: 0;
+  color: var(--sb-green-900);
+  font-size: 24px;
+}
+
+.request-card p {
+  margin: 8px 0 0;
+  color: var(--sb-muted);
+}
+
+.request-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.request-grid div {
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(247, 255, 244, 0.9);
+  border: 1px solid rgba(43, 107, 58, 0.08);
+}
+
+.request-grid span {
+  display: block;
+  color: var(--sb-muted);
+  font-size: 12px;
+}
+
+.request-grid strong {
+  display: block;
+  margin-top: 5px;
+  color: var(--sb-green-900);
+}
+
+.request-note {
+  margin-top: 14px !important;
+  padding: 12px;
+  border-radius: 16px;
+  background: rgba(43, 107, 58, 0.06);
+  line-height: 1.55;
+}
+
+.request-whatsapp {
+  display: inline-flex;
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 999px;
+  text-decoration: none;
+  color: #15311e;
+  background: linear-gradient(135deg, #dfff79, #9eff7a);
+  font-weight: 850;
+  font-size: 13px;
+}
+
+.request-actions {
+  display: grid;
+  gap: 10px;
+}
+
+.request-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 860px) {
+  .request-card,
+  .request-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .request-actions {
+    display: flex;
+    flex-wrap: wrap;
+  }
+}

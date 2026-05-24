@@ -7,7 +7,7 @@ export default function FoodImageUpload({ form, onChange }) {
         {form.image_url ? (
           <img src={form.image_url} alt="Preview makanan" />
         ) : (
-          <div>
+          <div className="food-image-empty">
             <span>📷</span>
             <p>Preview foto makanan</p>
           </div>
@@ -15,10 +15,12 @@ export default function FoodImageUpload({ form, onChange }) {
       </div>
 
       <div className="food-image-body">
-        <h3>Foto Makanan</h3>
+        <span>Foto Makanan</span>
+        <h3>Tambahkan gambar produk</h3>
+
         <p>
-          Untuk sementara masukkan URL gambar. Upload file fisik bisa kita
-          tambahkan saat backend upload sudah tersedia.
+          Untuk saat ini, masukkan URL foto makanan. Fitur upload file langsung
+          bisa ditambahkan setelah backend upload siap.
         </p>
 
         <label>URL Foto</label>

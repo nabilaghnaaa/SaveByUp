@@ -2,9 +2,10 @@ import { useEffect, useState } from "react";
 
 import AppShell from "../../components/layout/AppShell";
 import { getFoodSummary } from "../../services/foodService";
-import DashboardInventory from "./components/DashboardInventory";
+
 import InfoBanner from "./components/InfoBanner";
 import SummaryGrid from "./components/SummaryGrid";
+import DashboardInventory from "./components/DashboardInventory";
 
 import "./styles/dashboard.css";
 
@@ -24,26 +25,28 @@ export default function Dashboard() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   const [summary, setSummary] = useState(defaultSummary);
+  const [summaryLoading, setSummaryLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [loadingSummary, setLoadingSummary] = useState(true);
 
   const fetchSummary = async () => {
     try {
-      setLoadingSummary(true);
+      setSummaryLoading(true);
+
       const data = await getFoodSummary();
+
       setSummary({
         ...defaultSummary,
         ...data,
       });
     } catch (error) {
-      console.error("Gagal mengambil ringkasan makanan:", error);
+      console.error("Gagal mengambil ringkasan dashboard:", error);
     } finally {
-      setLoadingSummary(false);
+      setSummaryLoading(false);
     }
   };
 
-  const refreshDashboard = () => {
-    fetchSummary();
+  const refreshDashboard = async () => {
+    await fetchSummary();
     setRefreshKey((prev) => prev + 1);
   };
 
@@ -54,8 +57,17 @@ export default function Dashboard() {
   return (
     <AppShell>
       <div className="dashboard-page">
-        <InfoBanner user={user} summary={summary} loading={loadingSummary} />
-        <SummaryGrid summary={summary} loading={loadingSummary} />
+        <InfoBanner
+          user={user}
+          summary={summary}
+          loading={summaryLoading}
+        />
+
+        <SummaryGrid
+          summary={summary}
+          loading={summaryLoading}
+        />
+
         <DashboardInventory
           refreshKey={refreshKey}
           onInventoryChange={refreshDashboard}

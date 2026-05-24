@@ -1,105 +1,17 @@
-:root {
-  --register-green-dark: #173b2a;
-  --register-green: #6f8f72;
-  --register-green-soft: #e7eddc;
-  --register-cream: #fffaf0;
-  --register-bg: #f7fbf7;
-  --register-text: #102318;
-  --register-muted: #64748b;
-  --register-border: rgba(15, 35, 24, 0.09);
-  --register-shadow: 0 30px 90px rgba(15, 35, 24, 0.12);
+.register-brand,
+.register-form {
+  width: 100%;
 }
 
-.register-page,
-.register-page * {
-  box-sizing: border-box;
-}
-
-.register-page {
-  animation: registerPageEnter 0.6s ease both;
-}
-
-.register-page-leave {
-  animation: registerPageLeave 0.45s ease both;
-}
-
-.register-brand-icon,
-.register-input-icon,
-.register-button-icon,
-.register-mini-icon {
-  display: block;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.9;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.register-brand-icon {
-  width: 28px;
-  height: 28px;
-}
-
-.register-input-icon {
-  width: 20px;
-  height: 20px;
-}
-
-.register-button-icon,
-.register-mini-icon {
-  width: 19px;
-  height: 19px;
-}
-
-@keyframes registerPageEnter {
-  from {
-    opacity: 0;
-    transform: translateX(36px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
-}
-
-@keyframes registerPageLeave {
-  from {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  to {
-    opacity: 0;
-    transform: translateX(-36px);
-  }
-}
-
-@keyframes registerFadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(22px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes registerFloat {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-
-  50% {
-    transform: translateY(-12px);
-  }
-}
-
-@keyframes registerSpin {
-  to {
-    transform: rotate(360deg);
-  }
+.register-logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  color: #15311e;
+  background: linear-gradient(135deg, #dfff79, #9eff7a);
+  font-weight: 950;
+  font-size: 22px;
+  box-shadow: 0 16px 36px rgba(150, 225, 92, 0.28);
 }

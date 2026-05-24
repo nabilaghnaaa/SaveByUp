@@ -6,19 +6,23 @@
   box-shadow: var(--sb-shadow-card);
   transition:
     transform 0.25s ease,
-    box-shadow 0.25s ease;
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
 }
 
 .food-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 26px 70px rgba(21, 64, 33, 0.13);
+  border-color: rgba(47, 122, 66, 0.22);
 }
 
 .food-card-image {
   position: relative;
   height: 184px;
   overflow: hidden;
-  background: linear-gradient(135deg, #e6f6df, #f9fff4);
+  background:
+    radial-gradient(circle at 20% 20%, rgba(200, 255, 98, 0.25), transparent 35%),
+    linear-gradient(135deg, #e6f6df, #f9fff4);
 }
 
 .food-card-image img {
@@ -48,6 +52,22 @@
   backdrop-filter: blur(12px);
 }
 
+.status-green {
+  background: rgba(31, 78, 44, 0.78);
+}
+
+.status-warning {
+  background: rgba(146, 64, 14, 0.78);
+}
+
+.status-danger {
+  background: rgba(185, 28, 28, 0.78);
+}
+
+.status-blue {
+  background: rgba(29, 78, 216, 0.78);
+}
+
 .food-card-body {
   padding: 18px;
 }
@@ -56,6 +76,7 @@
   display: flex;
   justify-content: space-between;
   gap: 12px;
+  align-items: flex-start;
 }
 
 .food-card h3 {
@@ -96,6 +117,11 @@
 .priority-blue {
   background: var(--sb-blue-soft);
   color: #1d4ed8;
+}
+
+.priority-gray {
+  background: rgba(102, 117, 104, 0.12);
+  color: var(--sb-muted);
 }
 
 .food-meta-grid {
@@ -153,10 +179,15 @@
   color: var(--sb-green-800);
   font-weight: 850;
   font-size: 12px;
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    opacity 0.2s ease;
 }
 
 .food-actions button:hover:not(:disabled) {
   background: var(--sb-lime-soft);
+  transform: translateY(-1px);
 }
 
 .food-actions button:disabled {
@@ -167,4 +198,23 @@
 .food-actions button.danger {
   background: rgba(239, 68, 68, 0.1);
   color: #b91c1c;
+}
+
+.food-actions button.danger:hover {
+  background: rgba(239, 68, 68, 0.16);
+}
+
+@media (max-width: 520px) {
+  .food-card-head,
+  .food-meta-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .food-card-head {
+    display: grid;
+  }
+
+  .food-priority {
+    width: fit-content;
+  }
 }

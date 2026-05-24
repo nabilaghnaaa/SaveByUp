@@ -11,10 +11,7 @@
   }
 }
 
-@media (max-width: 760px) {
-  .dashboard-hero,
-  .summary-grid,
-  .food-grid,
+@media (max-width: 860px) {
   .inventory-toolbar {
     grid-template-columns: 1fr;
   }
@@ -23,8 +20,30 @@
     align-items: flex-start;
     flex-direction: column;
   }
+}
+
+@media (max-width: 760px) {
+  .dashboard-hero,
+  .summary-grid,
+  .food-grid {
+    grid-template-columns: 1fr;
+  }
 
   .dashboard-hero h1 {
     letter-spacing: -1px;
+  }
+
+  .dashboard-hero-actions,
+  .inventory-actions {
+    width: 100%;
+  }
+
+  .dashboard-hero-actions .sb-btn,
+  .inventory-actions .sb-btn {
+    width: 100%;
+  }
+
+  .hero-mini-stats {
+    grid-template-columns: 1fr;
   }
 }

@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 import Landing from "./pages/Landing/Landing";
 
@@ -6,6 +6,7 @@ import Login from "./pages/Auth/login/Login";
 import Register from "./pages/Auth/register/Register";
 
 import Dashboard from "./pages/Dashboard/Dashboard";
+
 import FoodForm from "./pages/Foods/FoodForm";
 
 import Marketplace from "./pages/Marketplace/Marketplace";
@@ -14,7 +15,9 @@ import SellProduct from "./pages/Marketplace/SellProduct";
 import IncomingRequests from "./pages/Marketplace/IncomingRequests";
 
 import Notifications from "./pages/Notifications/Notifications";
+
 import Transactions from "./pages/Transactions/Transactions";
+
 import Profile from "./pages/Profile/Profile";
 
 import ProtectedRoute from "./routes/ProtectedRoute";

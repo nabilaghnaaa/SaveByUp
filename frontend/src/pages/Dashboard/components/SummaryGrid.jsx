@@ -15,18 +15,20 @@ export default function SummaryGrid({ summary, loading }) {
   const totalDibuang = Number(summary.total_dibuang || 0);
   const totalDigunakan = Number(summary.total_digunakan || 0);
 
+  const wasteTotal = totalKedaluwarsa + totalDibuang + totalDigunakan;
+
   const cards = [
     {
       title: "Total Makanan",
       value: totalFoods,
-      desc: "Seluruh makanan yang tercatat dalam inventaris pribadi.",
+      desc: "Semua makanan yang tercatat dalam inventaris pribadi.",
       tone: "green",
       percent: totalFoods > 0 ? 100 : 0,
     },
     {
       title: "Aman Dikonsumsi",
       value: totalAman,
-      desc: "Makanan yang masih aman dan belum mendekati kedaluwarsa.",
+      desc: "Makanan yang masih aman dan belum mendekati tanggal kedaluwarsa.",
       tone: "safe",
       percent: getPercent(totalAman, totalFoods),
     },
@@ -39,10 +41,10 @@ export default function SummaryGrid({ summary, loading }) {
     },
     {
       title: "Selesai / Waste",
-      value: totalKedaluwarsa + totalDibuang + totalDigunakan,
-      desc: "Makanan yang sudah digunakan, dibuang, atau kedaluwarsa.",
+      value: wasteTotal,
+      desc: "Makanan yang sudah digunakan, dibuang, atau sudah kedaluwarsa.",
       tone: "danger",
-      percent: getPercent(totalKedaluwarsa + totalDibuang + totalDigunakan, totalFoods),
+      percent: getPercent(wasteTotal, totalFoods),
     },
   ];
 
@@ -51,12 +53,18 @@ export default function SummaryGrid({ summary, loading }) {
       <div className="section-heading">
         <span>Ringkasan Inventaris</span>
         <h2>Status stok makanan</h2>
-        <p>Ringkasan ini membantu kamu memantau stok dan risiko food waste.</p>
+        <p>
+          Ringkasan ini membantu kamu memantau kondisi stok dan risiko makanan
+          terbuang.
+        </p>
       </div>
 
       <div className="summary-grid">
         {cards.map((card) => (
-          <article className={`summary-card summary-${card.tone}`} key={card.title}>
+          <article
+            className={`summary-card summary-${card.tone}`}
+            key={card.title}
+          >
             <div className="summary-card-top">
               <span>{card.title}</span>
               <strong>{loading ? "..." : card.value}</strong>
@@ -65,7 +73,7 @@ export default function SummaryGrid({ summary, loading }) {
             <p>{card.desc}</p>
 
             <div className="summary-progress">
-              <div style={{ width: `${card.percent}%` }}></div>
+              <div style={{ width: `${card.percent}%` }} />
             </div>
 
             <small>{card.percent}% dari total data</small>

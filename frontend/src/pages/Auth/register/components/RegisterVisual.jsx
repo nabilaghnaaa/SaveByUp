@@ -1,64 +1,39 @@
-import registerImage from '../../../../assets/images/login-food.jpg';
-
-function IconCheck() {
+export default function RegisterVisual() {
   return (
-    <svg viewBox="0 0 24 24" className="register-mini-icon">
-      <circle cx="12" cy="12" r="8" />
-      <path d="M8.5 12.2l2.2 2.2 4.8-5" />
-    </svg>
-  );
-}
+    <section className="register-visual">
+      <div className="register-visual-overlay" />
 
-function IconClock() {
-  return (
-    <svg viewBox="0 0 24 24" className="register-mini-icon">
-      <circle cx="12" cy="12" r="8" />
-      <path d="M12 7.5V12l3 2" />
-    </svg>
-  );
-}
+      <div className="register-visual-content">
+        <div className="register-visual-badge">Join SaveByUp</div>
 
-function RegisterVisual() {
-  return (
-    <aside className="register-visual">
-      <div className="register-image-card">
-        <img src={registerImage} alt="SaveByUp food marketplace" />
+        <h2>Ubah stok makanan jadi lebih terpantau.</h2>
 
-        <div className="register-image-overlay"></div>
+        <p>
+          SaveByUp dirancang untuk mahasiswa kos agar bisa mencatat makanan,
+          memantau kedaluwarsa, mengurangi food waste, dan berbagi makanan layak
+          konsumsi secara lebih aman.
+        </p>
 
-        <div className="register-visual-content">
-          <span>Smart Marketplace</span>
-          <h2>Mulai hemat dan kurangi makanan terbuang.</h2>
-          <p>
-            SaveByUp membantu pengguna menemukan makanan berlebih yang masih
-            layak konsumsi dengan harga lebih terjangkau.
-          </p>
+        <div className="register-steps">
+          <div>
+            <span>01</span>
+            <strong>Catat Stok</strong>
+            <p>Masukkan makanan dan tanggal kedaluwarsa.</p>
+          </div>
+
+          <div>
+            <span>02</span>
+            <strong>Dapatkan Reminder</strong>
+            <p>Sistem membantu menentukan prioritas konsumsi.</p>
+          </div>
+
+          <div>
+            <span>03</span>
+            <strong>Manfaatkan Lagi</strong>
+            <p>Jual murah makanan layak konsumsi melalui marketplace.</p>
+          </div>
         </div>
       </div>
-
-      <div className="register-floating-card register-floating-top">
-        <div>
-          <IconClock />
-        </div>
-
-        <section>
-          <strong>Food Rescue</strong>
-          <span>Selamatkan makanan layak konsumsi</span>
-        </section>
-      </div>
-
-      <div className="register-floating-card register-floating-bottom">
-        <div>
-          <IconCheck />
-        </div>
-
-        <section>
-          <strong>Akun Baru</strong>
-          <span>Siap kelola stok dan marketplace</span>
-        </section>
-      </div>
-    </aside>
+    </section>
   );
 }
-
-export default RegisterVisual;

@@ -1,9 +1,24 @@
 .food-status-preview {
   border-radius: 30px;
   padding: 22px;
+  position: relative;
+  overflow: hidden;
+}
+
+.food-status-preview::after {
+  content: "";
+  position: absolute;
+  right: -60px;
+  bottom: -60px;
+  width: 150px;
+  height: 150px;
+  border-radius: 999px;
+  background: rgba(200, 255, 98, 0.16);
 }
 
 .preview-label {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   margin-bottom: 12px;
   color: var(--sb-green-600);
@@ -14,18 +29,24 @@
 }
 
 .food-status-preview h3 {
+  position: relative;
+  z-index: 1;
   margin: 0;
   color: var(--sb-green-900);
   font-size: 25px;
 }
 
 .food-status-preview p {
+  position: relative;
+  z-index: 1;
   margin: 12px 0 0;
   color: var(--sb-muted);
   line-height: 1.65;
 }
 
 .preview-info-grid {
+  position: relative;
+  z-index: 1;
   display: grid;
   gap: 12px;
   margin-top: 18px;
@@ -51,6 +72,8 @@
 }
 
 .food-status-preview small {
+  position: relative;
+  z-index: 1;
   display: block;
   margin-top: 14px;
   color: var(--sb-muted);
@@ -58,9 +81,21 @@
 }
 
 .preview-danger {
-  border-color: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.2);
+}
+
+.preview-danger::after {
+  background: rgba(239, 68, 68, 0.1);
 }
 
 .preview-warning {
-  border-color: rgba(245, 158, 11, 0.18);
+  border-color: rgba(245, 158, 11, 0.2);
+}
+
+.preview-warning::after {
+  background: rgba(245, 158, 11, 0.12);
+}
+
+.preview-blue::after {
+  background: rgba(59, 130, 246, 0.12);
 }

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import EmptyState from "../../../components/ui/EmptyState";
 import FoodCard from "../../Foods/components/FoodCard";
+
 import {
   deleteFood,
   getFoods,
@@ -22,19 +23,24 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
   const fetchFoods = async () => {
     try {
       setLoading(true);
+
       const data = await getFoods();
       setFoods(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Gagal mengambil data makanan:", error);
+      console.error("Gagal mengambil inventaris:", error);
       setMessage("Gagal mengambil data inventaris makanan.");
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchFoods();
-  }, [refreshKey]);
+  const showMessage = (text) => {
+    setMessage(text);
+
+    setTimeout(() => {
+      setMessage("");
+    }, 2800);
+  };
 
   const refreshAll = async () => {
     await fetchFoods();
@@ -44,13 +50,13 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
     }
   };
 
-  const showMessage = (text) => {
-    setMessage(text);
-    setTimeout(() => setMessage(""), 2500);
-  };
+  useEffect(() => {
+    fetchFoods();
+  }, [refreshKey]);
 
   const handleDelete = async (food) => {
     const ok = window.confirm(`Hapus data makanan "${food.name}"?`);
+
     if (!ok) return;
 
     try {
@@ -59,7 +65,9 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
       await refreshAll();
     } catch (error) {
       console.error("Gagal menghapus makanan:", error);
-      showMessage(error.response?.data?.message || "Gagal menghapus makanan.");
+      showMessage(
+        error.response?.data?.message || "Gagal menghapus data makanan."
+      );
     }
   };
 
@@ -69,8 +77,10 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
       showMessage(successMessage);
       await refreshAll();
     } catch (error) {
-      console.error("Gagal mengubah status:", error);
-      showMessage(error.response?.data?.message || "Gagal mengubah status makanan.");
+      console.error("Gagal mengubah status makanan:", error);
+      showMessage(
+        error.response?.data?.message || "Gagal mengubah status makanan."
+      );
     }
   };
 
@@ -84,7 +94,9 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
         food.category?.toLowerCase().includes(keyword) ||
         food.unit?.toLowerCase().includes(keyword);
 
-      const matchStatus = statusFilter === "semua" || food.status === statusFilter;
+      const matchStatus =
+        statusFilter === "semua" || food.status === statusFilter;
+
       const matchPriority =
         priorityFilter === "semua" || food.priority === priorityFilter;
 
@@ -99,17 +111,22 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
           <span>Inventaris Makanan</span>
           <h2>Daftar stok makanan kamu</h2>
           <p>
-            Pantau jumlah stok, tanggal kedaluwarsa, status makanan, dan pilih
-            makanan yang layak untuk ditawarkan ke marketplace.
+            Kelola stok, tanggal kedaluwarsa, status makanan, dan pilih makanan
+            yang masih layak untuk ditawarkan ke marketplace.
           </p>
         </div>
 
         <div className="inventory-actions">
-          <button className="sb-btn sb-btn-ghost" onClick={fetchFoods}>
+          <button
+            type="button"
+            className="sb-btn sb-btn-ghost"
+            onClick={fetchFoods}
+          >
             Refresh
           </button>
 
           <button
+            type="button"
             className="sb-btn sb-btn-primary"
             onClick={() => navigate("/foods/add")}
           >
@@ -122,7 +139,7 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
         <input
           type="text"
           value={search}
-          placeholder="Cari makanan, kategori, atau satuan..."
+          placeholder="Cari nama makanan, kategori, atau satuan..."
           onChange={(event) => setSearch(event.target.value)}
         />
 
@@ -165,6 +182,7 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
           description="Tambahkan makanan pertama agar SaveByUp bisa memantau stok dan tanggal kedaluwarsa."
           action={
             <button
+              type="button"
               className="sb-btn sb-btn-primary"
               onClick={() => navigate("/foods/add")}
             >
@@ -178,6 +196,7 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
           description="Coba ubah kata kunci pencarian atau reset filter."
           action={
             <button
+              type="button"
               className="sb-btn sb-btn-ghost"
               onClick={() => {
                 setSearch("");
@@ -205,7 +224,11 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
                 )
               }
               onDiscard={() =>
-                handleUpdateStatus(food, "dibuang", "Makanan ditandai dibuang.")
+                handleUpdateStatus(
+                  food,
+                  "dibuang",
+                  "Makanan ditandai dibuang."
+                )
               }
               onSell={() => navigate(`/marketplace/sell/${food.id}`)}
             />

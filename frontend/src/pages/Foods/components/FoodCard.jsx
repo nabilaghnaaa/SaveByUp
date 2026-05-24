@@ -1,4 +1,5 @@
 import { formatDate, getDaysLeftLabel } from "../../../utils/formatDate";
+
 import {
   canSellFood,
   getFoodPriority,
@@ -16,8 +17,7 @@ export default function FoodCard({
   onSell,
 }) {
   const priority = getFoodPriority(food.expiry_date, food.status);
-  const canSell = canSellFood(food);
-
+  const isSellable = canSellFood(food);
   const imageSource = food.image_url;
 
   return (
@@ -73,7 +73,7 @@ export default function FoodCard({
             Edit
           </button>
 
-          <button type="button" disabled={!canSell} onClick={onSell}>
+          <button type="button" disabled={!isSellable} onClick={onSell}>
             Jual
           </button>
 

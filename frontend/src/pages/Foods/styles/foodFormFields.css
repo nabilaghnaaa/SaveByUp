@@ -4,45 +4,52 @@
   gap: 16px;
 }
 
-.form-group {
+.food-field {
   display: grid;
   gap: 8px;
 }
 
-.form-group.full {
+.food-field-full {
   grid-column: 1 / -1;
 }
 
-.form-group label {
+.food-field label {
   color: var(--sb-green-900);
   font-weight: 850;
   font-size: 14px;
 }
 
-.form-group input,
-.form-group select,
-.form-group textarea {
+.food-field input,
+.food-field select,
+.food-field textarea {
   width: 100%;
   border: 1px solid rgba(43, 107, 58, 0.14);
   border-radius: 18px;
   padding: 14px 15px;
   outline: none;
   color: var(--sb-green-900);
-  background: rgba(255, 255, 255, 0.82);
+  background: rgba(255, 255, 255, 0.86);
   transition:
     border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
-.form-group input:focus,
-.form-group select:focus,
-.form-group textarea:focus {
+.food-field input:focus,
+.food-field select:focus,
+.food-field textarea:focus {
   border-color: rgba(47, 122, 66, 0.45);
   box-shadow: 0 0 0 4px rgba(200, 255, 98, 0.2);
+  background: white;
 }
 
-.form-group textarea {
+.food-field textarea {
   resize: vertical;
+}
+
+.food-field small {
+  color: var(--sb-muted);
+  line-height: 1.55;
 }
 
 @media (max-width: 720px) {

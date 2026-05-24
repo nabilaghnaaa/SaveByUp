@@ -27,7 +27,9 @@ export const getDaysLeft = (dateString) => {
   today.setHours(0, 0, 0, 0);
   expiry.setHours(0, 0, 0, 0);
 
-  return Math.ceil((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  return Math.ceil(
+    (expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+  );
 };
 
 export const getDaysLeftLabel = (dateString) => {
@@ -35,6 +37,6 @@ export const getDaysLeftLabel = (dateString) => {
 
   if (daysLeft === null) return "Tanggal belum diisi";
   if (daysLeft < 0) return `Lewat ${Math.abs(daysLeft)} hari`;
-  if (daysLeft === 0) return "Kedaluwarsa hari ini";
+  if (daysLeft === 0) return "Hari ini";
   return `${daysLeft} hari lagi`;
 };

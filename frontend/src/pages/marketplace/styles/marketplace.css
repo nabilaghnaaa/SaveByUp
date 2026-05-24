@@ -1,0 +1,75 @@
+.product-filter {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px 220px;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 24px;
+  margin-bottom: 22px;
+}
+
+.product-filter input,
+.product-filter select {
+  width: 100%;
+  min-height: 48px;
+  border: 1px solid rgba(43, 107, 58, 0.13);
+  border-radius: 16px;
+  padding: 0 14px;
+  background: rgba(255, 255, 255, 0.86);
+  color: var(--sb-green-900);
+  outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.product-filter input:focus,
+.product-filter select:focus {
+  border-color: rgba(47, 122, 66, 0.45);
+  box-shadow: 0 0 0 4px rgba(200, 255, 98, 0.2);
+}
+
+.marketplace-message {
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: var(--sb-danger-soft);
+  border: 1px solid rgba(239, 68, 68, 0.14);
+  color: #b91c1c;
+  font-weight: 800;
+}
+
+.marketplace-state {
+  padding: 34px;
+  border-radius: 28px;
+  text-align: center;
+}
+
+.marketplace-state h3 {
+  margin: 0 0 8px;
+  color: var(--sb-green-900);
+  font-size: 24px;
+}
+
+.marketplace-state p {
+  margin: 0;
+  color: var(--sb-muted);
+}
+
+.marketplace-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+@media (max-width: 1180px) {
+  .marketplace-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .product-filter,
+  .marketplace-grid {
+    grid-template-columns: 1fr;
+  }
+}

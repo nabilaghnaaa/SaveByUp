@@ -1,105 +1,93 @@
-function IconMail() {
-  return (
-    <svg viewBox="0 0 24 24" className="login-input-icon">
-      <path d="M4 6h16v12H4V6z" />
-      <path d="M4 7l8 6 8-6" />
-    </svg>
-  );
-}
+import { useState } from "react";
 
-function IconLock() {
-  return (
-    <svg viewBox="0 0 24 24" className="login-input-icon">
-      <rect x="5" y="10" width="14" height="10" rx="2" />
-      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
-      <path d="M12 14v3" />
-    </svg>
-  );
-}
+import { loginUser } from "../../../../services/authService";
 
-function IconArrow() {
-  return (
-    <svg viewBox="0 0 24 24" className="login-button-icon">
-      <path d="M5 12h14" />
-      <path d="M13 6l6 6-6 6" />
-    </svg>
-  );
-}
+export default function LoginForm({ onSuccess }) {
+  const [form, setForm] = useState({
+    email: "",
+    password: "",
+  });
 
-function LoginForm({
-  form,
-  message,
-  messageType,
-  loading,
-  onChange,
-  onSubmit,
-  onGoRegister,
-}) {
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (name, value) => {
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const validateForm = () => {
+    if (!form.email.trim()) {
+      return "Email wajib diisi.";
+    }
+
+    if (!form.password.trim()) {
+      return "Password wajib diisi.";
+    }
+
+    return "";
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const errorMessage = validateForm();
+
+    if (errorMessage) {
+      setMessage(errorMessage);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setMessage("");
+
+      await loginUser(form);
+
+      if (onSuccess) {
+        onSuccess();
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+
+      setMessage(
+        error.response?.data?.message ||
+          "Login gagal. Periksa kembali email dan password."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="login-card">
-      <div className="login-card-heading">
-        <span>Welcome Back</span>
-        <h1>Masuk ke akunmu</h1>
-        <p>
-          Kelola stok makanan, pantau kedaluwarsa, dan kurangi food waste dari
-          satu dashboard.
-        </p>
+    <form className="login-form" onSubmit={handleSubmit}>
+      {message && <div className="login-message">{message}</div>}
+
+      <div className="login-field">
+        <label>Email</label>
+        <input
+          type="email"
+          value={form.email}
+          placeholder="Masukkan email"
+          onChange={(event) => handleChange("email", event.target.value)}
+        />
       </div>
 
-      {message && (
-        <div className={`login-message ${messageType}`}>
-          {message}
-        </div>
-      )}
-
-      <form className="login-form" onSubmit={onSubmit}>
-        <div className="login-form-group">
-          <label>Email</label>
-
-          <div className="login-input-shell">
-            <IconMail />
-
-            <input
-              type="email"
-              name="email"
-              placeholder="Masukkan email kamu"
-              value={form.email}
-              onChange={onChange}
-            />
-          </div>
-        </div>
-
-        <div className="login-form-group">
-          <label>Password</label>
-
-          <div className="login-input-shell">
-            <IconLock />
-
-            <input
-              type="password"
-              name="password"
-              placeholder="Masukkan password"
-              value={form.password}
-              onChange={onChange}
-            />
-          </div>
-        </div>
-
-        <button type="submit" className="login-submit-btn" disabled={loading}>
-          {loading ? 'Memproses...' : 'Masuk ke Dashboard'}
-          <IconArrow />
-        </button>
-      </form>
-
-      <div className="login-register-row">
-        <span>Belum punya akun?</span>
-
-        <button type="button" onClick={onGoRegister}>
-          Daftar sekarang
-        </button>
+      <div className="login-field">
+        <label>Password</label>
+        <input
+          type="password"
+          value={form.password}
+          placeholder="Masukkan password"
+          onChange={(event) => handleChange("password", event.target.value)}
+        />
       </div>
-    </div>
+
+      <button type="submit" className="login-submit" disabled={loading}>
+        {loading ? "Memproses..." : "Masuk"}
+      </button>
+    </form>
   );
 }
-
-export default LoginForm;

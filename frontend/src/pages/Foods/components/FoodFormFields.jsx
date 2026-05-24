@@ -9,7 +9,7 @@ import "../styles/foodFormFields.css";
 export default function FoodFormFields({ form, onChange }) {
   return (
     <div className="food-form-fields">
-      <div className="form-group full">
+      <div className="food-field food-field-full">
         <label>Nama Makanan</label>
         <input
           type="text"
@@ -19,7 +19,7 @@ export default function FoodFormFields({ form, onChange }) {
         />
       </div>
 
-      <div className="form-group">
+      <div className="food-field">
         <label>Kategori</label>
         <select
           value={form.category}
@@ -33,7 +33,7 @@ export default function FoodFormFields({ form, onChange }) {
         </select>
       </div>
 
-      <div className="form-group">
+      <div className="food-field">
         <label>Jumlah Stok</label>
         <input
           type="number"
@@ -43,7 +43,7 @@ export default function FoodFormFields({ form, onChange }) {
         />
       </div>
 
-      <div className="form-group">
+      <div className="food-field">
         <label>Satuan</label>
         <select
           value={form.unit}
@@ -57,7 +57,7 @@ export default function FoodFormFields({ form, onChange }) {
         </select>
       </div>
 
-      <div className="form-group">
+      <div className="food-field">
         <label>Tanggal Kedaluwarsa</label>
         <input
           type="date"
@@ -66,7 +66,7 @@ export default function FoodFormFields({ form, onChange }) {
         />
       </div>
 
-      <div className="form-group full">
+      <div className="food-field food-field-full">
         <label>Status Makanan</label>
         <select
           value={form.status}
@@ -78,14 +78,20 @@ export default function FoodFormFields({ form, onChange }) {
             </option>
           ))}
         </select>
+
+        <small>
+          Status aman, mendekati kedaluwarsa, dan kedaluwarsa akan disesuaikan
+          otomatis berdasarkan tanggal kedaluwarsa. Status seperti dijual,
+          digunakan, dan dibuang dipakai untuk aksi manual.
+        </small>
       </div>
 
-      <div className="form-group full">
+      <div className="food-field food-field-full">
         <label>Keterangan</label>
         <textarea
           rows="4"
           value={form.note}
-          placeholder="Contoh: masih tersegel, simpan di kulkas, dibeli kemarin..."
+          placeholder="Contoh: masih tersegel, simpan di kulkas, dibeli kemarin, cocok untuk dijual murah..."
           onChange={(event) => onChange("note", event.target.value)}
         />
       </div>

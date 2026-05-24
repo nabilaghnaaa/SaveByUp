@@ -3,21 +3,18 @@
   gap: 26px;
 }
 
-.dashboard-loading,
 .inventory-state {
   padding: 34px;
   border-radius: 28px;
   text-align: center;
 }
 
-.dashboard-loading h3,
 .inventory-state h3 {
   margin: 0 0 8px;
   font-size: 24px;
   color: var(--sb-green-900);
 }
 
-.dashboard-loading p,
 .inventory-state p {
   margin: 0;
   color: var(--sb-muted);

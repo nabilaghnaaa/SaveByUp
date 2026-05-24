@@ -34,6 +34,15 @@
   background: rgba(255, 255, 255, 0.86);
   color: var(--sb-green-900);
   outline: none;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.inventory-toolbar input:focus,
+.inventory-toolbar select:focus {
+  border-color: rgba(47, 122, 66, 0.45);
+  box-shadow: 0 0 0 4px rgba(200, 255, 98, 0.2);
 }
 
 .inventory-message {

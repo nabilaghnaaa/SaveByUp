@@ -1,0 +1,123 @@
+.app-topbar {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+  margin-bottom: 24px;
+  padding: 18px 20px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(43, 107, 58, 0.12);
+  box-shadow: 0 14px 40px rgba(28, 78, 40, 0.06);
+  backdrop-filter: blur(18px);
+}
+
+.app-topbar-label {
+  margin: 0 0 5px;
+  color: var(--sb-green-600);
+  font-size: 12px;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.app-topbar h2 {
+  margin: 0;
+  font-size: 22px;
+  color: var(--sb-green-900);
+  letter-spacing: -0.3px;
+}
+
+.app-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.app-notification-button,
+.app-profile-button {
+  border: 0;
+  border-radius: 999px;
+  min-height: 42px;
+  background: rgba(43, 107, 58, 0.08);
+  color: var(--sb-green-800);
+  font-weight: 850;
+  transition:
+    transform 0.22s ease,
+    background 0.22s ease;
+}
+
+.app-notification-button {
+  width: 42px;
+  display: grid;
+  place-items: center;
+}
+
+.app-profile-button {
+  padding: 0 15px;
+}
+
+.app-notification-button:hover,
+.app-profile-button:hover {
+  transform: translateY(-2px);
+  background: var(--sb-lime-soft);
+}
+
+.app-avatar {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--sb-green-800);
+  color: var(--sb-lime);
+  font-weight: 950;
+}
+
+.app-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.app-avatar span {
+  display: inline-flex;
+}
+
+.app-user-info {
+  display: grid;
+}
+
+.app-user-info strong {
+  font-size: 14px;
+  color: var(--sb-green-900);
+}
+
+.app-user-info span {
+  font-size: 12px;
+  color: var(--sb-muted);
+}
+
+@media (max-width: 760px) {
+  .app-topbar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .app-user {
+    width: 100%;
+    flex-wrap: wrap;
+  }
+
+  .app-user-info {
+    min-width: 0;
+  }
+
+  .app-user-info span {
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

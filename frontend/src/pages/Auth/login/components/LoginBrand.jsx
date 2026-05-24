@@ -1,25 +1,27 @@
-function IconLeaf() {
-  return (
-    <svg viewBox="0 0 24 24" className="login-brand-icon">
-      <path d="M19 5c-7.2.3-12 3.9-12 9.4 0 2.7 1.9 4.6 4.5 4.6C16.9 19 19 12.6 19 5z" />
-      <path d="M7 19c2.4-4.6 5.5-7.3 9.2-9" />
-    </svg>
-  );
-}
+import { Link } from "react-router-dom";
 
-function LoginBrand() {
+export default function LoginBrand() {
   return (
     <div className="login-brand">
-      <div className="login-logo">
-        <IconLeaf />
-      </div>
+      <div className="login-logo">S</div>
 
       <div>
-        <span>SaveByUp</span>
-        <strong>Food Waste Prevention System</strong>
+        <strong>SaveByUp</strong>
+        <span>Food Waste Prevention System</span>
       </div>
+
+      <div className="login-heading">
+        <span>Selamat Datang Kembali</span>
+        <h1>Masuk ke akun kamu</h1>
+        <p>
+          Lanjutkan memantau stok makanan, tanggal kedaluwarsa, dan marketplace
+          makanan layak konsumsi.
+        </p>
+      </div>
+
+      <p className="login-switch">
+        Belum punya akun? <Link to="/register">Daftar sekarang</Link>
+      </p>
     </div>
   );
 }
-
-export default LoginBrand;

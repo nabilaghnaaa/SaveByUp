@@ -1,101 +1,130 @@
-import { useMemo, useState } from 'react';
-import MarketplaceHero from './components/MarketplaceHero';
-import MarketplaceFilters from './components/MarketplaceFilters';
-import MarketplaceGrid from './components/MarketplaceGrid';
-import './styles/marketplace.css';
+import { useEffect, useMemo, useState } from "react";
 
-const products = [
-  {
-    id: 1,
-    name: 'Paket Sayur Fresh',
-    seller: 'Dapur Hijau',
-    category: 'Sayur',
-    price: 18000,
-    oldPrice: 26000,
-    location: 'Bandung',
-    stock: 12,
-    expiresIn: '2 hari lagi',
-    image: '🥬',
-    tag: 'Hemat 31%',
-  },
-  {
-    id: 2,
-    name: 'Roti Gandum Sisa Produksi',
-    seller: 'Bakery Up',
-    category: 'Roti',
-    price: 12000,
-    oldPrice: 20000,
-    location: 'Jakarta',
-    stock: 8,
-    expiresIn: 'Besok',
-    image: '🍞',
-    tag: 'Cepat habis',
-  },
-  {
-    id: 3,
-    name: 'Buah Campur Rescue Box',
-    seller: 'Fruit Saver',
-    category: 'Buah',
-    price: 25000,
-    oldPrice: 38000,
-    location: 'Depok',
-    stock: 15,
-    expiresIn: '3 hari lagi',
-    image: '🍎',
-    tag: 'Best deal',
-  },
-  {
-    id: 4,
-    name: 'Nasi Box Berlebih',
-    seller: 'Warung Berkah',
-    category: 'Makanan Siap Saji',
-    price: 15000,
-    oldPrice: 28000,
-    location: 'Bekasi',
-    stock: 6,
-    expiresIn: 'Hari ini',
-    image: '🍱',
-    tag: 'Prioritas',
-  },
-];
+import AppShell from "../../components/layout/AppShell";
+import EmptyState from "../../components/ui/EmptyState";
+import PageHeader from "../../components/ui/PageHeader";
 
-function Marketplace() {
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('Semua');
+import { getMarketplaceProducts } from "../../services/marketplaceService";
+
+import ProductCard from "./components/ProductCard";
+import ProductFilter from "./components/ProductFilter";
+
+import "./styles/marketplace.css";
+
+export default function Marketplace() {
+  const [products, setProducts] = useState([]);
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("semua");
+  const [statusFilter, setStatusFilter] = useState("tersedia");
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      setMessage("");
+
+      const data = await getMarketplaceProducts();
+      setProducts(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error("Gagal mengambil produk marketplace:", error);
+      setMessage(
+        error.response?.data?.message ||
+          "Gagal mengambil data marketplace."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
 
   const filteredProducts = useMemo(() => {
+    const keyword = search.toLowerCase().trim();
+
     return products.filter((product) => {
       const matchSearch =
-        product.name.toLowerCase().includes(search.toLowerCase()) ||
-        product.seller.toLowerCase().includes(search.toLowerCase());
+        !keyword ||
+        product.name?.toLowerCase().includes(keyword) ||
+        product.category?.toLowerCase().includes(keyword) ||
+        product.seller_name?.toLowerCase().includes(keyword) ||
+        product.seller_address?.toLowerCase().includes(keyword);
 
       const matchCategory =
-        category === 'Semua' || product.category === category;
+        categoryFilter === "semua" || product.category === categoryFilter;
 
-      return matchSearch && matchCategory;
+      const matchStatus =
+        statusFilter === "semua" || product.status === statusFilter;
+
+      return matchSearch && matchCategory && matchStatus;
     });
-  }, [search, category]);
+  }, [products, search, categoryFilter, statusFilter]);
 
   return (
-    <div className="marketplace-page">
-      <div className="marketplace-grid-bg"></div>
-      <div className="marketplace-orb marketplace-orb-one"></div>
-      <div className="marketplace-orb marketplace-orb-two"></div>
+    <AppShell>
+      <PageHeader
+        label="Marketplace"
+        title="Marketplace Makanan Mahasiswa Kos"
+        description="Temukan makanan layak konsumsi dari mahasiswa lain, cek tanggal kedaluwarsa, lalu ajukan pembelian atau negosiasi harga."
+        action={
+          <button
+            type="button"
+            className="sb-btn sb-btn-ghost"
+            onClick={fetchProducts}
+          >
+            Refresh
+          </button>
+        }
+      />
 
-      <main className="marketplace-shell">
-        <MarketplaceHero totalProducts={products.length} />
+      <ProductFilter
+        search={search}
+        categoryFilter={categoryFilter}
+        statusFilter={statusFilter}
+        onSearchChange={setSearch}
+        onCategoryChange={setCategoryFilter}
+        onStatusChange={setStatusFilter}
+      />
 
-        <MarketplaceFilters
-          search={search}
-          category={category}
-          onSearchChange={setSearch}
-          onCategoryChange={setCategory}
+      {message && <div className="marketplace-message">{message}</div>}
+
+      {loading ? (
+        <div className="marketplace-state sb-glass">
+          <h3>Memuat marketplace...</h3>
+          <p>Sedang mengambil daftar makanan yang ditawarkan.</p>
+        </div>
+      ) : products.length === 0 ? (
+        <EmptyState
+          title="Belum ada produk marketplace"
+          description="Produk dari inventaris yang ditawarkan ke marketplace akan muncul di sini."
         />
-
-        <MarketplaceGrid products={filteredProducts} />
-      </main>
-    </div>
+      ) : filteredProducts.length === 0 ? (
+        <EmptyState
+          title="Produk tidak ditemukan"
+          description="Coba ubah kata kunci pencarian, kategori, atau status produk."
+          action={
+            <button
+              type="button"
+              className="sb-btn sb-btn-ghost"
+              onClick={() => {
+                setSearch("");
+                setCategoryFilter("semua");
+                setStatusFilter("semua");
+              }}
+            >
+              Reset Filter
+            </button>
+          }
+        />
+      ) : (
+        <section className="marketplace-grid">
+          {filteredProducts.map((product) => (
+            <ProductCard product={product} key={product.id} />
+          ))}
+        </section>
+      )}
+    </AppShell>
   );
 }
-
-export default Marketplace;

@@ -3,14 +3,18 @@ import { getFoodPriority, getFoodStatusLabel } from "../../../utils/foodStatus";
 
 import "../styles/foodStatusPreview.css";
 
-export default function FoodStatusPreview({ expiryDate, status, currentStatus }) {
-  const priority = getFoodPriority(expiryDate, status);
+export default function FoodStatusPreview({
+  expiryDate,
+  autoStatus,
+  currentStatus,
+}) {
+  const priority = getFoodPriority(expiryDate, autoStatus);
 
   return (
     <section className={`food-status-preview preview-${priority.tone} sb-glass`}>
       <span className="preview-label">Status Otomatis</span>
 
-      <h3>{getFoodStatusLabel(status)}</h3>
+      <h3>{getFoodStatusLabel(autoStatus)}</h3>
 
       <p>{priority.message}</p>
 
@@ -27,9 +31,15 @@ export default function FoodStatusPreview({ expiryDate, status, currentStatus })
       </div>
 
       {currentStatus === "dijual" && (
-        <small>
-          Makanan ini sedang ditawarkan di marketplace.
-        </small>
+        <small>Makanan ini sedang ditawarkan di marketplace.</small>
+      )}
+
+      {currentStatus === "digunakan" && (
+        <small>Makanan ini sudah ditandai sebagai digunakan.</small>
+      )}
+
+      {currentStatus === "dibuang" && (
+        <small>Makanan ini sudah ditandai sebagai dibuang.</small>
       )}
     </section>
   );

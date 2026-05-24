@@ -12,20 +12,31 @@
 .summary-card {
   padding: 22px;
   border-radius: 26px;
-  background: rgba(255, 255, 255, 0.76);
+  background: rgba(255, 255, 255, 0.78);
   border: 1px solid rgba(43, 107, 58, 0.12);
   box-shadow: var(--sb-shadow-card);
+  backdrop-filter: blur(18px);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+
+.summary-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 26px 70px rgba(21, 64, 33, 0.12);
 }
 
 .summary-card-top {
   display: flex;
   justify-content: space-between;
   gap: 12px;
+  align-items: flex-start;
 }
 
 .summary-card-top span {
   color: var(--sb-muted);
   font-weight: 850;
+  line-height: 1.4;
 }
 
 .summary-card-top strong {

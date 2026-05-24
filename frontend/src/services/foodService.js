@@ -1,16 +1,17 @@
 import API from "./api";
 
-const normalizeFood = (food) => ({
-  id: food.id || food.id_makanan,
-  name: food.name || food.nama_makanan || "",
-  category: food.category || food.kategori || "",
-  quantity: Number(food.quantity ?? food.jumlah_stok ?? 0),
-  unit: food.unit || food.satuan || "pcs",
-  expiry_date: food.expiry_date || food.tanggal_kedaluwarsa || "",
-  note: food.note || food.keterangan || "",
-  status: food.status || food.status_makanan || "aman",
-  priority: food.priority || food.prioritas || "",
-  image_url: food.image_url || food.foto_makanan || food.photo_url || "",
+const normalizeFood = (food = {}) => ({
+  id: food.id,
+  user_id: food.user_id,
+  name: food.name || "",
+  category: food.category || "",
+  quantity: Number(food.quantity || 0),
+  unit: food.unit || "pcs",
+  expiry_date: food.expiry_date ? String(food.expiry_date).slice(0, 10) : "",
+  status: food.status || "aman",
+  priority: food.priority || "rendah",
+  note: food.note || "",
+  image_url: food.image_url || "",
   created_at: food.created_at,
   updated_at: food.updated_at,
 });
@@ -40,19 +41,19 @@ const toFoodPayload = (food) => ({
 
 export const getFoodSummary = async () => {
   const response = await API.get("/foods/summary");
-  return normalizeSummary(response.data.data || response.data || {});
+  return normalizeSummary(response.data.data || {});
 };
 
 export const getFoods = async () => {
   const response = await API.get("/foods");
-  const foods = response.data.data || response.data || [];
+  const foods = response.data.data || [];
+
   return Array.isArray(foods) ? foods.map(normalizeFood) : [];
 };
 
 export const getFoodById = async (id) => {
   const response = await API.get(`/foods/${id}`);
-  const food = response.data.data || response.data;
-  return normalizeFood(food);
+  return normalizeFood(response.data.data);
 };
 
 export const createFood = async (food) => {
@@ -65,17 +66,15 @@ export const updateFood = async (id, food) => {
   return response.data;
 };
 
-export const deleteFood = async (id) => {
-  const response = await API.delete(`/foods/${id}`);
-  return response.data;
-};
-
 export const updateFoodStatus = async (food, status) => {
-  const payload = toFoodPayload({
-    ...food,
+  const response = await API.patch(`/foods/${food.id}/status`, {
     status,
   });
 
-  const response = await API.put(`/foods/${food.id}`, payload);
+  return response.data;
+};
+
+export const deleteFood = async (id) => {
+  const response = await API.delete(`/foods/${id}`);
   return response.data;
 };
