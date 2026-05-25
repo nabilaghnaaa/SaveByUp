@@ -28,14 +28,18 @@ export default function RequestCard({ request, onApprove, onReject }) {
   return (
     <article className="request-card">
       <div className="request-main">
-        <span className={`request-status request-${request.status}`}>
-          {getStatusLabel(request.status)}
-        </span>
+        <div className="request-top">
+          <span className={`request-status request-${request.status}`}>
+            {getStatusLabel(request.status)}
+          </span>
 
-        <h3>{request.product_name}</h3>
+          <small>{formatDate(request.created_at)}</small>
+        </div>
+
+        <h3>{request.product_name || "Produk Marketplace"}</h3>
 
         <p>
-          Pengajuan dari <strong>{request.buyer_name}</strong>
+          Pengajuan dari <strong>{request.buyer_name || "Calon Pembeli"}</strong>
         </p>
 
         <div className="request-grid">
@@ -50,8 +54,8 @@ export default function RequestCard({ request, onApprove, onReject }) {
           </div>
 
           <div>
-            <span>Tanggal Pengajuan</span>
-            <strong>{formatDate(request.created_at)}</strong>
+            <span>Status</span>
+            <strong>{getStatusLabel(request.status)}</strong>
           </div>
         </div>
 
@@ -64,7 +68,7 @@ export default function RequestCard({ request, onApprove, onReject }) {
             target="_blank"
             rel="noreferrer"
           >
-            Hubungi pembeli via WhatsApp
+            Hubungi via WhatsApp
           </a>
         )}
       </div>
@@ -81,7 +85,7 @@ export default function RequestCard({ request, onApprove, onReject }) {
 
         <button
           type="button"
-          className="sb-btn marketplace-btn-outline"
+          className="sb-btn request-btn-outline"
           disabled={!isPending}
           onClick={onReject}
         >

@@ -18,17 +18,15 @@ export default function InfoBanner({ user }) {
 
   return (
     <section className="dashboard-hero">
-      <div className="dashboard-hero-main">
-        <div className="dashboard-kicker-row">
-          <span className="dashboard-kicker">SaveByUp</span>
-          <span className="dashboard-sub-kicker">Inventory Monitor</span>
-        </div>
+      <div className="dashboard-hero-content">
+        <span>SaveByUp Dashboard</span>
 
-        <h1>Hai, {userName}. Kelola stok makanan kos dengan lebih rapi.</h1>
+        <h2>Hai, {userName}. Kelola stok makanan kos dengan lebih rapi.</h2>
 
         <p>
           Pantau stok makanan, tanggal kedaluwarsa, dan makanan yang perlu
-          diprioritaskan sebelum terbuang.
+          diprioritaskan sebelum terbuang. Semua data inventaris bisa kamu
+          kelola dari satu dashboard.
         </p>
 
         <div className="dashboard-hero-actions">
@@ -42,7 +40,7 @@ export default function InfoBanner({ user }) {
 
           <button
             type="button"
-            className="sb-btn dashboard-btn-outline"
+            className="sb-btn dashboard-btn-glass"
             onClick={scrollToInventory}
           >
             Lihat Inventaris
@@ -50,7 +48,7 @@ export default function InfoBanner({ user }) {
 
           <button
             type="button"
-            className="sb-btn dashboard-btn-brown"
+            className="sb-btn dashboard-btn-glass"
             onClick={() => navigate("/marketplace")}
           >
             Marketplace

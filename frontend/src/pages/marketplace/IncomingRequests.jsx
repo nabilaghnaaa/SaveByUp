@@ -25,9 +25,8 @@ export default function IncomingRequests() {
 
       const data = await getIncomingRequests();
       setRequests(Array.isArray(data) ? data : []);
-    } catch (error) {
+    } catch {
       setRequests([]);
-      setNotice("");
     } finally {
       setLoading(false);
     }
@@ -36,6 +35,18 @@ export default function IncomingRequests() {
   useEffect(() => {
     fetchRequests();
   }, []);
+
+  const pendingCount = requests.filter(
+    (request) => request.status === "menunggu"
+  ).length;
+
+  const approvedCount = requests.filter(
+    (request) => request.status === "disetujui"
+  ).length;
+
+  const rejectedCount = requests.filter(
+    (request) => request.status === "ditolak"
+  ).length;
 
   const handleApprove = async (request) => {
     const ok = window.confirm(`Setujui pengajuan dari ${request.buyer_name}?`);
@@ -46,7 +57,7 @@ export default function IncomingRequests() {
       await approveRequest(request.id);
       setNotice("Pengajuan berhasil disetujui.");
       await fetchRequests();
-    } catch (error) {
+    } catch {
       setNotice("Pengajuan belum bisa disetujui. Coba lagi nanti.");
     }
   };
@@ -60,7 +71,7 @@ export default function IncomingRequests() {
       await rejectRequest(request.id);
       setNotice("Pengajuan berhasil ditolak.");
       await fetchRequests();
-    } catch (error) {
+    } catch {
       setNotice("Pengajuan belum bisa ditolak. Coba lagi nanti.");
     }
   };
@@ -68,19 +79,41 @@ export default function IncomingRequests() {
   return (
     <AppShell>
       <main className="incoming-page">
-        <section className="incoming-top">
-          <div className="incoming-heading">
-            <span>Pengajuan Masuk</span>
-            <h1>Kelola permintaan pembelian.</h1>
+        <section className="incoming-hero">
+          <div className="incoming-hero-content">
+            <span>Purchase Requests</span>
+            <h2>Kelola pengajuan pembelian dengan lebih rapi.</h2>
             <p>
-              Lihat pengajuan dari calon pembeli, lalu setujui atau tolak
-              sebelum komunikasi dilanjutkan.
+              Pengajuan dari calon pembeli akan tampil di sini. Kamu bisa
+              mengecek jumlah, harga penawaran, dan catatan pembeli sebelum
+              menerima atau menolak pengajuan.
             </p>
           </div>
+        </section>
 
-          <div className="incoming-count-card">
-            <span>Total</span>
+        <section className="incoming-summary">
+          <div className="incoming-summary-card">
+            <span>Total Pengajuan</span>
             <strong>{loading ? "..." : requests.length}</strong>
+            <p>Semua pengajuan pembelian yang masuk ke produk kamu.</p>
+          </div>
+
+          <div className="incoming-summary-card">
+            <span>Menunggu</span>
+            <strong>{loading ? "..." : pendingCount}</strong>
+            <p>Pengajuan yang masih perlu kamu cek dan putuskan.</p>
+          </div>
+
+          <div className="incoming-summary-card">
+            <span>Disetujui</span>
+            <strong>{loading ? "..." : approvedCount}</strong>
+            <p>Pengajuan yang sudah bisa dilanjutkan ke komunikasi.</p>
+          </div>
+
+          <div className="incoming-summary-card">
+            <span>Ditolak</span>
+            <strong>{loading ? "..." : rejectedCount}</strong>
+            <p>Pengajuan yang tidak dilanjutkan ke proses transaksi.</p>
           </div>
         </section>
 
@@ -88,7 +121,7 @@ export default function IncomingRequests() {
 
         {loading ? (
           <section className="incoming-state">
-            <div className="marketplace-loader" />
+            <div className="incoming-loader" />
             <h3>Memuat pengajuan...</h3>
             <p>Sedang mengambil daftar pengajuan pembelian.</p>
           </section>

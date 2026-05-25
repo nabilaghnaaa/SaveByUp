@@ -43,10 +43,13 @@ const normalizeRequest = (request = {}) => ({
 });
 
 export const getMarketplaceProducts = async () => {
-  const response = await API.get("/marketplace");
-  const products = response.data.data || response.data || [];
-
-  return Array.isArray(products) ? products.map(normalizeProduct) : [];
+  try {
+    const response = await API.get("/marketplace");
+    const products = response.data.data || response.data || [];
+    return Array.isArray(products) ? products.map(normalizeProduct) : [];
+  } catch {
+    return [];
+  }
 };
 
 export const getMarketplaceProductById = async (id) => {
@@ -87,9 +90,8 @@ export const getIncomingRequests = async () => {
   try {
     const response = await API.get("/requests/incoming");
     const requests = response.data.data || response.data || [];
-
     return Array.isArray(requests) ? requests.map(normalizeRequest) : [];
-  } catch (error) {
+  } catch {
     return [];
   }
 };
@@ -98,9 +100,8 @@ export const getMyRequests = async () => {
   try {
     const response = await API.get("/requests/mine");
     const requests = response.data.data || response.data || [];
-
     return Array.isArray(requests) ? requests.map(normalizeRequest) : [];
-  } catch (error) {
+  } catch {
     return [];
   }
 };
