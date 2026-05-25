@@ -1,118 +1,232 @@
 .food-image-upload {
-  overflow: hidden;
-  border-radius: 34px;
-  background: rgba(255, 251, 244, 0.72);
-  border: 1px solid rgba(95, 71, 47, 0.13);
-  box-shadow: 0 24px 72px rgba(69, 48, 31, 0.09);
-  backdrop-filter: blur(22px);
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr);
+  gap: 18px;
+  margin-bottom: 22px;
+  padding: 18px;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 92% 12%, rgba(90, 139, 83, 0.08), transparent 30%),
+    rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(95, 71, 47, 0.12);
 }
 
 .food-image-preview {
-  position: relative;
-  height: 250px;
   overflow: hidden;
+  min-height: 220px;
+  border-radius: 22px;
   background:
-    radial-gradient(circle at 20% 20%, rgba(74, 121, 67, 0.22), transparent 35%),
-    radial-gradient(circle at 90% 80%, rgba(122, 79, 47, 0.16), transparent 35%),
-    linear-gradient(135deg, #edf6e8, #f7f0e4);
-}
-
-.food-image-preview::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(to top, rgba(37, 48, 30, 0.28), transparent 56%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.08), transparent);
-  pointer-events: none;
+    radial-gradient(circle at 18% 18%, rgba(90, 139, 83, 0.16), transparent 32%),
+    radial-gradient(circle at 85% 85%, rgba(122, 79, 47, 0.14), transparent 32%),
+    #f6efe3;
+  border: 1px solid rgba(95, 71, 47, 0.13);
+  display: grid;
+  place-items: center;
 }
 
 .food-image-preview img {
   width: 100%;
   height: 100%;
+  min-height: 220px;
   object-fit: cover;
 }
 
 .food-image-empty {
-  width: 100%;
-  height: 100%;
   display: grid;
   place-items: center;
-  align-content: center;
+  gap: 10px;
   text-align: center;
-  color: #756b5d;
-  padding: 24px;
 }
 
 .food-image-empty span {
-  display: block;
-  font-size: 48px;
-}
-
-.food-image-empty strong {
-  display: block;
-  margin-top: 10px;
-  color: #263f24;
-  font-size: 20px;
-}
-
-.food-image-empty p {
-  margin: 7px 0 0;
-  color: #756b5d;
-  line-height: 1.5;
-}
-
-.food-image-body {
-  padding: 22px;
-}
-
-.food-image-body span {
-  display: inline-flex;
-  margin-bottom: 9px;
-  color: #7a4f2f;
-  font-size: 12px;
+  width: 70px;
+  height: 70px;
+  border-radius: 22px;
+  display: grid;
+  place-items: center;
+  color: #fff8ee;
+  background: #18301d;
   font-weight: 950;
-  text-transform: uppercase;
   letter-spacing: 1px;
 }
 
-.food-image-body h3 {
-  margin: 0 0 9px;
-  color: #21351e;
-  font-size: 24px;
-  letter-spacing: -0.6px;
+.food-image-empty p {
+  margin: 0;
+  color: #756b5d;
+  font-size: 14px;
+  font-weight: 750;
 }
 
-.food-image-body p {
-  margin: 0 0 18px;
+.food-image-content {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.food-image-content > span {
+  display: inline-flex;
+  width: fit-content;
+  color: #7a5a3a;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.food-image-content h3 {
+  margin: 10px 0 0;
+  color: #21351e;
+  font-size: 28px;
+  line-height: 1.1;
+  letter-spacing: -0.8px;
+}
+
+.food-image-content p {
+  max-width: 760px;
+  margin: 12px 0 0;
   color: #756b5d;
   line-height: 1.7;
-  font-size: 14px;
 }
 
-.food-image-body label {
+.food-image-input {
+  display: none;
+}
+
+.food-image-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}
+
+.food-image-secondary {
+  color: #18301d;
+  background: #e8edbd;
+  border: 1px solid rgba(95, 71, 47, 0.12);
+}
+
+.food-image-secondary:hover:not(:disabled) {
+  background: #dfe8c3;
+}
+
+.food-image-remove {
+  color: #18301d;
+  background: rgba(255, 251, 244, 0.68);
+  border: 1px solid rgba(95, 71, 47, 0.16);
+}
+
+.food-image-remove:hover:not(:disabled) {
+  background: #eee4d5;
+}
+
+.food-image-message {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(223, 239, 198, 0.78);
+  border: 1px solid rgba(74, 121, 67, 0.16);
+  color: #274622;
+  font-weight: 800;
+}
+
+.food-image-content small {
   display: block;
-  margin-bottom: 8px;
-  color: #263f24;
-  font-weight: 900;
+  margin-top: 12px;
+  color: #8a7f70;
+  line-height: 1.5;
 }
 
-.food-image-body input {
+.camera-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(21, 39, 19, 0.72);
+  backdrop-filter: blur(12px);
+}
+
+.camera-card {
+  width: min(100%, 760px);
+  padding: 20px;
+  border-radius: 28px;
+  background: #fffaf0;
+  border: 1px solid rgba(95, 71, 47, 0.18);
+  box-shadow: 0 32px 90px rgba(0, 0, 0, 0.22);
+}
+
+.camera-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.camera-header span {
+  color: #7a5a3a;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.camera-header h3 {
+  margin: 6px 0 0;
+  color: #21351e;
+  font-size: 26px;
+}
+
+.camera-header button {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  color: #18301d;
+  background: #eee4d5;
+  font-size: 24px;
+}
+
+.camera-video {
   width: 100%;
-  border: 1px solid rgba(95, 71, 47, 0.14);
-  border-radius: 18px;
-  padding: 14px 15px;
-  outline: none;
-  color: #263f24;
-  background: rgba(255, 255, 255, 0.76);
-  transition:
-    border-color 0.2s ease,
-    box-shadow 0.2s ease,
-    background 0.2s ease;
+  max-height: 480px;
+  border-radius: 22px;
+  background: #111;
+  object-fit: cover;
 }
 
-.food-image-body input:focus {
-  border-color: rgba(74, 121, 67, 0.42);
-  box-shadow: 0 0 0 4px rgba(123, 153, 91, 0.16);
-  background: #fffdfa;
+.camera-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+@media (max-width: 820px) {
+  .food-image-upload {
+    grid-template-columns: 1fr;
+  }
+
+  .food-image-preview,
+  .food-image-preview img {
+    min-height: 250px;
+  }
+}
+
+@media (max-width: 520px) {
+  .food-image-upload {
+    padding: 14px;
+    border-radius: 22px;
+  }
+
+  .food-image-actions .sb-btn,
+  .camera-actions .sb-btn {
+    width: 100%;
+  }
+
+  .camera-actions {
+    flex-direction: column;
+  }
 }

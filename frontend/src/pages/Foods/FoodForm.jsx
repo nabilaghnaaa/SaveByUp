@@ -1,22 +1,17 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import AppShell from "../../components/layout/AppShell";
-import PageHeader from "../../components/ui/PageHeader";
-
-import {
-  createFood,
-  getFoodById,
-  updateFood,
-} from "../../services/foodService";
-
-import { getAutoStatus } from "../../utils/foodStatus";
+import { createFood, getFoodById, updateFood } from "../../services/foodService";
 
 import FoodFormFields from "./components/FoodFormFields";
 import FoodImageUpload from "./components/FoodImageUpload";
 import FoodStatusPreview from "./components/FoodStatusPreview";
 
 import "./styles/foodForm.css";
+import "./styles/foodFormFields.css";
+import "./styles/foodImageUpload.css";
+import "./styles/foodStatusPreview.css";
 
 const initialForm = {
   name: "",
@@ -24,14 +19,14 @@ const initialForm = {
   quantity: 1,
   unit: "pcs",
   expiry_date: "",
+  status: "aman",
   note: "",
   image_url: "",
-  status: "aman",
 };
 
 export default function FoodForm() {
-  const navigate = useNavigate();
   const { id } = useParams();
+  const navigate = useNavigate();
 
   const isEdit = Boolean(id);
 
@@ -40,44 +35,38 @@ export default function FoodForm() {
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
-  const autoStatus = useMemo(() => {
-    return getAutoStatus(form.expiry_date, form.status);
-  }, [form.expiry_date, form.status]);
+  const fetchFood = async () => {
+    try {
+      setLoading(true);
+      setMessage("");
+
+      const data = await getFoodById(id);
+
+      setForm({
+        name: data.name || "",
+        category: data.category || "Snack",
+        quantity: data.quantity || 1,
+        unit: data.unit || "pcs",
+        expiry_date: data.expiry_date ? String(data.expiry_date).slice(0, 10) : "",
+        status: data.status || "aman",
+        note: data.note || data.notes || "",
+        image_url: data.image_url || data.image || "",
+      });
+    } catch (error) {
+      console.error("Gagal mengambil data makanan:", error);
+      setMessage(
+        error.response?.data?.message || "Gagal mengambil data makanan."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchFood = async () => {
-      if (!isEdit) return;
-
-      try {
-        setLoading(true);
-        setMessage("");
-
-        const data = await getFoodById(id);
-
-        setForm({
-          name: data.name || "",
-          category: data.category || "Snack",
-          quantity: data.quantity || 1,
-          unit: data.unit || "pcs",
-          expiry_date: data.expiry_date
-            ? String(data.expiry_date).slice(0, 10)
-            : "",
-          note: data.note || "",
-          image_url: data.image_url || "",
-          status: data.status || "aman",
-        });
-      } catch (error) {
-        console.error("Gagal mengambil detail makanan:", error);
-        setMessage(
-          error.response?.data?.message || "Gagal mengambil detail makanan."
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchFood();
-  }, [id, isEdit]);
+    if (isEdit) {
+      fetchFood();
+    }
+  }, [id]);
 
   const handleChange = (name, value) => {
     setForm((prev) => ({
@@ -88,13 +77,13 @@ export default function FoodForm() {
 
   const validateForm = () => {
     if (!form.name.trim()) return "Nama makanan wajib diisi.";
-    if (!form.category.trim()) return "Kategori makanan wajib dipilih.";
 
     if (!form.quantity || Number(form.quantity) <= 0) {
       return "Jumlah stok harus lebih dari 0.";
     }
 
-    if (!form.unit.trim()) return "Satuan wajib dipilih.";
+    if (!form.unit) return "Satuan wajib dipilih.";
+
     if (!form.expiry_date) return "Tanggal kedaluwarsa wajib diisi.";
 
     return "";
@@ -110,15 +99,14 @@ export default function FoodForm() {
       return;
     }
 
-    const payload = {
-      ...form,
-      quantity: Number(form.quantity),
-      status: getAutoStatus(form.expiry_date, form.status),
-    };
-
     try {
       setSaving(true);
       setMessage("");
+
+      const payload = {
+        ...form,
+        quantity: Number(form.quantity),
+      };
 
       if (isEdit) {
         await updateFood(id, payload);
@@ -143,80 +131,65 @@ export default function FoodForm() {
 
   return (
     <AppShell>
-      <main className="food-form-wrapper">
-        <div className="food-form-orb food-orb-one" />
-        <div className="food-form-orb food-orb-two" />
-
-        <PageHeader
-          label={isEdit ? "Edit Inventaris" : "Tambah Inventaris"}
-          title={isEdit ? "Edit Data Makanan" : "Tambah Data Makanan"}
-          description="Catat makanan secara rapi agar stok, tanggal kedaluwarsa, dan prioritas konsumsi bisa dipantau sebelum makanan terbuang."
-          action={
-            <button
-              type="button"
-              className="sb-btn food-btn-outline"
-              onClick={() => navigate("/dashboard")}
-            >
-              Kembali
-            </button>
-          }
-        />
-
+      <main className="food-form-page">
         {loading ? (
-          <section className="food-form-loading">
+          <section className="food-form-state">
             <div className="food-form-loader" />
             <h3>Memuat data makanan...</h3>
             <p>Sedang mengambil detail makanan dari inventaris.</p>
           </section>
         ) : (
-          <form className="food-form-page" onSubmit={handleSubmit}>
-            <div className="food-form-main">
-              <div className="food-form-title">
-                <span>Food Inventory Form</span>
-                <h2>{isEdit ? "Perbarui informasi makanan" : "Isi data makanan"}</h2>
-                <p>
-                  Data yang lengkap membantu sistem menentukan makanan mana yang
-                  aman, mendekati kedaluwarsa, atau layak ditawarkan ke
-                  marketplace.
-                </p>
-              </div>
-
-              {message && <div className="food-form-message">{message}</div>}
-
-              <FoodFormFields form={form} onChange={handleChange} />
-
-              <div className="food-form-actions">
-                <button
-                  type="button"
-                  className="sb-btn food-btn-outline"
-                  onClick={() => navigate("/dashboard")}
-                >
-                  Batal
-                </button>
-
-                <button
-                  type="submit"
-                  className="sb-btn sb-btn-primary"
-                  disabled={saving}
-                >
-                  {saving
-                    ? "Menyimpan..."
-                    : isEdit
-                      ? "Simpan Perubahan"
-                      : "Tambah Makanan"}
-                </button>
-              </div>
+          <form className="food-form-card" onSubmit={handleSubmit}>
+            <div className="food-form-heading">
+              <span>Food Inventory Form</span>
+              <h1>{isEdit ? "Edit data makanan" : "Isi data makanan"}</h1>
+              <p>
+                Data yang lengkap membantu sistem menentukan makanan mana yang
+                aman, mendekati kedaluwarsa, atau layak ditawarkan ke
+                marketplace.
+              </p>
             </div>
 
-            <aside className="food-form-side">
-              <FoodImageUpload form={form} onChange={handleChange} />
+            {message && <div className="food-form-message">{message}</div>}
 
-              <FoodStatusPreview
-                expiryDate={form.expiry_date}
-                autoStatus={autoStatus}
-                currentStatus={form.status}
+            <FoodImageUpload form={form} onChange={handleChange} />
+
+            <FoodFormFields form={form} onChange={handleChange} />
+
+            <div className="food-note-box">
+              <label>Keterangan</label>
+              <textarea
+                rows="5"
+                value={form.note}
+                placeholder="Contoh: masih tersegel, simpan di kulkas, dibeli kemarin, atau cocok untuk dijual murah..."
+                onChange={(event) => handleChange("note", event.target.value)}
               />
-            </aside>
+            </div>
+
+            <FoodStatusPreview form={form} />
+
+            <div className="food-form-actions">
+              <button
+                type="button"
+                className="sb-btn food-btn-outline"
+                onClick={() => navigate("/dashboard")}
+                disabled={saving}
+              >
+                Batal
+              </button>
+
+              <button
+                type="submit"
+                className="sb-btn sb-btn-primary"
+                disabled={saving}
+              >
+                {saving
+                  ? "Menyimpan..."
+                  : isEdit
+                    ? "Simpan Perubahan"
+                    : "Tambah Makanan"}
+              </button>
+            </div>
           </form>
         )}
       </main>

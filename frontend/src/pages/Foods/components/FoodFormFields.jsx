@@ -1,14 +1,21 @@
-import {
-  FOOD_CATEGORY_OPTIONS,
-  FOOD_STATUS_OPTIONS,
-  FOOD_UNIT_OPTIONS,
-} from "../../../utils/foodStatus";
-
 import "../styles/foodFormFields.css";
+
+const categories = [
+  "Snack",
+  "Makanan Instan",
+  "Minuman",
+  "Bahan Masak",
+  "Buah",
+  "Sayur",
+  "Makanan Beku",
+  "Lainnya",
+];
+
+const units = ["pcs", "bungkus", "botol", "kotak", "gram", "kg", "liter"];
 
 export default function FoodFormFields({ form, onChange }) {
   return (
-    <div className="food-form-fields">
+    <section className="food-form-fields">
       <div className="food-field food-field-full">
         <label>Nama Makanan</label>
         <input
@@ -25,7 +32,7 @@ export default function FoodFormFields({ form, onChange }) {
           value={form.category}
           onChange={(event) => onChange("category", event.target.value)}
         >
-          {FOOD_CATEGORY_OPTIONS.map((category) => (
+          {categories.map((category) => (
             <option value={category} key={category}>
               {category}
             </option>
@@ -39,7 +46,6 @@ export default function FoodFormFields({ form, onChange }) {
           type="number"
           min="1"
           value={form.quantity}
-          placeholder="1"
           onChange={(event) => onChange("quantity", event.target.value)}
         />
       </div>
@@ -50,7 +56,7 @@ export default function FoodFormFields({ form, onChange }) {
           value={form.unit}
           onChange={(event) => onChange("unit", event.target.value)}
         >
-          {FOOD_UNIT_OPTIONS.map((unit) => (
+          {units.map((unit) => (
             <option value={unit} key={unit}>
               {unit}
             </option>
@@ -73,29 +79,20 @@ export default function FoodFormFields({ form, onChange }) {
           value={form.status}
           onChange={(event) => onChange("status", event.target.value)}
         >
-          {FOOD_STATUS_OPTIONS.map((status) => (
-            <option value={status.value} key={status.value}>
-              {status.label}
-            </option>
-          ))}
+          <option value="aman">Aman</option>
+          <option value="mendekati_kedaluwarsa">Mendekati Kedaluwarsa</option>
+          <option value="kedaluwarsa">Kedaluwarsa</option>
+          <option value="dijual">Dijual</option>
+          <option value="digunakan">Digunakan</option>
+          <option value="dibuang">Dibuang</option>
         </select>
 
         <small>
-          Status aman, mendekati kedaluwarsa, dan kedaluwarsa akan dihitung
-          otomatis berdasarkan tanggal. Status dijual, digunakan, dan dibuang
-          dipakai untuk aksi manual.
+          Status aman, mendekati kedaluwarsa, dan kedaluwarsa dihitung otomatis
+          berdasarkan tanggal. Status dijual, digunakan, dan dibuang dipakai
+          untuk aksi manual.
         </small>
       </div>
-
-      <div className="food-field food-field-full">
-        <label>Keterangan</label>
-        <textarea
-          rows="4"
-          value={form.note}
-          placeholder="Contoh: masih tersegel, simpan di kulkas, dibeli kemarin, atau cocok untuk dijual murah..."
-          onChange={(event) => onChange("note", event.target.value)}
-        />
-      </div>
-    </div>
+    </section>
   );
 }
