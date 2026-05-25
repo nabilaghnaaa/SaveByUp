@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 
 import AppShell from "../../components/layout/AppShell";
 import EmptyState from "../../components/ui/EmptyState";
-import PageHeader from "../../components/ui/PageHeader";
 
 import {
   approveRequest,
@@ -17,21 +16,18 @@ import "./styles/incomingRequests.css";
 export default function IncomingRequests() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [message, setMessage] = useState("");
+  const [notice, setNotice] = useState("");
 
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      setMessage("");
+      setNotice("");
 
       const data = await getIncomingRequests();
       setRequests(Array.isArray(data) ? data : []);
     } catch (error) {
-      console.error("Gagal mengambil pengajuan masuk:", error);
-      setMessage(
-        error.response?.data?.message ||
-          "Gagal mengambil daftar pengajuan masuk."
-      );
+      setRequests([]);
+      setNotice("");
     } finally {
       setLoading(false);
     }
@@ -48,16 +44,10 @@ export default function IncomingRequests() {
 
     try {
       await approveRequest(request.id);
-      setMessage(
-        "Pengajuan berhasil disetujui. Pembeli akan mendapat notifikasi dan transaksi akan dibuat."
-      );
+      setNotice("Pengajuan berhasil disetujui.");
       await fetchRequests();
     } catch (error) {
-      setMessage(
-        error.response?.data?.message ||
-          error.message ||
-          "Gagal menyetujui pengajuan."
-      );
+      setNotice("Pengajuan belum bisa disetujui. Coba lagi nanti.");
     }
   };
 
@@ -68,63 +58,44 @@ export default function IncomingRequests() {
 
     try {
       await rejectRequest(request.id);
-      setMessage("Pengajuan berhasil ditolak.");
+      setNotice("Pengajuan berhasil ditolak.");
       await fetchRequests();
     } catch (error) {
-      setMessage(
-        error.response?.data?.message ||
-          error.message ||
-          "Gagal menolak pengajuan."
-      );
+      setNotice("Pengajuan belum bisa ditolak. Coba lagi nanti.");
     }
   };
 
   return (
     <AppShell>
       <main className="incoming-page">
-        <div className="incoming-orb incoming-orb-one" />
-        <div className="incoming-orb incoming-orb-two" />
-
-        <PageHeader
-          label="Pengajuan Masuk"
-          title="Daftar Pengajuan Pembelian"
-          description="Lihat calon pembeli, jumlah pembelian, harga penawaran, lalu terima atau tolak pengajuan."
-          action={
-            <button
-              type="button"
-              className="sb-btn marketplace-btn-outline"
-              onClick={fetchRequests}
-            >
-              Refresh
-            </button>
-          }
-        />
-
-        <section className="incoming-hero">
-          <div>
-            <span>Request Management</span>
-            <h2>Kelola pengajuan sebelum lanjut ke WhatsApp.</h2>
+        <section className="incoming-top">
+          <div className="incoming-heading">
+            <span>Pengajuan Masuk</span>
+            <h1>Kelola permintaan pembelian.</h1>
             <p>
-              Pembeli tidak langsung menghubungi penjual. Pengajuan harus
-              disetujui terlebih dahulu agar alur transaksi lebih aman dan rapi.
+              Lihat pengajuan dari calon pembeli, lalu setujui atau tolak
+              sebelum komunikasi dilanjutkan.
             </p>
           </div>
 
-          <strong>{loading ? "..." : requests.length}</strong>
+          <div className="incoming-count-card">
+            <span>Total</span>
+            <strong>{loading ? "..." : requests.length}</strong>
+          </div>
         </section>
 
-        {message && <div className="incoming-message">{message}</div>}
+        {notice && <div className="incoming-notice">{notice}</div>}
 
         {loading ? (
-          <div className="incoming-state">
+          <section className="incoming-state">
             <div className="marketplace-loader" />
             <h3>Memuat pengajuan...</h3>
             <p>Sedang mengambil daftar pengajuan pembelian.</p>
-          </div>
+          </section>
         ) : requests.length === 0 ? (
           <EmptyState
             title="Belum ada pengajuan masuk"
-            description="Pengajuan pembelian dan negosiasi dari calon pembeli akan muncul di sini."
+            description="Pengajuan pembelian dari calon pembeli akan muncul di halaman ini."
           />
         ) : (
           <section className="incoming-list">

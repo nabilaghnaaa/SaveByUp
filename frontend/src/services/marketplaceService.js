@@ -16,7 +16,7 @@ const normalizeProduct = (product = {}) => ({
   unit: product.unit || "pcs",
   price: Number(product.price || 0),
   expiry_date: product.expiry_date ? String(product.expiry_date).slice(0, 10) : "",
-  image_url: product.image_url || "",
+  image_url: product.image_url || product.image || "",
   status: product.status || "tersedia",
   created_at: product.created_at,
   updated_at: product.updated_at,
@@ -44,14 +44,14 @@ const normalizeRequest = (request = {}) => ({
 
 export const getMarketplaceProducts = async () => {
   const response = await API.get("/marketplace");
-  const products = response.data.data || [];
+  const products = response.data.data || response.data || [];
 
   return Array.isArray(products) ? products.map(normalizeProduct) : [];
 };
 
 export const getMarketplaceProductById = async (id) => {
   const response = await API.get(`/marketplace/${id}`);
-  return normalizeProduct(response.data.data);
+  return normalizeProduct(response.data.data || response.data);
 };
 
 export const createMarketplaceProduct = async (foodId, payload) => {
@@ -84,17 +84,25 @@ export const createPurchaseRequest = async ({
 };
 
 export const getIncomingRequests = async () => {
-  const response = await API.get("/requests/incoming");
-  const requests = response.data.data || [];
+  try {
+    const response = await API.get("/requests/incoming");
+    const requests = response.data.data || response.data || [];
 
-  return Array.isArray(requests) ? requests.map(normalizeRequest) : [];
+    return Array.isArray(requests) ? requests.map(normalizeRequest) : [];
+  } catch (error) {
+    return [];
+  }
 };
 
 export const getMyRequests = async () => {
-  const response = await API.get("/requests/mine");
-  const requests = response.data.data || [];
+  try {
+    const response = await API.get("/requests/mine");
+    const requests = response.data.data || response.data || [];
 
-  return Array.isArray(requests) ? requests.map(normalizeRequest) : [];
+    return Array.isArray(requests) ? requests.map(normalizeRequest) : [];
+  } catch (error) {
+    return [];
+  }
 };
 
 export const approveRequest = async (id) => {
