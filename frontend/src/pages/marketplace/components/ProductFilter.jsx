@@ -20,7 +20,7 @@ export default function ProductFilter({
   onStatusChange,
 }) {
   return (
-    <section className="product-filter sb-glass">
+    <section className="product-filter">
       <input
         type="text"
         value={search}

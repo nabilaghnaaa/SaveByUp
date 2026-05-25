@@ -5,7 +5,7 @@ export default function LoginBrand() {
     <div className="login-brand">
       <div className="login-logo">S</div>
 
-      <div>
+      <div className="login-brand-text">
         <strong>SaveByUp</strong>
         <span>Food Waste Prevention System</span>
       </div>

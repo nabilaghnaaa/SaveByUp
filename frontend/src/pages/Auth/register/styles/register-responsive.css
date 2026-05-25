@@ -1,15 +1,19 @@
 @media (max-width: 980px) {
   .register-visual {
-    min-height: 380px;
+    min-height: 420px;
   }
 }
 
 @media (max-width: 640px) {
+  .register-visual {
+    padding: 28px;
+  }
+
   .register-form {
     grid-template-columns: 1fr;
   }
 
   .register-visual h2 {
-    letter-spacing: -1px;
+    letter-spacing: -1.3px;
   }
 }

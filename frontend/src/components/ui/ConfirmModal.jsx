@@ -22,14 +22,18 @@ export default function ConfirmModal({
         {description && <p>{description}</p>}
 
         <div className="confirm-actions">
-          <button type="button" className="sb-btn sb-btn-ghost" onClick={onCancel}>
+          <button
+            type="button"
+            className="sb-btn ui-btn-outline"
+            onClick={onCancel}
+          >
             {cancelText}
           </button>
 
           <button
             type="button"
             className={`sb-btn ${
-              tone === "danger" ? "sb-btn-danger" : "sb-btn-primary"
+              tone === "danger" ? "ui-btn-danger" : "ui-btn-primary"
             }`}
             onClick={onConfirm}
           >

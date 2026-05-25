@@ -39,6 +39,7 @@ export default function FoodFormFields({ form, onChange }) {
           type="number"
           min="1"
           value={form.quantity}
+          placeholder="1"
           onChange={(event) => onChange("quantity", event.target.value)}
         />
       </div>
@@ -80,9 +81,9 @@ export default function FoodFormFields({ form, onChange }) {
         </select>
 
         <small>
-          Status aman, mendekati kedaluwarsa, dan kedaluwarsa akan disesuaikan
-          otomatis berdasarkan tanggal kedaluwarsa. Status seperti dijual,
-          digunakan, dan dibuang dipakai untuk aksi manual.
+          Status aman, mendekati kedaluwarsa, dan kedaluwarsa akan dihitung
+          otomatis berdasarkan tanggal. Status dijual, digunakan, dan dibuang
+          dipakai untuk aksi manual.
         </small>
       </div>
 
@@ -91,7 +92,7 @@ export default function FoodFormFields({ form, onChange }) {
         <textarea
           rows="4"
           value={form.note}
-          placeholder="Contoh: masih tersegel, simpan di kulkas, dibeli kemarin, cocok untuk dijual murah..."
+          placeholder="Contoh: masih tersegel, simpan di kulkas, dibeli kemarin, atau cocok untuk dijual murah..."
           onChange={(event) => onChange("note", event.target.value)}
         />
       </div>

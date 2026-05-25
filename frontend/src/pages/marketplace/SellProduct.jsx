@@ -97,123 +97,140 @@ export default function SellProduct() {
 
   return (
     <AppShell>
-      <PageHeader
-        label="Jual Makanan"
-        title="Tawarkan Makanan ke Marketplace"
-        description="Pastikan makanan masih layak konsumsi, belum melewati kedaluwarsa, dan informasi produk ditulis jelas."
-        action={
-          <button
-            type="button"
-            className="sb-btn sb-btn-ghost"
-            onClick={() => navigate("/dashboard")}
-          >
-            Kembali
-          </button>
-        }
-      />
+      <main className="sell-product-wrapper">
+        <div className="sell-product-orb sell-orb-one" />
+        <div className="sell-product-orb sell-orb-two" />
 
-      {loading ? (
-        <div className="sell-product-state sb-glass">
-          <h3>Memuat makanan...</h3>
-          <p>Sedang mengambil data makanan dari inventaris.</p>
-        </div>
-      ) : message && !food ? (
-        <div className="sell-product-state sb-glass">
-          <h3>Data makanan tidak dapat ditampilkan</h3>
-          <p>{message}</p>
-          <button
-            type="button"
-            className="sb-btn sb-btn-primary"
-            onClick={() => navigate("/dashboard")}
-          >
-            Kembali ke Dashboard
-          </button>
-        </div>
-      ) : (
-        food && (
-          <section className="sell-product-page">
-            <div className="sell-product-preview sb-glass">
-              <div className="sell-product-image">
-                {food.image_url ? (
-                  <img src={food.image_url} alt={food.name} />
-                ) : (
-                  <span>🍱</span>
-                )}
+        <PageHeader
+          label="Jual Makanan"
+          title="Tawarkan Makanan ke Marketplace"
+          description="Pastikan makanan masih layak konsumsi, belum melewati kedaluwarsa, dan informasi produk ditulis jelas sebelum ditawarkan."
+          action={
+            <button
+              type="button"
+              className="sb-btn marketplace-btn-outline"
+              onClick={() => navigate("/dashboard")}
+            >
+              Kembali
+            </button>
+          }
+        />
+
+        {loading ? (
+          <div className="sell-product-state">
+            <div className="marketplace-loader" />
+            <h3>Memuat makanan...</h3>
+            <p>Sedang mengambil data makanan dari inventaris.</p>
+          </div>
+        ) : message && !food ? (
+          <div className="sell-product-state">
+            <h3>Data makanan tidak dapat ditampilkan</h3>
+            <p>{message}</p>
+            <button
+              type="button"
+              className="sb-btn sb-btn-primary"
+              onClick={() => navigate("/dashboard")}
+            >
+              Kembali ke Dashboard
+            </button>
+          </div>
+        ) : (
+          food && (
+            <section className="sell-product-page">
+              <div className="sell-product-preview">
+                <div className="sell-product-image">
+                  {food.image_url ? (
+                    <img src={food.image_url} alt={food.name} />
+                  ) : (
+                    <span>🍱</span>
+                  )}
+
+                  <div className="sell-product-image-overlay" />
+                </div>
+
+                <div className="sell-product-info">
+                  <span>{food.category || "Tanpa Kategori"}</span>
+                  <h2>{food.name}</h2>
+
+                  <p>
+                    Stok: {food.quantity} {food.unit}
+                  </p>
+
+                  <p>Kedaluwarsa: {formatDate(food.expiry_date)}</p>
+
+                  <strong>{getDaysLeftLabel(food.expiry_date)}</strong>
+
+                  {!canSellFood(food) && (
+                    <div className="sell-warning">
+                      Makanan ini tidak dapat dijual karena status atau tanggal
+                      kedaluwarsanya tidak memenuhi syarat.
+                    </div>
+                  )}
+                </div>
               </div>
 
-              <div className="sell-product-info">
-                <span>{food.category || "Tanpa Kategori"}</span>
-                <h2>{food.name}</h2>
+              <form className="sell-product-form" onSubmit={handleSubmit}>
+                <div className="sell-form-heading">
+                  <span>Marketplace Form</span>
+                  <h3>Atur harga dan deskripsi</h3>
+                  <p>
+                    Tulis kondisi makanan secara jujur agar pembeli dapat
+                    mengambil keputusan dengan aman.
+                  </p>
+                </div>
 
-                <p>
-                  Stok: {food.quantity} {food.unit}
-                </p>
+                {message && <div className="sell-message">{message}</div>}
 
-                <p>Kedaluwarsa: {formatDate(food.expiry_date)}</p>
+                <label>Harga Awal</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={form.price}
+                  placeholder="Contoh: 8000"
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      price: event.target.value,
+                    }))
+                  }
+                />
 
-                <strong>{getDaysLeftLabel(food.expiry_date)}</strong>
+                <label>Deskripsi Produk</label>
+                <textarea
+                  rows="5"
+                  value={form.description}
+                  placeholder="Jelaskan kondisi makanan, masih tersegel/tidak, lokasi COD, dan informasi penting lainnya."
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      description: event.target.value,
+                    }))
+                  }
+                />
 
-                {!canSellFood(food) && (
-                  <div className="sell-warning">
-                    Makanan ini tidak dapat dijual karena status atau tanggal
-                    kedaluwarsanya tidak memenuhi syarat.
-                  </div>
-                )}
-              </div>
-            </div>
+                <div className="sell-rules">
+                  <strong>Kriteria marketplace:</strong>
+                  <ul>
+                    <li>Makanan belum melewati tanggal kedaluwarsa.</li>
+                    <li>Makanan masih layak konsumsi.</li>
+                    <li>Data makanan berasal dari inventaris pengguna.</li>
+                    <li>Penjual bertanggung jawab atas kondisi makanan.</li>
+                    <li>Komunikasi lanjutan dilakukan setelah pengajuan disetujui.</li>
+                  </ul>
+                </div>
 
-            <form className="sell-product-form sb-glass" onSubmit={handleSubmit}>
-              {message && <div className="sell-message">{message}</div>}
-
-              <label>Harga Awal</label>
-              <input
-                type="number"
-                min="1"
-                value={form.price}
-                placeholder="Contoh: 8000"
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    price: event.target.value,
-                  }))
-                }
-              />
-
-              <label>Deskripsi Produk</label>
-              <textarea
-                rows="5"
-                value={form.description}
-                placeholder="Jelaskan kondisi makanan, masih tersegel/tidak, lokasi COD, dan informasi penting lainnya."
-                onChange={(event) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    description: event.target.value,
-                  }))
-                }
-              />
-
-              <div className="sell-rules">
-                <strong>Kriteria marketplace:</strong>
-                <ul>
-                  <li>Makanan belum melewati tanggal kedaluwarsa.</li>
-                  <li>Makanan masih layak konsumsi.</li>
-                  <li>Data makanan berasal dari inventaris pengguna.</li>
-                  <li>Penjual bertanggung jawab atas kondisi makanan.</li>
-                  <li>Komunikasi lanjutan dilakukan setelah pengajuan disetujui.</li>
-                </ul>
-              </div>
-
-              <button
-                type="submit"
-                className="sb-btn sb-btn-primary"
-                disabled={saving || !canSellFood(food)}
-              >
-                {saving ? "Menyimpan..." : "Tawarkan ke Marketplace"}
-              </button>
-            </form>
-          </section>
-        )
-      )}
+                <button
+                  type="submit"
+                  className="sb-btn sb-btn-primary"
+                  disabled={saving || !canSellFood(food)}
+                >
+                  {saving ? "Menyimpan..." : "Tawarkan ke Marketplace"}
+                </button>
+              </form>
+            </section>
+          )
+        )}
+      </main>
     </AppShell>
   );
 }

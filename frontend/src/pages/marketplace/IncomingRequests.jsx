@@ -81,45 +81,64 @@ export default function IncomingRequests() {
 
   return (
     <AppShell>
-      <PageHeader
-        label="Pengajuan Masuk"
-        title="Daftar Pengajuan Pembelian"
-        description="Lihat calon pembeli, jumlah pembelian, harga penawaran, lalu terima atau tolak pengajuan."
-        action={
-          <button
-            type="button"
-            className="sb-btn sb-btn-ghost"
-            onClick={fetchRequests}
-          >
-            Refresh
-          </button>
-        }
-      />
+      <main className="incoming-page">
+        <div className="incoming-orb incoming-orb-one" />
+        <div className="incoming-orb incoming-orb-two" />
 
-      {message && <div className="incoming-message">{message}</div>}
-
-      {loading ? (
-        <div className="incoming-state sb-glass">
-          <h3>Memuat pengajuan...</h3>
-          <p>Sedang mengambil daftar pengajuan pembelian.</p>
-        </div>
-      ) : requests.length === 0 ? (
-        <EmptyState
-          title="Belum ada pengajuan masuk"
-          description="Pengajuan pembelian dan negosiasi dari calon pembeli akan muncul di sini."
+        <PageHeader
+          label="Pengajuan Masuk"
+          title="Daftar Pengajuan Pembelian"
+          description="Lihat calon pembeli, jumlah pembelian, harga penawaran, lalu terima atau tolak pengajuan."
+          action={
+            <button
+              type="button"
+              className="sb-btn marketplace-btn-outline"
+              onClick={fetchRequests}
+            >
+              Refresh
+            </button>
+          }
         />
-      ) : (
-        <section className="incoming-list">
-          {requests.map((request) => (
-            <RequestCard
-              key={request.id}
-              request={request}
-              onApprove={() => handleApprove(request)}
-              onReject={() => handleReject(request)}
-            />
-          ))}
+
+        <section className="incoming-hero">
+          <div>
+            <span>Request Management</span>
+            <h2>Kelola pengajuan sebelum lanjut ke WhatsApp.</h2>
+            <p>
+              Pembeli tidak langsung menghubungi penjual. Pengajuan harus
+              disetujui terlebih dahulu agar alur transaksi lebih aman dan rapi.
+            </p>
+          </div>
+
+          <strong>{loading ? "..." : requests.length}</strong>
         </section>
-      )}
+
+        {message && <div className="incoming-message">{message}</div>}
+
+        {loading ? (
+          <div className="incoming-state">
+            <div className="marketplace-loader" />
+            <h3>Memuat pengajuan...</h3>
+            <p>Sedang mengambil daftar pengajuan pembelian.</p>
+          </div>
+        ) : requests.length === 0 ? (
+          <EmptyState
+            title="Belum ada pengajuan masuk"
+            description="Pengajuan pembelian dan negosiasi dari calon pembeli akan muncul di sini."
+          />
+        ) : (
+          <section className="incoming-list">
+            {requests.map((request) => (
+              <RequestCard
+                key={request.id}
+                request={request}
+                onApprove={() => handleApprove(request)}
+                onReject={() => handleReject(request)}
+              />
+            ))}
+          </section>
+        )}
+      </main>
     </AppShell>
   );
 }

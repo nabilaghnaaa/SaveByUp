@@ -1,102 +1,113 @@
 .app-topbar {
   display: flex;
   justify-content: space-between;
-  gap: 20px;
+  gap: 18px;
   align-items: center;
-  margin-bottom: 24px;
-  padding: 18px 20px;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(43, 107, 58, 0.12);
-  box-shadow: 0 14px 40px rgba(28, 78, 40, 0.06);
-  backdrop-filter: blur(18px);
+  margin-bottom: 22px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: #fffaf0;
+  border: 1px solid #e3d8c8;
 }
 
-.app-topbar-label {
-  margin: 0 0 5px;
-  color: var(--sb-green-600);
-  font-size: 12px;
+.topbar-title p {
+  margin: 0 0 4px;
+  color: #7a5a3a;
+  font-size: 11px;
   font-weight: 850;
   text-transform: uppercase;
   letter-spacing: 0.8px;
 }
 
-.app-topbar h2 {
+.topbar-title h2 {
   margin: 0;
-  font-size: 22px;
-  color: var(--sb-green-900);
-  letter-spacing: -0.3px;
+  font-size: 18px;
+  color: #1d321f;
+  letter-spacing: -0.4px;
+  line-height: 1.2;
 }
 
-.app-user {
+.topbar-actions {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
-.app-notification-button,
-.app-profile-button {
-  border: 0;
+.topbar-icon-button,
+.topbar-profile-button {
+  border: 1px solid #e3d8c8;
   border-radius: 999px;
-  min-height: 42px;
-  background: rgba(43, 107, 58, 0.08);
-  color: var(--sb-green-800);
-  font-weight: 850;
+  min-height: 40px;
+  background: #fffaf0;
+  color: #1d321f;
+  font-weight: 800;
   transition:
-    transform 0.22s ease,
-    background 0.22s ease;
+    background 0.18s ease,
+    border-color 0.18s ease;
 }
 
-.app-notification-button {
-  width: 42px;
+.topbar-icon-button {
+  width: 40px;
   display: grid;
   place-items: center;
 }
 
-.app-profile-button {
+.topbar-profile-button {
   padding: 0 15px;
 }
 
-.app-notification-button:hover,
-.app-profile-button:hover {
-  transform: translateY(-2px);
-  background: var(--sb-lime-soft);
+.topbar-icon-button:hover,
+.topbar-profile-button:hover {
+  background: #eee4d5;
+  border-color: #d5c7b7;
 }
 
-.app-avatar {
-  width: 44px;
-  height: 44px;
+.topbar-user {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 10px 5px 5px;
+  border-radius: 999px;
+  background: #f6efe3;
+  border: 1px solid #e3d8c8;
+}
+
+.topbar-avatar {
+  width: 38px;
+  height: 38px;
   display: grid;
   place-items: center;
-  border-radius: 16px;
+  border-radius: 13px;
   overflow: hidden;
-  background: var(--sb-green-800);
-  color: var(--sb-lime);
-  font-weight: 950;
+  color: #fffaf0;
+  background: #1d321f;
+  font-weight: 900;
 }
 
-.app-avatar img {
+.topbar-avatar img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.app-avatar span {
-  display: inline-flex;
-}
-
-.app-user-info {
+.topbar-user-info {
   display: grid;
+  min-width: 0;
 }
 
-.app-user-info strong {
-  font-size: 14px;
-  color: var(--sb-green-900);
+.topbar-user-info strong {
+  color: #1d321f;
+  font-size: 13px;
+  line-height: 1.2;
 }
 
-.app-user-info span {
+.topbar-user-info span {
+  color: #7a6d60;
   font-size: 12px;
-  color: var(--sb-muted);
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 @media (max-width: 760px) {
@@ -105,19 +116,17 @@
     flex-direction: column;
   }
 
-  .app-user {
+  .topbar-actions {
     width: 100%;
     flex-wrap: wrap;
   }
 
-  .app-user-info {
-    min-width: 0;
+  .topbar-user {
+    flex: 1;
+    min-width: 220px;
   }
 
-  .app-user-info span {
-    max-width: 180px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+  .topbar-profile-button {
+    flex: 1;
   }
 }

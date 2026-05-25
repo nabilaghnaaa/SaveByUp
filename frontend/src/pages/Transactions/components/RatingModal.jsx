@@ -37,7 +37,7 @@ export default function RatingModal({ transaction, onClose, onSubmit }) {
 
         <p>
           Berikan rating untuk membantu membangun kepercayaan antar pengguna
-          SaveByUp.
+          SaveByUp setelah transaksi selesai.
         </p>
 
         {message && <div className="rating-message">{message}</div>}
@@ -65,7 +65,7 @@ export default function RatingModal({ transaction, onClose, onSubmit }) {
         <div className="rating-actions">
           <button
             type="button"
-            className="sb-btn sb-btn-ghost"
+            className="sb-btn transaction-btn-outline"
             onClick={onClose}
           >
             Batal

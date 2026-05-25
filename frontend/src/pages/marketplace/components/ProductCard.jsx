@@ -28,16 +28,22 @@ export default function ProductCard({ product }) {
           <div className="product-placeholder">🍱</div>
         )}
 
+        <div className="product-card-overlay" />
+
         <span className={`product-status product-${product.status}`}>
           {getStatusLabel(product.status)}
+        </span>
+
+        <span className="product-expiry-badge">
+          {getDaysLeftLabel(product.expiry_date)}
         </span>
       </div>
 
       <div className="product-card-body">
         <div className="product-card-head">
           <div>
+            <span>{product.category || "Tanpa kategori"}</span>
             <h3>{product.name}</h3>
-            <p>{product.category || "Tanpa kategori"}</p>
           </div>
 
           <strong>{formatCurrency(product.price)}</strong>
@@ -53,18 +59,20 @@ export default function ProductCard({ product }) {
 
           <div>
             <span>Kedaluwarsa</span>
-            <strong>{getDaysLeftLabel(product.expiry_date)}</strong>
+            <strong>{formatDate(product.expiry_date)}</strong>
           </div>
         </div>
 
         <div className="product-seller">
-          <span>Penjual</span>
-          <strong>{product.seller_name || "Penjual SaveByUp"}</strong>
-          <small>{product.seller_address || "Area kos UMY"}</small>
-        </div>
+          <div className="seller-mini-avatar">
+            {product.seller_name?.charAt(0)?.toUpperCase() || "S"}
+          </div>
 
-        <div className="product-expiry">
-          Tanggal kedaluwarsa: {formatDate(product.expiry_date)}
+          <div>
+            <span>Penjual</span>
+            <strong>{product.seller_name || "Penjual SaveByUp"}</strong>
+            <small>{product.seller_address || "Area kos UMY"}</small>
+          </div>
         </div>
 
         <button

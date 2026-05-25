@@ -55,24 +55,17 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <AppShell>
-      <div className="dashboard-page">
-        <InfoBanner
-          user={user}
-          summary={summary}
-          loading={summaryLoading}
-        />
+  <AppShell>
+    <main className="dashboard-page">
+      <InfoBanner user={user} />
 
-        <SummaryGrid
-          summary={summary}
-          loading={summaryLoading}
-        />
+      <SummaryGrid summary={summary} loading={summaryLoading} />
 
-        <DashboardInventory
-          refreshKey={refreshKey}
-          onInventoryChange={refreshDashboard}
-        />
-      </div>
-    </AppShell>
-  );
+      <DashboardInventory
+        refreshKey={refreshKey}
+        onInventoryChange={refreshDashboard}
+      />
+    </main>
+  </AppShell>
+);
 }

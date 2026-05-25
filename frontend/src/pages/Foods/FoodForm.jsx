@@ -50,6 +50,7 @@ export default function FoodForm() {
 
       try {
         setLoading(true);
+        setMessage("");
 
         const data = await getFoodById(id);
 
@@ -88,9 +89,11 @@ export default function FoodForm() {
   const validateForm = () => {
     if (!form.name.trim()) return "Nama makanan wajib diisi.";
     if (!form.category.trim()) return "Kategori makanan wajib dipilih.";
+
     if (!form.quantity || Number(form.quantity) <= 0) {
       return "Jumlah stok harus lebih dari 0.";
     }
+
     if (!form.unit.trim()) return "Satuan wajib dipilih.";
     if (!form.expiry_date) return "Tanggal kedaluwarsa wajib diisi.";
 
@@ -140,67 +143,83 @@ export default function FoodForm() {
 
   return (
     <AppShell>
-      <PageHeader
-        label={isEdit ? "Edit Inventaris" : "Tambah Inventaris"}
-        title={isEdit ? "Edit Data Makanan" : "Tambah Data Makanan"}
-        description="Isi data makanan dengan jelas agar SaveByUp dapat memantau stok, tanggal kedaluwarsa, dan prioritas konsumsi."
-        action={
-          <button
-            type="button"
-            className="sb-btn sb-btn-ghost"
-            onClick={() => navigate("/dashboard")}
-          >
-            Kembali
-          </button>
-        }
-      />
+      <main className="food-form-wrapper">
+        <div className="food-form-orb food-orb-one" />
+        <div className="food-form-orb food-orb-two" />
 
-      {loading ? (
-        <section className="food-form-loading sb-glass">
-          <h3>Memuat data makanan...</h3>
-          <p>Sedang mengambil detail makanan dari inventaris.</p>
-        </section>
-      ) : (
-        <form className="food-form-page" onSubmit={handleSubmit}>
-          <div className="food-form-main sb-glass">
-            {message && <div className="food-form-message">{message}</div>}
+        <PageHeader
+          label={isEdit ? "Edit Inventaris" : "Tambah Inventaris"}
+          title={isEdit ? "Edit Data Makanan" : "Tambah Data Makanan"}
+          description="Catat makanan secara rapi agar stok, tanggal kedaluwarsa, dan prioritas konsumsi bisa dipantau sebelum makanan terbuang."
+          action={
+            <button
+              type="button"
+              className="sb-btn food-btn-outline"
+              onClick={() => navigate("/dashboard")}
+            >
+              Kembali
+            </button>
+          }
+        />
 
-            <FoodFormFields form={form} onChange={handleChange} />
+        {loading ? (
+          <section className="food-form-loading">
+            <div className="food-form-loader" />
+            <h3>Memuat data makanan...</h3>
+            <p>Sedang mengambil detail makanan dari inventaris.</p>
+          </section>
+        ) : (
+          <form className="food-form-page" onSubmit={handleSubmit}>
+            <div className="food-form-main">
+              <div className="food-form-title">
+                <span>Food Inventory Form</span>
+                <h2>{isEdit ? "Perbarui informasi makanan" : "Isi data makanan"}</h2>
+                <p>
+                  Data yang lengkap membantu sistem menentukan makanan mana yang
+                  aman, mendekati kedaluwarsa, atau layak ditawarkan ke
+                  marketplace.
+                </p>
+              </div>
 
-            <div className="food-form-actions">
-              <button
-                type="button"
-                className="sb-btn sb-btn-ghost"
-                onClick={() => navigate("/dashboard")}
-              >
-                Batal
-              </button>
+              {message && <div className="food-form-message">{message}</div>}
 
-              <button
-                type="submit"
-                className="sb-btn sb-btn-primary"
-                disabled={saving}
-              >
-                {saving
-                  ? "Menyimpan..."
-                  : isEdit
-                    ? "Simpan Perubahan"
-                    : "Tambah Makanan"}
-              </button>
+              <FoodFormFields form={form} onChange={handleChange} />
+
+              <div className="food-form-actions">
+                <button
+                  type="button"
+                  className="sb-btn food-btn-outline"
+                  onClick={() => navigate("/dashboard")}
+                >
+                  Batal
+                </button>
+
+                <button
+                  type="submit"
+                  className="sb-btn sb-btn-primary"
+                  disabled={saving}
+                >
+                  {saving
+                    ? "Menyimpan..."
+                    : isEdit
+                      ? "Simpan Perubahan"
+                      : "Tambah Makanan"}
+                </button>
+              </div>
             </div>
-          </div>
 
-          <aside className="food-form-side">
-            <FoodImageUpload form={form} onChange={handleChange} />
+            <aside className="food-form-side">
+              <FoodImageUpload form={form} onChange={handleChange} />
 
-            <FoodStatusPreview
-              expiryDate={form.expiry_date}
-              autoStatus={autoStatus}
-              currentStatus={form.status}
-            />
-          </aside>
-        </form>
-      )}
+              <FoodStatusPreview
+                expiryDate={form.expiry_date}
+                autoStatus={autoStatus}
+                currentStatus={form.status}
+              />
+            </aside>
+          </form>
+        )}
+      </main>
     </AppShell>
   );
 }

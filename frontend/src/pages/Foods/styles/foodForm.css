@@ -1,63 +1,190 @@
+.food-form-wrapper {
+  position: relative;
+  isolation: isolate;
+}
+
+.food-form-wrapper::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -5;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 9% 8%, rgba(121, 82, 46, 0.18), transparent 28%),
+    radial-gradient(circle at 92% 12%, rgba(89, 139, 79, 0.18), transparent 26%),
+    linear-gradient(135deg, #f7f3ea 0%, #edf6e8 48%, #f3eadf 100%);
+}
+
+.food-form-orb {
+  position: fixed;
+  z-index: -3;
+  border-radius: 999px;
+  pointer-events: none;
+  filter: blur(5px);
+  opacity: 0.75;
+  animation: foodFormFloat 8s ease-in-out infinite;
+}
+
+.food-orb-one {
+  width: 220px;
+  height: 220px;
+  top: 120px;
+  right: 90px;
+  background: rgba(74, 121, 67, 0.14);
+}
+
+.food-orb-two {
+  width: 180px;
+  height: 180px;
+  left: 320px;
+  bottom: 90px;
+  background: rgba(122, 79, 47, 0.14);
+  animation-delay: 1.3s;
+}
+
+@keyframes foodFormFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -22px, 0);
+  }
+}
+
 .food-form-page {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 370px;
-  gap: 22px;
+  grid-template-columns: minmax(0, 1fr) 390px;
+  gap: 24px;
   align-items: start;
 }
 
+.food-form-main,
+.food-form-loading {
+  border-radius: 34px;
+  background: rgba(255, 251, 244, 0.72);
+  border: 1px solid rgba(95, 71, 47, 0.13);
+  box-shadow: 0 24px 72px rgba(69, 48, 31, 0.09);
+  backdrop-filter: blur(22px);
+}
+
 .food-form-main {
-  border-radius: 30px;
-  padding: 24px;
+  padding: clamp(22px, 4vw, 34px);
+}
+
+.food-form-title {
+  margin-bottom: 22px;
+}
+
+.food-form-title span {
+  display: inline-flex;
+  margin-bottom: 9px;
+  color: #7a4f2f;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.food-form-title h2 {
+  margin: 0;
+  color: #21351e;
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1.06;
+  letter-spacing: -1.2px;
+}
+
+.food-form-title p {
+  max-width: 720px;
+  margin: 12px 0 0;
+  color: #756b5d;
+  line-height: 1.75;
 }
 
 .food-form-side {
+  position: sticky;
+  top: 24px;
   display: grid;
   gap: 18px;
 }
 
 .food-form-message {
   margin-bottom: 18px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: var(--sb-lime-soft);
-  border: 1px solid rgba(47, 122, 66, 0.14);
-  color: var(--sb-green-800);
+  padding: 15px 17px;
+  border-radius: 20px;
+  background: rgba(223, 239, 198, 0.78);
+  border: 1px solid rgba(74, 121, 67, 0.16);
+  color: #274622;
   font-weight: 850;
 }
 
 .food-form-actions {
-  margin-top: 22px;
+  margin-top: 24px;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
   flex-wrap: wrap;
 }
 
+.food-btn-outline {
+  color: #2c3d26;
+  background: rgba(255, 251, 244, 0.68);
+  border: 1px solid rgba(95, 71, 47, 0.16);
+  backdrop-filter: blur(16px);
+}
+
+.food-btn-outline:hover:not(:disabled) {
+  background: rgba(255, 251, 244, 0.96);
+}
+
 .food-form-loading {
-  padding: 34px;
-  border-radius: 28px;
+  padding: 44px;
+  text-align: center;
+}
+
+.food-form-loader {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto;
+  border-radius: 999px;
+  border: 4px solid rgba(70, 116, 61, 0.18);
+  border-top-color: #4f7d43;
+  animation: foodLoaderSpin 0.8s linear infinite;
+}
+
+@keyframes foodLoaderSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .food-form-loading h3 {
-  margin: 0 0 8px;
-  color: var(--sb-green-900);
+  margin: 16px 0 8px;
+  color: #263f24;
   font-size: 24px;
 }
 
 .food-form-loading p {
   margin: 0;
-  color: var(--sb-muted);
+  color: #756b5d;
 }
 
-@media (max-width: 980px) {
+@media (max-width: 1080px) {
   .food-form-page {
     grid-template-columns: 1fr;
+  }
+
+  .food-form-side {
+    position: relative;
+    top: auto;
   }
 }
 
 @media (max-width: 640px) {
   .food-form-main {
-    padding: 18px;
+    padding: 20px;
+    border-radius: 28px;
   }
 
   .food-form-actions .sb-btn {

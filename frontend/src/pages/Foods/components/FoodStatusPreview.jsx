@@ -1,5 +1,9 @@
 import { getDaysLeftLabel } from "../../../utils/formatDate";
-import { getFoodPriority, getFoodStatusLabel } from "../../../utils/foodStatus";
+
+import {
+  getFoodPriority,
+  getFoodStatusLabel,
+} from "../../../utils/foodStatus";
 
 import "../styles/foodStatusPreview.css";
 
@@ -11,7 +15,9 @@ export default function FoodStatusPreview({
   const priority = getFoodPriority(expiryDate, autoStatus);
 
   return (
-    <section className={`food-status-preview preview-${priority.tone} sb-glass`}>
+    <section className={`food-status-preview preview-${priority.tone}`}>
+      <div className="status-preview-glow" />
+
       <span className="preview-label">Status Otomatis</span>
 
       <h3>{getFoodStatusLabel(autoStatus)}</h3>

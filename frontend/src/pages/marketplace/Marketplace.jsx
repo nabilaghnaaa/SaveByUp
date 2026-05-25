@@ -64,67 +64,110 @@ export default function Marketplace() {
 
   return (
     <AppShell>
-      <PageHeader
-        label="Marketplace"
-        title="Marketplace Makanan Mahasiswa Kos"
-        description="Temukan makanan layak konsumsi dari mahasiswa lain, cek tanggal kedaluwarsa, lalu ajukan pembelian atau negosiasi harga."
-        action={
-          <button
-            type="button"
-            className="sb-btn sb-btn-ghost"
-            onClick={fetchProducts}
-          >
-            Refresh
-          </button>
-        }
-      />
+      <main className="marketplace-page">
+        <div className="marketplace-orb marketplace-orb-one" />
+        <div className="marketplace-orb marketplace-orb-two" />
 
-      <ProductFilter
-        search={search}
-        categoryFilter={categoryFilter}
-        statusFilter={statusFilter}
-        onSearchChange={setSearch}
-        onCategoryChange={setCategoryFilter}
-        onStatusChange={setStatusFilter}
-      />
-
-      {message && <div className="marketplace-message">{message}</div>}
-
-      {loading ? (
-        <div className="marketplace-state sb-glass">
-          <h3>Memuat marketplace...</h3>
-          <p>Sedang mengambil daftar makanan yang ditawarkan.</p>
-        </div>
-      ) : products.length === 0 ? (
-        <EmptyState
-          title="Belum ada produk marketplace"
-          description="Produk dari inventaris yang ditawarkan ke marketplace akan muncul di sini."
-        />
-      ) : filteredProducts.length === 0 ? (
-        <EmptyState
-          title="Produk tidak ditemukan"
-          description="Coba ubah kata kunci pencarian, kategori, atau status produk."
+        <PageHeader
+          label="Marketplace"
+          title="Marketplace Makanan Mahasiswa Kos"
+          description="Temukan makanan layak konsumsi dari mahasiswa lain, cek tanggal kedaluwarsa, lalu ajukan pembelian atau negosiasi harga secara aman."
           action={
             <button
               type="button"
-              className="sb-btn sb-btn-ghost"
-              onClick={() => {
-                setSearch("");
-                setCategoryFilter("semua");
-                setStatusFilter("semua");
-              }}
+              className="sb-btn marketplace-btn-outline"
+              onClick={fetchProducts}
             >
-              Reset Filter
+              Refresh
             </button>
           }
         />
-      ) : (
-        <section className="marketplace-grid">
-          {filteredProducts.map((product) => (
-            <ProductCard product={product} key={product.id} />
-          ))}
+
+        <section className="marketplace-hero">
+          <div className="marketplace-hero-content">
+            <span>Save Food, Share Value</span>
+            <h2>Makanan yang masih layak tidak harus berakhir di tempat sampah.</h2>
+            <p>
+              Marketplace SaveByUp membantu mahasiswa kos menawarkan makanan
+              mendekati kedaluwarsa dengan sistem pengajuan, negosiasi, dan
+              komunikasi lanjutan setelah disetujui.
+            </p>
+          </div>
+
+          <div className="marketplace-hero-stats">
+            <div>
+              <span>Total Produk</span>
+              <strong>{loading ? "..." : products.length}</strong>
+            </div>
+
+            <div>
+              <span>Tersedia</span>
+              <strong>
+                {loading
+                  ? "..."
+                  : products.filter((item) => item.status === "tersedia").length}
+              </strong>
+            </div>
+
+            <div>
+              <span>Dalam Proses</span>
+              <strong>
+                {loading
+                  ? "..."
+                  : products.filter((item) => item.status === "dalam_proses").length}
+              </strong>
+            </div>
+          </div>
         </section>
-      )}
+
+        <ProductFilter
+          search={search}
+          categoryFilter={categoryFilter}
+          statusFilter={statusFilter}
+          onSearchChange={setSearch}
+          onCategoryChange={setCategoryFilter}
+          onStatusChange={setStatusFilter}
+        />
+
+        {message && <div className="marketplace-message">{message}</div>}
+
+        {loading ? (
+          <div className="marketplace-state">
+            <div className="marketplace-loader" />
+            <h3>Memuat marketplace...</h3>
+            <p>Sedang mengambil daftar makanan yang ditawarkan.</p>
+          </div>
+        ) : products.length === 0 ? (
+          <EmptyState
+            title="Belum ada produk marketplace"
+            description="Produk dari inventaris yang ditawarkan ke marketplace akan muncul di sini."
+          />
+        ) : filteredProducts.length === 0 ? (
+          <EmptyState
+            title="Produk tidak ditemukan"
+            description="Coba ubah kata kunci pencarian, kategori, atau status produk."
+            action={
+              <button
+                type="button"
+                className="sb-btn marketplace-btn-outline"
+                onClick={() => {
+                  setSearch("");
+                  setCategoryFilter("semua");
+                  setStatusFilter("semua");
+                }}
+              >
+                Reset Filter
+              </button>
+            }
+          />
+        ) : (
+          <section className="marketplace-grid">
+            {filteredProducts.map((product) => (
+              <ProductCard product={product} key={product.id} />
+            ))}
+          </section>
+        )}
+      </main>
     </AppShell>
   );
 }

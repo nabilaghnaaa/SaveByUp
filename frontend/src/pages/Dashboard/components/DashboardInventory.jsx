@@ -109,17 +109,18 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
       <div className="inventory-header">
         <div className="section-heading">
           <span>Inventaris Makanan</span>
-          <h2>Daftar stok makanan kamu</h2>
+          <h2>Stok makanan yang kamu simpan</h2>
           <p>
-            Kelola stok, tanggal kedaluwarsa, status makanan, dan pilih makanan
-            yang masih layak untuk ditawarkan ke marketplace.
+            Kelola makanan berdasarkan nama, jumlah, tanggal kedaluwarsa, dan
+            status pemanfaatannya. Makanan yang masih layak bisa langsung kamu
+            tawarkan ke marketplace.
           </p>
         </div>
 
         <div className="inventory-actions">
           <button
             type="button"
-            className="sb-btn sb-btn-ghost"
+            className="sb-btn dashboard-btn-outline"
             onClick={fetchFoods}
           >
             Refresh
@@ -135,7 +136,7 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
         </div>
       </div>
 
-      <div className="inventory-toolbar sb-glass">
+      <div className="inventory-toolbar">
         <input
           type="text"
           value={search}
@@ -172,7 +173,8 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
       {message && <div className="inventory-message">{message}</div>}
 
       {loading ? (
-        <div className="inventory-state sb-glass">
+        <div className="inventory-state">
+          <div className="inventory-loader" />
           <h3>Memuat inventaris...</h3>
           <p>Sedang mengambil data makanan yang tersimpan.</p>
         </div>
@@ -197,7 +199,7 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
           action={
             <button
               type="button"
-              className="sb-btn sb-btn-ghost"
+              className="sb-btn dashboard-btn-outline"
               onClick={() => {
                 setSearch("");
                 setStatusFilter("semua");

@@ -1,15 +1,26 @@
 .register-visual {
   position: relative;
   min-height: 100%;
-  padding: clamp(28px, 5vw, 56px);
+  padding: clamp(30px, 5vw, 58px);
   display: flex;
   align-items: center;
-  color: white;
+  color: #fff8ee;
   overflow: hidden;
   background:
-    radial-gradient(circle at 82% 18%, rgba(200, 255, 98, 0.2), transparent 28%),
-    radial-gradient(circle at 12% 84%, rgba(95, 190, 110, 0.22), transparent 32%),
-    linear-gradient(135deg, #07140d 0%, #102719 55%, #1f5b31 100%);
+    radial-gradient(circle at 82% 18%, rgba(190, 159, 102, 0.22), transparent 28%),
+    radial-gradient(circle at 12% 84%, rgba(90, 139, 83, 0.24), transparent 34%),
+    linear-gradient(135deg, #152713 0%, #234522 48%, #6f492c 100%);
+}
+
+.register-visual::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 248, 236, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 248, 236, 0.045) 1px, transparent 1px);
+  background-size: 44px 44px;
+  pointer-events: none;
 }
 
 .register-visual-overlay {
@@ -17,7 +28,7 @@
   inset: 0;
   background:
     linear-gradient(to bottom, rgba(255, 255, 255, 0.04), transparent),
-    radial-gradient(circle at 65% 70%, rgba(200, 255, 98, 0.1), transparent 34%);
+    radial-gradient(circle at 65% 70%, rgba(255, 248, 236, 0.09), transparent 34%);
   pointer-events: none;
 }
 
@@ -29,28 +40,29 @@
 
 .register-visual-badge {
   display: inline-flex;
-  margin-bottom: 20px;
-  padding: 9px 15px;
+  margin-bottom: 22px;
+  padding: 10px 16px;
   border-radius: 999px;
-  background: rgba(200, 255, 98, 0.13);
-  border: 1px solid rgba(200, 255, 98, 0.25);
-  color: var(--sb-lime);
+  background: rgba(255, 248, 236, 0.1);
+  border: 1px solid rgba(255, 248, 236, 0.18);
+  color: #f3e5c8;
   font-size: 12px;
-  font-weight: 900;
-  letter-spacing: 0.8px;
+  font-weight: 950;
+  letter-spacing: 1px;
   text-transform: uppercase;
+  backdrop-filter: blur(14px);
 }
 
 .register-visual h2 {
   margin: 0;
-  font-size: clamp(38px, 6vw, 66px);
-  line-height: 1.02;
-  letter-spacing: -2px;
+  font-size: clamp(40px, 6vw, 68px);
+  line-height: 1.01;
+  letter-spacing: -2.3px;
 }
 
 .register-visual p {
-  margin: 22px 0 0;
-  color: rgba(255, 255, 255, 0.78);
+  margin: 23px 0 0;
+  color: rgba(255, 248, 236, 0.78);
   line-height: 1.8;
   font-size: 17px;
 }
@@ -58,33 +70,35 @@
 .register-steps {
   display: grid;
   gap: 14px;
-  margin-top: 30px;
+  margin-top: 32px;
 }
 
 .register-steps div {
   padding: 18px;
-  border-radius: 24px;
-  background: rgba(255, 255, 255, 0.09);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(12px);
+  border-radius: 25px;
+  background: rgba(255, 248, 236, 0.1);
+  border: 1px solid rgba(255, 248, 236, 0.16);
+  backdrop-filter: blur(14px);
 }
 
 .register-steps span {
   display: inline-flex;
   margin-bottom: 8px;
-  color: var(--sb-lime);
+  color: #f3e5c8;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 950;
+  letter-spacing: 1px;
 }
 
 .register-steps strong {
   display: block;
-  color: white;
-  font-size: 18px;
+  color: #fff8ee;
+  font-size: 19px;
 }
 
 .register-steps p {
-  margin: 6px 0 0;
+  margin: 7px 0 0;
+  color: rgba(255, 248, 236, 0.74);
   font-size: 14px;
-  line-height: 1.55;
+  line-height: 1.58;
 }

@@ -14,6 +14,16 @@ function getTransactionStatusLabel(status) {
   return labels[status] || "Menunggu Komunikasi";
 }
 
+function getStatusIcon(status) {
+  const icons = {
+    menunggu_komunikasi: "💬",
+    selesai: "✅",
+    dibatalkan: "✕",
+  };
+
+  return icons[status] || "💬";
+}
+
 export default function TransactionCard({ transaction, onComplete, onRate }) {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user.id || user.id_user || user.user_id;
@@ -41,27 +51,36 @@ export default function TransactionCard({ transaction, onComplete, onRate }) {
     transaction.status === "selesai" && isBuyer && !transaction.rating;
 
   return (
-    <article className="transaction-card sb-glass">
+    <article className={`transaction-card transaction-${transaction.status}`}>
       <div className="transaction-image">
         {transaction.product_image ? (
           <img src={transaction.product_image} alt={transaction.product_name} />
         ) : (
           <span>🍱</span>
         )}
+
+        <div className="transaction-image-overlay" />
+
+        <span className={`transaction-status status-${transaction.status}`}>
+          {getStatusIcon(transaction.status)}{" "}
+          {getTransactionStatusLabel(transaction.status)}
+        </span>
       </div>
 
       <div className="transaction-content">
         <div className="transaction-topline">
-          <span className={`transaction-status status-${transaction.status}`}>
-            {getTransactionStatusLabel(transaction.status)}
-          </span>
-
           <span className="transaction-role">
             {isBuyer ? "Sebagai Pembeli" : isSeller ? "Sebagai Penjual" : "Transaksi"}
           </span>
+
+          {transaction.rating && (
+            <span className="transaction-rating-badge">
+              Rating {transaction.rating}/5
+            </span>
+          )}
         </div>
 
-        <h3>{transaction.product_name}</h3>
+        <h3>{transaction.product_name || "Produk Marketplace"}</h3>
 
         <p>
           {isBuyer ? "Penjual" : "Pembeli"}:{" "}
@@ -93,7 +112,7 @@ export default function TransactionCard({ transaction, onComplete, onRate }) {
 
         {transaction.review && (
           <p className="transaction-review">
-            Rating {transaction.rating}/5 — {transaction.review}
+            “{transaction.review}”
           </p>
         )}
       </div>
@@ -113,7 +132,7 @@ export default function TransactionCard({ transaction, onComplete, onRate }) {
         {canComplete && (
           <button
             type="button"
-            className="sb-btn sb-btn-ghost"
+            className="sb-btn transaction-btn-outline"
             onClick={onComplete}
           >
             Tandai Selesai
@@ -123,7 +142,7 @@ export default function TransactionCard({ transaction, onComplete, onRate }) {
         {canRate && (
           <button
             type="button"
-            className="sb-btn sb-btn-ghost"
+            className="sb-btn transaction-btn-outline"
             onClick={onRate}
           >
             Beri Rating

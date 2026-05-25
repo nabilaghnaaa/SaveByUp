@@ -9,10 +9,10 @@ import Dashboard from "./pages/Dashboard/Dashboard";
 
 import FoodForm from "./pages/Foods/FoodForm";
 
-import Marketplace from "./pages/Marketplace/Marketplace";
-import MarketplaceDetail from "./pages/Marketplace/MarketplaceDetail";
-import SellProduct from "./pages/Marketplace/SellProduct";
-import IncomingRequests from "./pages/Marketplace/IncomingRequests";
+import Marketplace from "./pages/marketplace/Marketplace";
+import MarketplaceDetail from "./pages/marketplace/MarketplaceDetail";
+import SellProduct from "./pages/marketplace/SellProduct";
+import IncomingRequests from "./pages/marketplace/IncomingRequests";
 
 import Notifications from "./pages/Notifications/Notifications";
 
@@ -90,10 +90,10 @@ function App() {
       />
 
       <Route
-        path="/marketplace/:id"
+        path="/marketplace/requests"
         element={
           <ProtectedRoute>
-            <MarketplaceDetail />
+            <IncomingRequests />
           </ProtectedRoute>
         }
       />
@@ -108,10 +108,10 @@ function App() {
       />
 
       <Route
-        path="/marketplace/requests"
+        path="/marketplace/:id"
         element={
           <ProtectedRoute>
-            <IncomingRequests />
+            <MarketplaceDetail />
           </ProtectedRoute>
         }
       />

@@ -1,41 +1,97 @@
+.sell-product-wrapper {
+  position: relative;
+  isolation: isolate;
+}
+
+.sell-product-wrapper::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -5;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 9% 8%, rgba(121, 82, 46, 0.18), transparent 28%),
+    radial-gradient(circle at 92% 12%, rgba(89, 139, 79, 0.18), transparent 26%),
+    linear-gradient(135deg, #f7f3ea 0%, #edf6e8 48%, #f3eadf 100%);
+}
+
+.sell-product-orb {
+  position: fixed;
+  z-index: -3;
+  border-radius: 999px;
+  pointer-events: none;
+  filter: blur(5px);
+  opacity: 0.75;
+  animation: marketplaceFloat 8s ease-in-out infinite;
+}
+
+.sell-orb-one {
+  width: 220px;
+  height: 220px;
+  top: 120px;
+  right: 90px;
+  background: rgba(74, 121, 67, 0.14);
+}
+
+.sell-orb-two {
+  width: 180px;
+  height: 180px;
+  left: 320px;
+  bottom: 90px;
+  background: rgba(122, 79, 47, 0.14);
+  animation-delay: 1.3s;
+}
+
 .sell-product-page {
   display: grid;
   grid-template-columns: 390px minmax(0, 1fr);
-  gap: 22px;
+  gap: 24px;
   align-items: start;
 }
 
 .sell-product-preview,
 .sell-product-form,
 .sell-product-state {
-  border-radius: 30px;
+  border-radius: 34px;
+  background: rgba(255, 251, 244, 0.72);
+  border: 1px solid rgba(95, 71, 47, 0.13);
+  box-shadow: 0 24px 72px rgba(69, 48, 31, 0.09);
+  backdrop-filter: blur(22px);
 }
 
 .sell-product-state {
-  padding: 34px;
+  padding: 44px;
+  text-align: center;
 }
 
 .sell-product-state h3 {
-  margin: 0 0 8px;
-  color: var(--sb-green-900);
+  margin: 16px 0 8px;
+  color: #263f24;
   font-size: 24px;
 }
 
 .sell-product-state p {
-  color: var(--sb-muted);
+  color: #756b5d;
   line-height: 1.6;
 }
 
+.sell-product-preview {
+  overflow: hidden;
+  position: sticky;
+  top: 24px;
+}
+
 .sell-product-image {
-  height: 260px;
-  border-radius: 30px 30px 0 0;
+  position: relative;
+  height: 280px;
   overflow: hidden;
   display: grid;
   place-items: center;
-  font-size: 62px;
+  font-size: 64px;
   background:
-    radial-gradient(circle at 20% 20%, rgba(200, 255, 98, 0.25), transparent 35%),
-    linear-gradient(135deg, #e6f6df, #f9fff4);
+    radial-gradient(circle at 20% 20%, rgba(74, 121, 67, 0.22), transparent 35%),
+    radial-gradient(circle at 90% 80%, rgba(122, 79, 47, 0.17), transparent 35%),
+    linear-gradient(135deg, #edf6e8, #f7f0e4);
 }
 
 .sell-product-image img {
@@ -44,105 +100,141 @@
   object-fit: cover;
 }
 
-.sell-product-info {
-  padding: 22px;
+.sell-product-image-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(29, 40, 24, 0.5), transparent 60%),
+    linear-gradient(to bottom, rgba(29, 40, 24, 0.16), transparent 40%);
 }
 
-.sell-product-info span {
-  color: var(--sb-green-600);
+.sell-product-info {
+  padding: 24px;
+}
+
+.sell-product-info span,
+.sell-form-heading span {
+  color: #7a4f2f;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 950;
   text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 .sell-product-info h2 {
-  margin: 8px 0 12px;
-  color: var(--sb-green-900);
-  font-size: 30px;
-  letter-spacing: -0.8px;
+  margin: 9px 0 13px;
+  color: #21351e;
+  font-size: 32px;
+  line-height: 1.1;
+  letter-spacing: -0.9px;
 }
 
 .sell-product-info p {
-  margin: 6px 0;
-  color: var(--sb-muted);
+  margin: 7px 0;
+  color: #756b5d;
 }
 
 .sell-product-info strong {
   display: inline-flex;
-  margin-top: 12px;
-  padding: 8px 12px;
+  margin-top: 14px;
+  padding: 9px 13px;
   border-radius: 999px;
-  background: var(--sb-lime-soft);
-  color: var(--sb-green-800);
+  background: rgba(74, 121, 67, 0.11);
+  color: #274622;
 }
 
 .sell-warning {
   margin-top: 16px;
-  padding: 13px;
-  border-radius: 18px;
-  background: var(--sb-danger-soft);
-  color: #b91c1c;
-  line-height: 1.5;
-  font-weight: 750;
+  padding: 14px;
+  border-radius: 20px;
+  background: rgba(170, 75, 48, 0.1);
+  color: #9f3f2d;
+  line-height: 1.55;
+  font-weight: 800;
 }
 
 .sell-product-form {
-  padding: 24px;
+  padding: clamp(22px, 4vw, 34px);
+}
+
+.sell-form-heading {
+  margin-bottom: 20px;
+}
+
+.sell-form-heading h3 {
+  margin: 9px 0 0;
+  color: #21351e;
+  font-size: clamp(28px, 4vw, 40px);
+  line-height: 1.05;
+  letter-spacing: -1.1px;
+}
+
+.sell-form-heading p {
+  margin: 12px 0 0;
+  color: #756b5d;
+  line-height: 1.75;
 }
 
 .sell-product-form label {
   display: block;
-  margin: 14px 0 8px;
-  color: var(--sb-green-900);
-  font-weight: 850;
+  margin: 15px 0 8px;
+  color: #263f24;
+  font-weight: 900;
 }
 
 .sell-product-form input,
 .sell-product-form textarea {
   width: 100%;
-  border: 1px solid rgba(43, 107, 58, 0.14);
-  border-radius: 18px;
-  padding: 14px 15px;
+  border: 1px solid rgba(95, 71, 47, 0.14);
+  border-radius: 20px;
+  padding: 15px 16px;
   outline: none;
-  color: var(--sb-green-900);
-  background: rgba(255, 255, 255, 0.86);
+  color: #263f24;
+  background: rgba(255, 255, 255, 0.76);
 }
 
 .sell-product-form input:focus,
 .sell-product-form textarea:focus {
-  border-color: rgba(47, 122, 66, 0.45);
-  box-shadow: 0 0 0 4px rgba(200, 255, 98, 0.2);
+  border-color: rgba(74, 121, 67, 0.42);
+  box-shadow: 0 0 0 4px rgba(123, 153, 91, 0.16);
+  background: #fffdfa;
 }
 
 .sell-rules {
-  margin: 18px 0;
+  margin: 20px 0;
   padding: 18px;
-  border-radius: 20px;
-  background: rgba(43, 107, 58, 0.06);
-  color: var(--sb-muted);
+  border-radius: 22px;
+  background: rgba(74, 121, 67, 0.07);
+  border: 1px solid rgba(74, 121, 67, 0.08);
+  color: #756b5d;
 }
 
 .sell-rules strong {
-  color: var(--sb-green-900);
+  color: #263f24;
 }
 
 .sell-rules ul {
   margin: 10px 0 0;
   padding-left: 20px;
-  line-height: 1.65;
+  line-height: 1.7;
 }
 
 .sell-message {
   margin-bottom: 14px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  background: var(--sb-lime-soft);
-  color: var(--sb-green-800);
+  padding: 13px 15px;
+  border-radius: 18px;
+  background: rgba(223, 239, 198, 0.78);
+  color: #274622;
   font-weight: 850;
 }
 
 @media (max-width: 980px) {
   .sell-product-page {
     grid-template-columns: 1fr;
+  }
+
+  .sell-product-preview {
+    position: relative;
+    top: auto;
   }
 }

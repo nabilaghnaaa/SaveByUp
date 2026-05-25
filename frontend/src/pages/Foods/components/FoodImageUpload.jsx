@@ -2,14 +2,15 @@ import "../styles/foodImageUpload.css";
 
 export default function FoodImageUpload({ form, onChange }) {
   return (
-    <section className="food-image-upload sb-glass">
+    <section className="food-image-upload">
       <div className="food-image-preview">
         {form.image_url ? (
           <img src={form.image_url} alt="Preview makanan" />
         ) : (
           <div className="food-image-empty">
             <span>📷</span>
-            <p>Preview foto makanan</p>
+            <strong>Preview Foto</strong>
+            <p>Tambahkan URL foto agar produk lebih jelas.</p>
           </div>
         )}
       </div>
@@ -19,8 +20,8 @@ export default function FoodImageUpload({ form, onChange }) {
         <h3>Tambahkan gambar produk</h3>
 
         <p>
-          Untuk saat ini, masukkan URL foto makanan. Fitur upload file langsung
-          bisa ditambahkan setelah backend upload siap.
+          Untuk saat ini, masukkan URL foto makanan. Gambar membantu pengguna
+          lain menilai detail makanan saat masuk marketplace.
         </p>
 
         <label>URL Foto</label>

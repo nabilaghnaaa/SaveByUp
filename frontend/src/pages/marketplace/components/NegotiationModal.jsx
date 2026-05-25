@@ -79,8 +79,7 @@ export default function NegotiationModal({ product, onClose, onSuccess }) {
         <p>
           Harga awal produk ini adalah{" "}
           <strong>{formatCurrency(product.price)}</strong>. Kamu dapat
-          mengajukan pembelian atau menawar harga sesuai kesepakatan dengan
-          penjual.
+          mengajukan pembelian atau menawar harga sesuai kesepakatan.
         </p>
 
         {message && <div className="negotiation-message">{message}</div>}
@@ -113,7 +112,7 @@ export default function NegotiationModal({ product, onClose, onSuccess }) {
         <div className="negotiation-actions">
           <button
             type="button"
-            className="sb-btn sb-btn-ghost"
+            className="sb-btn marketplace-btn-outline"
             onClick={onClose}
           >
             Batal

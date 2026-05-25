@@ -1,17 +1,32 @@
-@media (max-width: 1180px) {
-  .dashboard-hero,
+@media (max-width: 1240px) {
   .summary-grid,
   .food-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .dashboard-hero-main,
+  .dashboard-hero {
+    grid-template-columns: 1fr;
+  }
+
   .dashboard-hero-panel {
-    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .dashboard-floating-food {
+    min-height: auto;
   }
 }
 
-@media (max-width: 860px) {
+@media (max-width: 980px) {
+  .dashboard-hero {
+    padding: 16px;
+    border-radius: 32px;
+  }
+
+  .dashboard-hero-panel {
+    grid-template-columns: 1fr;
+  }
+
   .inventory-toolbar {
     grid-template-columns: 1fr;
   }
@@ -23,14 +38,16 @@
 }
 
 @media (max-width: 760px) {
-  .dashboard-hero,
-  .summary-grid,
-  .food-grid {
-    grid-template-columns: 1fr;
+  .dashboard-page {
+    gap: 26px;
+  }
+
+  .dashboard-hero-main {
+    padding: 28px;
   }
 
   .dashboard-hero h1 {
-    letter-spacing: -1px;
+    letter-spacing: -1.4px;
   }
 
   .dashboard-hero-actions,
@@ -43,7 +60,31 @@
     width: 100%;
   }
 
-  .hero-mini-stats {
+  .dashboard-hero-mini,
+  .summary-grid,
+  .food-grid {
     grid-template-columns: 1fr;
+  }
+
+  .summary-card p {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .dashboard-hero {
+    padding: 10px;
+    border-radius: 26px;
+  }
+
+  .dashboard-hero-main {
+    border-radius: 22px;
+    padding: 22px;
+  }
+
+  .dashboard-panel-card,
+  .summary-card,
+  .inventory-toolbar {
+    border-radius: 24px;
   }
 }

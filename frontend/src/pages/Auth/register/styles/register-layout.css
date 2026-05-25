@@ -1,58 +1,64 @@
 .register-brand {
   display: grid;
   gap: 10px;
-  margin-bottom: 24px;
+  margin-bottom: 26px;
 }
 
-.register-brand > div:first-of-type + div strong {
+.register-brand-text strong {
   display: block;
-  margin-top: 12px;
-  color: var(--sb-green-900);
-  font-size: 22px;
+  margin-top: 13px;
+  color: #21351e;
+  font-size: 23px;
+  letter-spacing: -0.4px;
 }
 
-.register-brand > div:first-of-type + div span {
+.register-brand-text span {
   display: block;
   margin-top: 4px;
-  color: var(--sb-muted);
+  color: #756b5d;
   font-size: 13px;
+  font-weight: 700;
 }
 
 .register-heading {
-  margin-top: 20px;
+  margin-top: 22px;
 }
 
 .register-heading span {
   display: inline-flex;
   margin-bottom: 10px;
-  color: var(--sb-green-600);
+  color: #7a4f2f;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 950;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 1px;
 }
 
 .register-heading h1 {
   margin: 0;
-  color: var(--sb-green-900);
-  font-size: clamp(30px, 5vw, 44px);
+  color: #21351e;
+  font-size: clamp(32px, 5vw, 46px);
   line-height: 1.05;
-  letter-spacing: -1.4px;
+  letter-spacing: -1.5px;
 }
 
 .register-heading p {
-  margin: 14px 0 0;
-  color: var(--sb-muted);
-  line-height: 1.7;
+  margin: 15px 0 0;
+  color: #756b5d;
+  line-height: 1.75;
 }
 
 .register-switch {
-  margin: 8px 0 0;
-  color: var(--sb-muted);
+  margin: 10px 0 0;
+  color: #756b5d;
 }
 
 .register-switch a {
-  color: var(--sb-green-700);
-  font-weight: 900;
+  color: #274622;
+  font-weight: 950;
   text-decoration: none;
+}
+
+.register-switch a:hover {
+  text-decoration: underline;
 }

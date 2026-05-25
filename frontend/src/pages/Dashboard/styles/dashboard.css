@@ -1,6 +1,6 @@
 @import "./dashboard-base.css";
-@import "./dashboard-hero.css";
 @import "./dashboard-section.css";
+@import "./dashboard-hero.css";
 @import "./dashboard-summary.css";
 @import "./dashboard-inventory.css";
 @import "./dashboard-responsive.css";

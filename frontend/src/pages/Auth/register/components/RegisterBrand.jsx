@@ -5,7 +5,7 @@ export default function RegisterBrand() {
     <div className="register-brand">
       <div className="register-logo">S</div>
 
-      <div>
+      <div className="register-brand-text">
         <strong>SaveByUp</strong>
         <span>Food Waste Prevention System</span>
       </div>

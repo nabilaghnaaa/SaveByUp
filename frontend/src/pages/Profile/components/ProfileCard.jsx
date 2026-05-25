@@ -8,7 +8,9 @@ function getInitial(name) {
 export default function ProfileCard({ profile, saving, onChange, onSubmit }) {
   return (
     <form className="profile-page" onSubmit={onSubmit}>
-      <aside className="profile-side sb-glass">
+      <aside className="profile-side">
+        <div className="profile-side-glow" />
+
         <div className="profile-avatar">
           {profile.avatar_url ? (
             <img src={profile.avatar_url} alt={profile.name} />
@@ -28,16 +30,28 @@ export default function ProfileCard({ profile, saving, onChange, onSubmit }) {
           </div>
         </div>
 
+        <div className="profile-mini-grid">
+          <div>
+            <span>WhatsApp</span>
+            <strong>{profile.whatsapp ? "Aktif" : "Belum diisi"}</strong>
+          </div>
+
+          <div>
+            <span>Area COD</span>
+            <strong>{profile.address ? "Tersedia" : "Belum diisi"}</strong>
+          </div>
+        </div>
+
         <div className="profile-tips">
           <span>Tips Profil</span>
           <p>
-            Nomor WhatsApp dan alamat kos akan membantu proses COD setelah
+            Nomor WhatsApp dan area COD membantu proses komunikasi setelah
             pengajuan marketplace disetujui.
           </p>
         </div>
       </aside>
 
-      <section className="profile-form sb-glass">
+      <section className="profile-form">
         <div className="profile-form-header">
           <span>Informasi Akun</span>
           <h3>Data profil dan kontak</h3>
@@ -104,7 +118,11 @@ export default function ProfileCard({ profile, saving, onChange, onSubmit }) {
         </div>
 
         <div className="profile-actions">
-          <button type="submit" className="sb-btn sb-btn-primary" disabled={saving}>
+          <button
+            type="submit"
+            className="sb-btn sb-btn-primary"
+            disabled={saving}
+          >
             {saving ? "Menyimpan..." : "Simpan Profil"}
           </button>
         </div>

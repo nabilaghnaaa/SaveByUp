@@ -26,7 +26,7 @@ export default function RequestCard({ request, onApprove, onReject }) {
   });
 
   return (
-    <article className="request-card sb-glass">
+    <article className="request-card">
       <div className="request-main">
         <span className={`request-status request-${request.status}`}>
           {getStatusLabel(request.status)}
@@ -81,7 +81,7 @@ export default function RequestCard({ request, onApprove, onReject }) {
 
         <button
           type="button"
-          className="sb-btn sb-btn-ghost"
+          className="sb-btn marketplace-btn-outline"
           disabled={!isPending}
           onClick={onReject}
         >

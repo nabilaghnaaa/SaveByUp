@@ -58,6 +58,18 @@ export default function Notifications() {
     (notification) => !notification.is_read
   ).length;
 
+  const expiryCount = notifications.filter(
+    (notification) => notification.type === "expiry"
+  ).length;
+
+  const requestCount = notifications.filter(
+    (notification) => notification.type === "request"
+  ).length;
+
+  const transactionCount = notifications.filter(
+    (notification) => notification.type === "transaction"
+  ).length;
+
   const handleMarkAsRead = async (notification) => {
     try {
       await markNotificationAsRead(notification.id);
@@ -93,135 +105,159 @@ export default function Notifications() {
 
   return (
     <AppShell>
-      <PageHeader
-        label="Notifikasi"
-        title="Pusat Notifikasi"
-        description="Pantau pengingat makanan mendekati kedaluwarsa, pengajuan marketplace, transaksi, dan informasi penting lainnya."
-        action={
-          <button
-            type="button"
-            className="sb-btn sb-btn-primary"
-            onClick={handleGenerateExpiryNotifications}
-            disabled={generating}
-          >
-            {generating ? "Membuat..." : "Generate Reminder"}
-          </button>
-        }
-      />
+      <main className="notifications-page">
+        <div className="notifications-orb notifications-orb-one" />
+        <div className="notifications-orb notifications-orb-two" />
 
-      <section className="notification-summary">
-        <div className="notification-summary-card sb-glass">
-          <span>Total Notifikasi</span>
-          <strong>{notifications.length}</strong>
-          <p>Semua notifikasi yang masuk ke akun kamu.</p>
-        </div>
-
-        <div className="notification-summary-card sb-glass">
-          <span>Belum Dibaca</span>
-          <strong>{unreadCount}</strong>
-          <p>Notifikasi yang masih perlu kamu cek.</p>
-        </div>
-
-        <div className="notification-summary-card sb-glass">
-          <span>Reminder</span>
-          <strong>
-            {
-              notifications.filter(
-                (notification) => notification.type === "expiry"
-              ).length
-            }
-          </strong>
-          <p>Pengingat makanan yang mendekati kedaluwarsa.</p>
-        </div>
-      </section>
-
-      <section className="notification-filter sb-glass">
-        <button
-          type="button"
-          className={activeFilter === "semua" ? "active" : ""}
-          onClick={() => setActiveFilter("semua")}
-        >
-          Semua
-        </button>
-
-        <button
-          type="button"
-          className={activeFilter === "belum_dibaca" ? "active" : ""}
-          onClick={() => setActiveFilter("belum_dibaca")}
-        >
-          Belum Dibaca
-        </button>
-
-        <button
-          type="button"
-          className={activeFilter === "expiry" ? "active" : ""}
-          onClick={() => setActiveFilter("expiry")}
-        >
-          Kedaluwarsa
-        </button>
-
-        <button
-          type="button"
-          className={activeFilter === "request" ? "active" : ""}
-          onClick={() => setActiveFilter("request")}
-        >
-          Pengajuan
-        </button>
-
-        <button
-          type="button"
-          className={activeFilter === "transaction" ? "active" : ""}
-          onClick={() => setActiveFilter("transaction")}
-        >
-          Transaksi
-        </button>
-
-        <button
-          type="button"
-          className={activeFilter === "system" ? "active" : ""}
-          onClick={() => setActiveFilter("system")}
-        >
-          Sistem
-        </button>
-      </section>
-
-      {message && <div className="notification-message">{message}</div>}
-
-      {loading ? (
-        <div className="notification-state sb-glass">
-          <h3>Memuat notifikasi...</h3>
-          <p>Sedang mengambil data notifikasi dari server.</p>
-        </div>
-      ) : notifications.length === 0 ? (
-        <EmptyState
-          title="Belum ada notifikasi"
-          description="Notifikasi kedaluwarsa, pengajuan pembelian, dan transaksi akan muncul di sini."
-        />
-      ) : filteredNotifications.length === 0 ? (
-        <EmptyState
-          title="Tidak ada notifikasi pada filter ini"
-          description="Coba pilih filter lain untuk melihat notifikasi yang tersedia."
+        <PageHeader
+          label="Notifikasi"
+          title="Pusat Notifikasi"
+          description="Pantau pengingat makanan mendekati kedaluwarsa, pengajuan marketplace, transaksi, dan informasi penting lainnya."
           action={
             <button
               type="button"
-              className="sb-btn sb-btn-ghost"
-              onClick={() => setActiveFilter("semua")}
+              className="sb-btn sb-btn-primary"
+              onClick={handleGenerateExpiryNotifications}
+              disabled={generating}
             >
-              Lihat Semua
+              {generating ? "Membuat..." : "Generate Reminder"}
             </button>
           }
         />
-      ) : (
-        <section className="notification-list">
-          {filteredNotifications.map((notification) => (
-            <NotificationCard
-              key={notification.id}
-              notification={notification}
-              onRead={() => handleMarkAsRead(notification)}
-            />
-          ))}
+
+        <section className="notifications-hero">
+          <div className="notifications-hero-content">
+            <span>Notification Center</span>
+            <h2>Jangan sampai stok makanan terlewat begitu saja.</h2>
+            <p>
+              Notifikasi membantu kamu mengambil keputusan lebih cepat: gunakan
+              makanan yang mendekati kedaluwarsa, cek pengajuan pembelian, dan
+              pantau transaksi marketplace.
+            </p>
+          </div>
+
+          <div className="notifications-hero-card">
+            <span>Belum Dibaca</span>
+            <strong>{loading ? "..." : unreadCount}</strong>
+            <p>Notifikasi yang masih perlu kamu cek.</p>
+          </div>
         </section>
-      )}
+
+        <section className="notification-summary">
+          <div className="notification-summary-card">
+            <span>Total Notifikasi</span>
+            <strong>{loading ? "..." : notifications.length}</strong>
+            <p>Semua informasi yang masuk ke akun kamu.</p>
+          </div>
+
+          <div className="notification-summary-card">
+            <span>Reminder</span>
+            <strong>{loading ? "..." : expiryCount}</strong>
+            <p>Pengingat makanan mendekati kedaluwarsa.</p>
+          </div>
+
+          <div className="notification-summary-card">
+            <span>Pengajuan</span>
+            <strong>{loading ? "..." : requestCount}</strong>
+            <p>Info terkait negosiasi dan pembelian.</p>
+          </div>
+
+          <div className="notification-summary-card">
+            <span>Transaksi</span>
+            <strong>{loading ? "..." : transactionCount}</strong>
+            <p>Perkembangan transaksi marketplace.</p>
+          </div>
+        </section>
+
+        <section className="notification-filter">
+          <button
+            type="button"
+            className={activeFilter === "semua" ? "active" : ""}
+            onClick={() => setActiveFilter("semua")}
+          >
+            Semua
+          </button>
+
+          <button
+            type="button"
+            className={activeFilter === "belum_dibaca" ? "active" : ""}
+            onClick={() => setActiveFilter("belum_dibaca")}
+          >
+            Belum Dibaca
+          </button>
+
+          <button
+            type="button"
+            className={activeFilter === "expiry" ? "active" : ""}
+            onClick={() => setActiveFilter("expiry")}
+          >
+            Kedaluwarsa
+          </button>
+
+          <button
+            type="button"
+            className={activeFilter === "request" ? "active" : ""}
+            onClick={() => setActiveFilter("request")}
+          >
+            Pengajuan
+          </button>
+
+          <button
+            type="button"
+            className={activeFilter === "transaction" ? "active" : ""}
+            onClick={() => setActiveFilter("transaction")}
+          >
+            Transaksi
+          </button>
+
+          <button
+            type="button"
+            className={activeFilter === "system" ? "active" : ""}
+            onClick={() => setActiveFilter("system")}
+          >
+            Sistem
+          </button>
+        </section>
+
+        {message && <div className="notification-message">{message}</div>}
+
+        {loading ? (
+          <div className="notification-state">
+            <div className="notification-loader" />
+            <h3>Memuat notifikasi...</h3>
+            <p>Sedang mengambil data notifikasi dari server.</p>
+          </div>
+        ) : notifications.length === 0 ? (
+          <EmptyState
+            title="Belum ada notifikasi"
+            description="Notifikasi kedaluwarsa, pengajuan pembelian, dan transaksi akan muncul di sini."
+          />
+        ) : filteredNotifications.length === 0 ? (
+          <EmptyState
+            title="Tidak ada notifikasi pada filter ini"
+            description="Coba pilih filter lain untuk melihat notifikasi yang tersedia."
+            action={
+              <button
+                type="button"
+                className="sb-btn notification-btn-outline"
+                onClick={() => setActiveFilter("semua")}
+              >
+                Lihat Semua
+              </button>
+            }
+          />
+        ) : (
+          <section className="notification-list">
+            {filteredNotifications.map((notification) => (
+              <NotificationCard
+                key={notification.id}
+                notification={notification}
+                onRead={() => handleMarkAsRead(notification)}
+              />
+            ))}
+          </section>
+        )}
+      </main>
     </AppShell>
   );
 }

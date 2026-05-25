@@ -1,34 +1,220 @@
+.transactions-page {
+  position: relative;
+  display: grid;
+  gap: 22px;
+  isolation: isolate;
+}
+
+.transactions-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -5;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 9% 8%, rgba(121, 82, 46, 0.18), transparent 28%),
+    radial-gradient(circle at 92% 12%, rgba(89, 139, 79, 0.18), transparent 26%),
+    linear-gradient(135deg, #f7f3ea 0%, #edf6e8 48%, #f3eadf 100%);
+}
+
+.transactions-orb {
+  position: fixed;
+  z-index: -3;
+  border-radius: 999px;
+  pointer-events: none;
+  filter: blur(5px);
+  opacity: 0.75;
+  animation: transactionsFloat 8s ease-in-out infinite;
+}
+
+.transactions-orb-one {
+  width: 230px;
+  height: 230px;
+  top: 120px;
+  right: 90px;
+  background: rgba(74, 121, 67, 0.14);
+}
+
+.transactions-orb-two {
+  width: 180px;
+  height: 180px;
+  left: 320px;
+  bottom: 90px;
+  background: rgba(122, 79, 47, 0.14);
+  animation-delay: 1.3s;
+}
+
+@keyframes transactionsFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -22px, 0);
+  }
+}
+
+.transaction-btn-outline {
+  color: #2c3d26;
+  background: rgba(255, 251, 244, 0.68);
+  border: 1px solid rgba(95, 71, 47, 0.16);
+  backdrop-filter: blur(16px);
+}
+
+.transaction-btn-outline:hover:not(:disabled) {
+  background: rgba(255, 251, 244, 0.96);
+}
+
+.transactions-hero {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 24px;
+  align-items: stretch;
+  padding: clamp(24px, 4vw, 40px);
+  border-radius: 36px;
+  background:
+    radial-gradient(circle at 88% 18%, rgba(190, 159, 102, 0.18), transparent 28%),
+    radial-gradient(circle at 8% 88%, rgba(90, 139, 83, 0.2), transparent 34%),
+    linear-gradient(135deg, #152713 0%, #234522 48%, #6f492c 100%);
+  box-shadow: 0 30px 90px rgba(69, 48, 31, 0.13);
+}
+
+.transactions-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 248, 236, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 248, 236, 0.045) 1px, transparent 1px);
+  background-size: 44px 44px;
+  pointer-events: none;
+}
+
+.transactions-hero-content,
+.transactions-hero-card {
+  position: relative;
+  z-index: 1;
+}
+
+.transactions-hero-content span,
+.transactions-hero-card span {
+  display: inline-flex;
+  color: #f3e5c8;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.transactions-hero-content h2 {
+  max-width: 780px;
+  margin: 14px 0 0;
+  color: #fff8ee;
+  font-size: clamp(34px, 5vw, 58px);
+  line-height: 1.02;
+  letter-spacing: -2px;
+}
+
+.transactions-hero-content p {
+  max-width: 760px;
+  margin: 20px 0 0;
+  color: rgba(255, 248, 236, 0.78);
+  line-height: 1.75;
+  font-size: 17px;
+}
+
+.transactions-hero-card {
+  display: grid;
+  align-content: center;
+  padding: 24px;
+  border-radius: 30px;
+  background: rgba(255, 248, 236, 0.1);
+  border: 1px solid rgba(255, 248, 236, 0.16);
+  backdrop-filter: blur(14px);
+}
+
+.transactions-hero-card strong {
+  display: block;
+  margin-top: 12px;
+  color: #f7e8c9;
+  font-size: 58px;
+  line-height: 1;
+  letter-spacing: -2px;
+}
+
+.transactions-hero-card p {
+  margin: 12px 0 0;
+  color: rgba(255, 248, 236, 0.76);
+  line-height: 1.6;
+}
+
 .transaction-summary {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-  margin-bottom: 18px;
+  gap: 18px;
 }
 
 .transaction-summary-card {
-  border-radius: 26px;
-  padding: 22px;
+  position: relative;
+  overflow: hidden;
+  padding: 24px;
+  border-radius: 30px;
+  background: rgba(255, 251, 244, 0.74);
+  border: 1px solid rgba(95, 71, 47, 0.13);
+  box-shadow: 0 22px 64px rgba(69, 48, 31, 0.08);
+  backdrop-filter: blur(20px);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.transaction-summary-card::before {
+  content: "";
+  position: absolute;
+  right: -52px;
+  top: -52px;
+  width: 130px;
+  height: 130px;
+  border-radius: 999px;
+  background: rgba(87, 126, 72, 0.12);
+}
+
+.transaction-summary-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 30px 86px rgba(69, 48, 31, 0.13);
+  border-color: rgba(95, 71, 47, 0.22);
 }
 
 .transaction-summary-card span {
+  position: relative;
+  z-index: 1;
   display: block;
-  color: var(--sb-muted);
+  color: #756b5d;
   font-size: 13px;
-  font-weight: 850;
+  font-weight: 900;
 }
 
 .transaction-summary-card strong {
+  position: relative;
+  z-index: 1;
   display: block;
-  margin-top: 8px;
-  color: var(--sb-green-900);
-  font-size: 38px;
+  margin-top: 10px;
+  color: #203a1e;
+  font-size: 40px;
   line-height: 1;
+  letter-spacing: -1px;
 }
 
 .transaction-summary-card p {
-  margin: 12px 0 0;
-  color: var(--sb-muted);
-  line-height: 1.55;
+  position: relative;
+  z-index: 1;
+  margin: 13px 0 0;
+  color: #756b5d;
+  line-height: 1.6;
 }
 
 .transaction-filter {
@@ -36,73 +222,100 @@
   flex-wrap: wrap;
   gap: 10px;
   padding: 14px;
-  border-radius: 24px;
-  margin-bottom: 18px;
+  border-radius: 28px;
+  background: rgba(255, 251, 244, 0.68);
+  border: 1px solid rgba(95, 71, 47, 0.13);
+  box-shadow: 0 20px 54px rgba(69, 48, 31, 0.07);
+  backdrop-filter: blur(20px);
 }
 
 .transaction-filter button {
   border: 0;
   border-radius: 999px;
   padding: 11px 15px;
-  background: rgba(43, 107, 58, 0.08);
-  color: var(--sb-green-800);
-  font-weight: 850;
+  background: rgba(74, 121, 67, 0.09);
+  color: #274622;
+  font-weight: 900;
   transition:
     transform 0.2s ease,
     background 0.2s ease,
-    color 0.2s ease;
+    color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .transaction-filter button:hover {
-  transform: translateY(-1px);
-  background: var(--sb-lime-soft);
+  transform: translateY(-2px);
+  background: rgba(223, 239, 198, 0.9);
 }
 
 .transaction-filter button.active {
-  background: linear-gradient(135deg, #dfff79, #9eff7a);
-  color: #15311e;
-  box-shadow: 0 12px 28px rgba(150, 225, 92, 0.24);
+  color: #fff8ee;
+  background: linear-gradient(135deg, #274622, #7a4f2f);
+  box-shadow: 0 16px 34px rgba(69, 48, 31, 0.16);
 }
 
 .transaction-message {
-  margin-bottom: 18px;
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: var(--sb-lime-soft);
-  border: 1px solid rgba(47, 122, 66, 0.14);
-  color: var(--sb-green-800);
-  font-weight: 800;
+  padding: 15px 17px;
+  border-radius: 20px;
+  background: rgba(223, 239, 198, 0.78);
+  border: 1px solid rgba(74, 121, 67, 0.16);
+  color: #274622;
+  font-weight: 850;
 }
 
 .transaction-state {
-  padding: 34px;
-  border-radius: 28px;
+  padding: 44px;
+  border-radius: 34px;
   text-align: center;
+  background: rgba(255, 251, 244, 0.72);
+  border: 1px solid rgba(95, 71, 47, 0.13);
+  box-shadow: 0 24px 72px rgba(69, 48, 31, 0.09);
+  backdrop-filter: blur(22px);
+}
+
+.transaction-loader {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto;
+  border-radius: 999px;
+  border: 4px solid rgba(70, 116, 61, 0.18);
+  border-top-color: #4f7d43;
+  animation: transactionLoaderSpin 0.8s linear infinite;
+}
+
+@keyframes transactionLoaderSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .transaction-state h3 {
-  margin: 0 0 8px;
-  color: var(--sb-green-900);
+  margin: 16px 0 8px;
+  color: #263f24;
   font-size: 24px;
 }
 
 .transaction-state p {
   margin: 0;
-  color: var(--sb-muted);
+  color: #756b5d;
 }
 
 .transaction-list {
   display: grid;
-  gap: 16px;
+  gap: 18px;
 }
 
 .transaction-card {
   display: grid;
-  grid-template-columns: 150px minmax(0, 1fr) auto;
-  gap: 18px;
+  grid-template-columns: 180px minmax(0, 1fr) auto;
+  gap: 20px;
   align-items: center;
   padding: 18px;
-  border-radius: 28px;
+  border-radius: 32px;
+  background: rgba(255, 251, 244, 0.74);
+  border: 1px solid rgba(95, 71, 47, 0.13);
+  box-shadow: 0 22px 64px rgba(69, 48, 31, 0.08);
+  backdrop-filter: blur(20px);
   transition:
     transform 0.25s ease,
     box-shadow 0.25s ease,
@@ -110,22 +323,24 @@
 }
 
 .transaction-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 24px 70px rgba(21, 64, 33, 0.12);
-  border-color: rgba(47, 122, 66, 0.22);
+  transform: translateY(-5px);
+  box-shadow: 0 32px 88px rgba(69, 48, 31, 0.13);
+  border-color: rgba(95, 71, 47, 0.24);
 }
 
 .transaction-image {
-  width: 150px;
-  height: 130px;
-  border-radius: 22px;
+  position: relative;
+  width: 180px;
+  height: 145px;
   overflow: hidden;
   display: grid;
   place-items: center;
+  border-radius: 24px;
   background:
-    radial-gradient(circle at 20% 20%, rgba(200, 255, 98, 0.25), transparent 35%),
-    linear-gradient(135deg, #e6f6df, #f9fff4);
-  font-size: 44px;
+    radial-gradient(circle at 20% 20%, rgba(74, 121, 67, 0.22), transparent 35%),
+    radial-gradient(circle at 90% 80%, rgba(122, 79, 47, 0.17), transparent 35%),
+    linear-gradient(135deg, #edf6e8, #f7f0e4);
+  font-size: 46px;
 }
 
 .transaction-image img {
@@ -134,101 +349,129 @@
   object-fit: cover;
 }
 
+.transaction-image-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(29, 40, 24, 0.58), transparent 60%),
+    linear-gradient(to bottom, rgba(29, 40, 24, 0.18), transparent 40%);
+  pointer-events: none;
+}
+
+.transaction-status {
+  position: absolute;
+  left: 12px;
+  top: 12px;
+  z-index: 2;
+  width: fit-content;
+  padding: 8px 11px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 900;
+  color: #fff8ee;
+  background: rgba(32, 58, 30, 0.78);
+  backdrop-filter: blur(14px);
+}
+
+.status-menunggu_komunikasi {
+  background: rgba(184, 123, 54, 0.86);
+}
+
+.status-selesai {
+  background: rgba(55, 104, 48, 0.84);
+}
+
+.status-dibatalkan {
+  background: rgba(170, 75, 48, 0.86);
+}
+
+.transaction-content {
+  min-width: 0;
+}
+
 .transaction-topline {
   display: flex;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
-  margin-bottom: 8px;
+  margin-bottom: 9px;
 }
 
-.transaction-status {
+.transaction-role,
+.transaction-rating-badge {
   display: inline-flex;
   width: fit-content;
-  padding: 7px 11px;
+  padding: 8px 12px;
   border-radius: 999px;
   font-size: 12px;
-  font-weight: 850;
-  background: var(--sb-blue-soft);
-  color: #1d4ed8;
-}
-
-.status-menunggu_komunikasi {
-  background: var(--sb-blue-soft);
-  color: #1d4ed8;
-}
-
-.status-selesai {
-  background: var(--sb-lime-soft);
-  color: var(--sb-green-800);
-}
-
-.status-dibatalkan {
-  background: var(--sb-danger-soft);
-  color: #b91c1c;
+  font-weight: 900;
 }
 
 .transaction-role {
-  display: inline-flex;
-  width: fit-content;
-  padding: 7px 11px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 850;
-  background: rgba(43, 107, 58, 0.08);
-  color: var(--sb-muted);
+  background: rgba(74, 121, 67, 0.11);
+  color: #274622;
+}
+
+.transaction-rating-badge {
+  background: rgba(122, 79, 47, 0.11);
+  color: #7a4f2f;
 }
 
 .transaction-content h3 {
   margin: 0;
-  color: var(--sb-green-900);
-  font-size: 24px;
+  color: #21351e;
+  font-size: 25px;
+  line-height: 1.12;
+  letter-spacing: -0.7px;
 }
 
 .transaction-content p {
-  margin: 8px 0 0;
-  color: var(--sb-muted);
+  margin: 9px 0 0;
+  color: #756b5d;
 }
 
 .transaction-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
-  margin-top: 14px;
+  margin-top: 16px;
 }
 
 .transaction-grid div {
-  padding: 13px;
-  border-radius: 18px;
-  background: rgba(247, 255, 244, 0.9);
-  border: 1px solid rgba(43, 107, 58, 0.08);
+  padding: 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(95, 71, 47, 0.1);
 }
 
 .transaction-grid span {
   display: block;
-  color: var(--sb-muted);
+  color: #756b5d;
   font-size: 12px;
+  font-weight: 800;
 }
 
 .transaction-grid strong {
   display: block;
   margin-top: 5px;
-  color: var(--sb-green-900);
+  color: #263f24;
 }
 
 .transaction-completed {
-  margin-top: 12px;
-  color: var(--sb-green-700);
+  margin-top: 13px;
+  color: #274622;
   font-size: 13px;
-  font-weight: 850;
+  font-weight: 900;
 }
 
 .transaction-review {
-  margin-top: 12px !important;
-  padding: 12px;
-  border-radius: 16px;
-  background: rgba(43, 107, 58, 0.06);
-  line-height: 1.55;
+  margin-top: 13px !important;
+  padding: 13px;
+  border-radius: 18px;
+  background: rgba(74, 121, 67, 0.07);
+  border: 1px solid rgba(74, 121, 67, 0.08);
+  color: #675e52 !important;
+  line-height: 1.6;
 }
 
 .transaction-actions {
@@ -247,16 +490,17 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(7, 20, 13, 0.58);
-  backdrop-filter: blur(10px);
+  background: rgba(34, 41, 27, 0.62);
+  backdrop-filter: blur(12px);
 }
 
 .rating-modal {
-  width: min(100%, 520px);
-  padding: 24px;
-  border-radius: 28px;
-  background: white;
-  box-shadow: 0 30px 100px rgba(7, 20, 13, 0.28);
+  width: min(100%, 540px);
+  padding: 26px;
+  border-radius: 32px;
+  background: #fffbf4;
+  border: 1px solid rgba(95, 71, 47, 0.14);
+  box-shadow: 0 34px 100px rgba(69, 48, 31, 0.26);
 }
 
 .rating-header {
@@ -266,82 +510,93 @@
 }
 
 .rating-header span {
-  color: var(--sb-green-600);
+  color: #7a4f2f;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 950;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 1px;
 }
 
 .rating-header h3 {
-  margin: 4px 0 0;
-  color: var(--sb-green-900);
-  font-size: 26px;
+  margin: 5px 0 0;
+  color: #21351e;
+  font-size: 28px;
+  line-height: 1.1;
+  letter-spacing: -0.8px;
 }
 
 .rating-header button {
-  width: 38px;
-  height: 38px;
+  width: 40px;
+  height: 40px;
   border: 0;
   border-radius: 999px;
-  background: rgba(239, 68, 68, 0.1);
-  color: #b91c1c;
+  background: rgba(170, 75, 48, 0.1);
+  color: #9f3f2d;
   font-size: 24px;
 }
 
 .rating-modal p {
   margin: 16px 0 0;
-  color: var(--sb-muted);
-  line-height: 1.6;
+  color: #756b5d;
+  line-height: 1.65;
 }
 
 .rating-message {
   margin-top: 14px;
-  padding: 12px 14px;
-  border-radius: 16px;
-  background: var(--sb-danger-soft);
-  color: #b91c1c;
+  padding: 13px 15px;
+  border-radius: 18px;
+  background: rgba(170, 75, 48, 0.1);
+  color: #9f3f2d;
   font-weight: 850;
 }
 
 .rating-modal label {
   display: block;
-  margin: 14px 0 8px;
-  color: var(--sb-green-900);
-  font-weight: 850;
+  margin: 15px 0 8px;
+  color: #263f24;
+  font-weight: 900;
 }
 
 .rating-modal select,
 .rating-modal textarea {
   width: 100%;
-  border: 1px solid rgba(43, 107, 58, 0.14);
-  border-radius: 16px;
-  padding: 13px 14px;
+  border: 1px solid rgba(95, 71, 47, 0.14);
+  border-radius: 18px;
+  padding: 14px 15px;
   outline: none;
-  color: var(--sb-green-900);
-  background: rgba(255, 255, 255, 0.86);
+  color: #263f24;
+  background: rgba(255, 255, 255, 0.76);
 }
 
 .rating-modal select:focus,
 .rating-modal textarea:focus {
-  border-color: rgba(47, 122, 66, 0.45);
-  box-shadow: 0 0 0 4px rgba(200, 255, 98, 0.2);
+  border-color: rgba(74, 121, 67, 0.42);
+  box-shadow: 0 0 0 4px rgba(123, 153, 91, 0.16);
+  background: #fffdfa;
 }
 
 .rating-actions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 18px;
+  margin-top: 20px;
 }
 
-@media (max-width: 1120px) {
+@media (max-width: 1180px) {
   .transaction-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .transactions-hero {
+    grid-template-columns: 1fr;
+  }
+
   .transaction-card {
-    grid-template-columns: 130px minmax(0, 1fr);
+    grid-template-columns: 160px minmax(0, 1fr);
+  }
+
+  .transaction-image {
+    width: 160px;
   }
 
   .transaction-actions {
@@ -358,6 +613,14 @@
     grid-template-columns: 1fr;
   }
 
+  .transactions-hero {
+    border-radius: 28px;
+  }
+
+  .transactions-hero-card strong {
+    font-size: 46px;
+  }
+
   .transaction-image {
     width: 100%;
   }
@@ -365,5 +628,15 @@
   .transaction-actions .sb-btn,
   .rating-actions .sb-btn {
     flex: 1;
+  }
+}
+
+@media (max-width: 520px) {
+  .rating-actions {
+    flex-direction: column;
+  }
+
+  .rating-actions .sb-btn {
+    width: 100%;
   }
 }

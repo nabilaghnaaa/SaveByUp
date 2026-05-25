@@ -15,36 +15,40 @@ export default function SummaryGrid({ summary, loading }) {
   const totalDibuang = Number(summary.total_dibuang || 0);
   const totalDigunakan = Number(summary.total_digunakan || 0);
 
-  const wasteTotal = totalKedaluwarsa + totalDibuang + totalDigunakan;
+  const selesaiWaste = totalKedaluwarsa + totalDibuang + totalDigunakan;
 
   const cards = [
     {
       title: "Total Makanan",
       value: totalFoods,
-      desc: "Semua makanan yang tercatat dalam inventaris pribadi.",
-      tone: "green",
+      desc: "Semua makanan yang sudah tercatat dalam inventaris pribadi.",
+      tone: "earth",
       percent: totalFoods > 0 ? 100 : 0,
+      icon: "🍱",
     },
     {
       title: "Aman Dikonsumsi",
       value: totalAman,
       desc: "Makanan yang masih aman dan belum mendekati tanggal kedaluwarsa.",
-      tone: "safe",
+      tone: "green",
       percent: getPercent(totalAman, totalFoods),
+      icon: "🌿",
     },
     {
       title: "Mendekati Kedaluwarsa",
       value: totalMendekati,
-      desc: "Makanan yang perlu diprioritaskan untuk digunakan atau ditawarkan.",
-      tone: "warning",
+      desc: "Makanan yang perlu diprioritaskan agar tidak terbuang.",
+      tone: "warm",
       percent: getPercent(totalMendekati, totalFoods),
+      icon: "⏰",
     },
     {
       title: "Selesai / Waste",
-      value: wasteTotal,
-      desc: "Makanan yang sudah digunakan, dibuang, atau sudah kedaluwarsa.",
-      tone: "danger",
-      percent: getPercent(wasteTotal, totalFoods),
+      value: selesaiWaste,
+      desc: "Makanan yang sudah digunakan, dibuang, atau melewati kedaluwarsa.",
+      tone: "brown",
+      percent: getPercent(selesaiWaste, totalFoods),
+      icon: "♻️",
     },
   ];
 
@@ -52,10 +56,11 @@ export default function SummaryGrid({ summary, loading }) {
     <section className="summary-section">
       <div className="section-heading">
         <span>Ringkasan Inventaris</span>
-        <h2>Status stok makanan</h2>
+        <h2>Status stok makanan kamu</h2>
         <p>
-          Ringkasan ini membantu kamu memantau kondisi stok dan risiko makanan
-          terbuang.
+          Ringkasan ini membantu kamu melihat kondisi makanan secara cepat,
+          sehingga keputusan untuk menggunakan, menjual, atau membuang makanan
+          bisa lebih terarah.
         </p>
       </div>
 
@@ -65,6 +70,8 @@ export default function SummaryGrid({ summary, loading }) {
             className={`summary-card summary-${card.tone}`}
             key={card.title}
           >
+            <div className="summary-icon">{card.icon}</div>
+
             <div className="summary-card-top">
               <span>{card.title}</span>
               <strong>{loading ? "..." : card.value}</strong>

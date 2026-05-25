@@ -27,7 +27,7 @@ function getNotificationIcon(type) {
 export default function NotificationCard({ notification, onRead }) {
   return (
     <article
-      className={`notification-card sb-glass ${
+      className={`notification-card notification-${notification.type} ${
         notification.is_read ? "is-read" : "is-unread"
       }`}
     >
@@ -46,16 +46,20 @@ export default function NotificationCard({ notification, onRead }) {
           )}
         </div>
 
-        <h3>{notification.title}</h3>
+        <h3>{notification.title || "Notifikasi SaveByUp"}</h3>
 
-        <p>{notification.message}</p>
+        <p>{notification.message || "Tidak ada pesan notifikasi."}</p>
 
         <small>{formatDate(notification.created_at)}</small>
       </div>
 
       <div className="notification-actions">
         {!notification.is_read ? (
-          <button type="button" className="sb-btn sb-btn-ghost" onClick={onRead}>
+          <button
+            type="button"
+            className="sb-btn notification-btn-outline"
+            onClick={onRead}
+          >
             Tandai Dibaca
           </button>
         ) : (

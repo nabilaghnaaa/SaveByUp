@@ -17,6 +17,7 @@ const router = express.Router();
 router.use(authMiddleware);
 
 router.get("/summary", getFoodSummary);
+
 router.get("/", getFoods);
 router.get("/:id", getFoodById);
 router.post("/", createFood);

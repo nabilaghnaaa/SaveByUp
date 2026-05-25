@@ -63,6 +63,10 @@ export default function Transactions() {
     (transaction) => transaction.status === "dibatalkan"
   ).length;
 
+  const totalRating = transactions.filter(
+    (transaction) => transaction.rating
+  ).length;
+
   const handleComplete = async (transaction) => {
     const ok = window.confirm("Tandai transaksi ini sebagai selesai?");
 
@@ -96,127 +100,151 @@ export default function Transactions() {
 
   return (
     <AppShell>
-      <PageHeader
-        label="Riwayat"
-        title="Riwayat Transaksi"
-        description="Pantau transaksi pembelian dan penjualan, hubungi pihak terkait via WhatsApp, selesaikan transaksi, lalu beri rating."
-        action={
-          <button
-            type="button"
-            className="sb-btn sb-btn-ghost"
-            onClick={fetchTransactions}
-          >
-            Refresh
-          </button>
-        }
-      />
+      <main className="transactions-page">
+        <div className="transactions-orb transactions-orb-one" />
+        <div className="transactions-orb transactions-orb-two" />
 
-      <section className="transaction-summary">
-        <div className="transaction-summary-card sb-glass">
-          <span>Total Transaksi</span>
-          <strong>{transactions.length}</strong>
-          <p>Semua transaksi yang melibatkan akun kamu.</p>
-        </div>
-
-        <div className="transaction-summary-card sb-glass">
-          <span>Menunggu Komunikasi</span>
-          <strong>{totalMenunggu}</strong>
-          <p>Transaksi yang perlu dilanjutkan melalui WhatsApp.</p>
-        </div>
-
-        <div className="transaction-summary-card sb-glass">
-          <span>Selesai</span>
-          <strong>{totalSelesai}</strong>
-          <p>Transaksi yang sudah selesai diproses.</p>
-        </div>
-
-        <div className="transaction-summary-card sb-glass">
-          <span>Dibatalkan</span>
-          <strong>{totalDibatalkan}</strong>
-          <p>Transaksi yang tidak jadi dilanjutkan.</p>
-        </div>
-      </section>
-
-      <section className="transaction-filter sb-glass">
-        <button
-          type="button"
-          className={activeFilter === "semua" ? "active" : ""}
-          onClick={() => setActiveFilter("semua")}
-        >
-          Semua
-        </button>
-
-        <button
-          type="button"
-          className={activeFilter === "menunggu_komunikasi" ? "active" : ""}
-          onClick={() => setActiveFilter("menunggu_komunikasi")}
-        >
-          Menunggu Komunikasi
-        </button>
-
-        <button
-          type="button"
-          className={activeFilter === "selesai" ? "active" : ""}
-          onClick={() => setActiveFilter("selesai")}
-        >
-          Selesai
-        </button>
-
-        <button
-          type="button"
-          className={activeFilter === "dibatalkan" ? "active" : ""}
-          onClick={() => setActiveFilter("dibatalkan")}
-        >
-          Dibatalkan
-        </button>
-      </section>
-
-      {message && <div className="transaction-message">{message}</div>}
-
-      {loading ? (
-        <div className="transaction-state sb-glass">
-          <h3>Memuat transaksi...</h3>
-          <p>Sedang mengambil riwayat transaksi dari server.</p>
-        </div>
-      ) : transactions.length === 0 ? (
-        <EmptyState
-          title="Belum ada transaksi"
-          description="Transaksi akan muncul setelah pengajuan pembelian marketplace disetujui."
-        />
-      ) : filteredTransactions.length === 0 ? (
-        <EmptyState
-          title="Tidak ada transaksi pada filter ini"
-          description="Coba pilih filter lain untuk melihat transaksi yang tersedia."
+        <PageHeader
+          label="Riwayat"
+          title="Riwayat Transaksi"
+          description="Pantau transaksi pembelian dan penjualan, hubungi pihak terkait via WhatsApp, selesaikan transaksi, lalu beri rating untuk membangun kepercayaan."
           action={
             <button
               type="button"
-              className="sb-btn sb-btn-ghost"
-              onClick={() => setActiveFilter("semua")}
+              className="sb-btn transaction-btn-outline"
+              onClick={fetchTransactions}
             >
-              Lihat Semua
+              Refresh
             </button>
           }
         />
-      ) : (
-        <section className="transaction-list">
-          {filteredTransactions.map((transaction) => (
-            <TransactionCard
-              key={transaction.id}
-              transaction={transaction}
-              onComplete={() => handleComplete(transaction)}
-              onRate={() => setSelectedTransaction(transaction)}
-            />
-          ))}
-        </section>
-      )}
 
-      {selectedTransaction && (
-        <RatingModal
-          transaction={selectedTransaction}
-          onClose={() => setSelectedTransaction(null)}
-          onSubmit={handleRate}
-        />
-      )}
+        <section className="transactions-hero">
+          <div className="transactions-hero-content">
+            <span>Transaction History</span>
+            <h2>Setiap makanan yang terselamatkan punya jejak transaksi.</h2>
+            <p>
+              Riwayat transaksi membantu kamu melihat proses pembelian dan
+              penjualan makanan layak konsumsi, mulai dari pengajuan, komunikasi
+              COD, sampai rating setelah transaksi selesai.
+            </p>
+          </div>
+
+          <div className="transactions-hero-card">
+            <span>Total Transaksi</span>
+            <strong>{loading ? "..." : transactions.length}</strong>
+            <p>Seluruh transaksi yang melibatkan akun kamu.</p>
+          </div>
+        </section>
+
+        <section className="transaction-summary">
+          <div className="transaction-summary-card">
+            <span>Menunggu Komunikasi</span>
+            <strong>{loading ? "..." : totalMenunggu}</strong>
+            <p>Transaksi yang perlu dilanjutkan melalui WhatsApp.</p>
+          </div>
+
+          <div className="transaction-summary-card">
+            <span>Selesai</span>
+            <strong>{loading ? "..." : totalSelesai}</strong>
+            <p>Transaksi yang sudah selesai diproses.</p>
+          </div>
+
+          <div className="transaction-summary-card">
+            <span>Dibatalkan</span>
+            <strong>{loading ? "..." : totalDibatalkan}</strong>
+            <p>Transaksi yang tidak jadi dilanjutkan.</p>
+          </div>
+
+          <div className="transaction-summary-card">
+            <span>Sudah Dinilai</span>
+            <strong>{loading ? "..." : totalRating}</strong>
+            <p>Transaksi yang sudah memiliki rating atau ulasan.</p>
+          </div>
+        </section>
+
+        <section className="transaction-filter">
+          <button
+            type="button"
+            className={activeFilter === "semua" ? "active" : ""}
+            onClick={() => setActiveFilter("semua")}
+          >
+            Semua
+          </button>
+
+          <button
+            type="button"
+            className={activeFilter === "menunggu_komunikasi" ? "active" : ""}
+            onClick={() => setActiveFilter("menunggu_komunikasi")}
+          >
+            Menunggu Komunikasi
+          </button>
+
+          <button
+            type="button"
+            className={activeFilter === "selesai" ? "active" : ""}
+            onClick={() => setActiveFilter("selesai")}
+          >
+            Selesai
+          </button>
+
+          <button
+            type="button"
+            className={activeFilter === "dibatalkan" ? "active" : ""}
+            onClick={() => setActiveFilter("dibatalkan")}
+          >
+            Dibatalkan
+          </button>
+        </section>
+
+        {message && <div className="transaction-message">{message}</div>}
+
+        {loading ? (
+          <div className="transaction-state">
+            <div className="transaction-loader" />
+            <h3>Memuat transaksi...</h3>
+            <p>Sedang mengambil riwayat transaksi dari server.</p>
+          </div>
+        ) : transactions.length === 0 ? (
+          <EmptyState
+            title="Belum ada transaksi"
+            description="Transaksi akan muncul setelah pengajuan pembelian marketplace disetujui."
+          />
+        ) : filteredTransactions.length === 0 ? (
+          <EmptyState
+            title="Tidak ada transaksi pada filter ini"
+            description="Coba pilih filter lain untuk melihat transaksi yang tersedia."
+            action={
+              <button
+                type="button"
+                className="sb-btn transaction-btn-outline"
+                onClick={() => setActiveFilter("semua")}
+              >
+                Lihat Semua
+              </button>
+            }
+          />
+        ) : (
+          <section className="transaction-list">
+            {filteredTransactions.map((transaction) => (
+              <TransactionCard
+                key={transaction.id}
+                transaction={transaction}
+                onComplete={() => handleComplete(transaction)}
+                onRate={() => setSelectedTransaction(transaction)}
+              />
+            ))}
+          </section>
+        )}
+
+        {selectedTransaction && (
+          <RatingModal
+            transaction={selectedTransaction}
+            onClose={() => setSelectedTransaction(null)}
+            onSubmit={handleRate}
+          />
+        )}
+      </main>
     </AppShell>
   );
 }

@@ -1,12 +1,12 @@
 .inventory-section {
   display: grid;
-  gap: 18px;
+  gap: 20px;
 }
 
 .inventory-header {
   display: flex;
   justify-content: space-between;
-  gap: 18px;
+  gap: 20px;
   align-items: flex-end;
 }
 
@@ -21,41 +21,47 @@
   grid-template-columns: minmax(0, 1fr) 220px 220px;
   gap: 12px;
   padding: 14px;
-  border-radius: 24px;
+  border-radius: 28px;
+  background: rgba(255, 251, 244, 0.68);
+  border: 1px solid rgba(95, 71, 47, 0.13);
+  box-shadow: 0 20px 54px rgba(69, 48, 31, 0.07);
+  backdrop-filter: blur(20px);
 }
 
 .inventory-toolbar input,
 .inventory-toolbar select {
   width: 100%;
-  min-height: 48px;
-  border: 1px solid rgba(43, 107, 58, 0.13);
-  border-radius: 16px;
-  padding: 0 14px;
-  background: rgba(255, 255, 255, 0.86);
-  color: var(--sb-green-900);
+  min-height: 50px;
+  border: 1px solid rgba(95, 71, 47, 0.14);
+  border-radius: 18px;
+  padding: 0 15px;
+  color: #263f24;
+  background: rgba(255, 255, 255, 0.76);
   outline: none;
   transition:
     border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 .inventory-toolbar input:focus,
 .inventory-toolbar select:focus {
-  border-color: rgba(47, 122, 66, 0.45);
-  box-shadow: 0 0 0 4px rgba(200, 255, 98, 0.2);
+  border-color: rgba(74, 121, 67, 0.42);
+  box-shadow: 0 0 0 4px rgba(123, 153, 91, 0.16);
+  background: #fffdfa;
 }
 
 .inventory-message {
-  padding: 14px 16px;
-  border-radius: 18px;
-  background: var(--sb-lime-soft);
-  border: 1px solid rgba(47, 122, 66, 0.14);
-  color: var(--sb-green-800);
-  font-weight: 800;
+  padding: 15px 17px;
+  border-radius: 20px;
+  color: #274622;
+  background: rgba(223, 239, 198, 0.78);
+  border: 1px solid rgba(74, 121, 67, 0.16);
+  font-weight: 850;
 }
 
 .food-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
+  gap: 20px;
 }

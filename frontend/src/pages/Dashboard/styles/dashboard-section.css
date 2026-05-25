@@ -1,23 +1,24 @@
 .section-heading span {
   display: inline-flex;
-  margin-bottom: 8px;
-  color: var(--sb-green-600);
+  margin-bottom: 9px;
+  color: #7a4f2f;
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 950;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
+  letter-spacing: 1px;
 }
 
 .section-heading h2 {
   margin: 0;
-  font-size: clamp(28px, 4vw, 42px);
-  color: var(--sb-green-900);
-  letter-spacing: -1.2px;
+  font-size: clamp(28px, 4vw, 44px);
+  color: #21351e;
+  letter-spacing: -1.4px;
+  line-height: 1.05;
 }
 
 .section-heading p {
-  margin: 10px 0 0;
-  max-width: 720px;
-  line-height: 1.7;
-  color: var(--sb-muted);
+  margin: 12px 0 0;
+  max-width: 760px;
+  line-height: 1.75;
+  color: #756b5d;
 }

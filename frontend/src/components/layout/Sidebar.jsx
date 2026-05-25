@@ -8,37 +8,37 @@ const menuItems = [
   {
     label: "Dashboard",
     path: "/dashboard",
-    icon: "🏠",
+    key: "D",
   },
   {
     label: "Tambah Makanan",
     path: "/foods/add",
-    icon: "➕",
+    key: "+",
   },
   {
     label: "Marketplace",
     path: "/marketplace",
-    icon: "🛒",
+    key: "M",
   },
   {
     label: "Pengajuan Masuk",
     path: "/marketplace/requests",
-    icon: "🤝",
+    key: "P",
   },
   {
     label: "Notifikasi",
     path: "/notifications",
-    icon: "🔔",
+    key: "N",
   },
   {
     label: "Riwayat",
     path: "/transactions",
-    icon: "🧾",
+    key: "R",
   },
   {
     label: "Profil",
     path: "/profile",
-    icon: "👤",
+    key: "U",
   },
 ];
 
@@ -68,18 +68,15 @@ export default function Sidebar() {
       <nav className="sidebar-nav">
         {menuItems.map((item) => (
           <NavLink key={item.path} to={item.path}>
-            <span>{item.icon}</span>
-            {item.label}
+            <span className="sidebar-icon">{item.key}</span>
+            <span className="sidebar-label">{item.label}</span>
           </NavLink>
         ))}
       </nav>
 
       <div className="sidebar-note">
-        <span>Tips Hari Ini</span>
-        <p>
-          Gunakan makanan yang paling dekat kedaluwarsa terlebih dahulu agar
-          tidak terbuang.
-        </p>
+        <span>Tips</span>
+        <p>Prioritaskan makanan yang paling dekat kedaluwarsa.</p>
       </div>
 
       <button type="button" className="sidebar-logout" onClick={handleLogout}>

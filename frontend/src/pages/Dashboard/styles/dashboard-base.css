@@ -1,21 +1,123 @@
 .dashboard-page {
+  position: relative;
   display: grid;
-  gap: 26px;
+  gap: 34px;
+  isolation: isolate;
+}
+
+.dashboard-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -5;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 9% 8%, rgba(121, 82, 46, 0.18), transparent 28%),
+    radial-gradient(circle at 92% 12%, rgba(89, 139, 79, 0.18), transparent 26%),
+    linear-gradient(135deg, #f7f3ea 0%, #edf6e8 48%, #f3eadf 100%);
+}
+
+.dashboard-parallax-orb {
+  position: fixed;
+  z-index: -3;
+  border-radius: 999px;
+  filter: blur(4px);
+  opacity: 0.75;
+  pointer-events: none;
+  animation: dashboardFloat 8s ease-in-out infinite;
+}
+
+.dashboard-orb-one {
+  width: 230px;
+  height: 230px;
+  left: 300px;
+  top: 110px;
+  background: rgba(80, 128, 77, 0.14);
+}
+
+.dashboard-orb-two {
+  width: 180px;
+  height: 180px;
+  right: 90px;
+  top: 240px;
+  background: rgba(145, 94, 52, 0.15);
+  animation-delay: 1.2s;
+}
+
+.dashboard-orb-three {
+  width: 150px;
+  height: 150px;
+  left: 42%;
+  bottom: 60px;
+  background: rgba(178, 139, 88, 0.13);
+  animation-delay: 2.2s;
+}
+
+@keyframes dashboardFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(0, -22px, 0);
+  }
+}
+
+.dashboard-btn-brown {
+  color: #fff9ef;
+  background: linear-gradient(135deg, #7a4f2f, #a7774c);
+  box-shadow: 0 18px 42px rgba(122, 79, 47, 0.24);
+}
+
+.dashboard-btn-brown:hover:not(:disabled) {
+  box-shadow: 0 24px 56px rgba(122, 79, 47, 0.32);
+}
+
+.dashboard-btn-outline {
+  color: #2c3d26;
+  background: rgba(255, 251, 244, 0.68);
+  border: 1px solid rgba(95, 71, 47, 0.16);
+  backdrop-filter: blur(16px);
+}
+
+.dashboard-btn-outline:hover:not(:disabled) {
+  background: rgba(255, 251, 244, 0.96);
 }
 
 .inventory-state {
-  padding: 34px;
-  border-radius: 28px;
+  padding: 42px;
+  border-radius: 34px;
   text-align: center;
+  background: rgba(255, 251, 244, 0.68);
+  border: 1px solid rgba(95, 71, 47, 0.13);
+  box-shadow: 0 24px 70px rgba(69, 48, 31, 0.08);
+  backdrop-filter: blur(20px);
 }
 
 .inventory-state h3 {
-  margin: 0 0 8px;
+  margin: 16px 0 8px;
   font-size: 24px;
-  color: var(--sb-green-900);
+  color: #263f24;
 }
 
 .inventory-state p {
   margin: 0;
-  color: var(--sb-muted);
+  color: #756b5d;
+}
+
+.inventory-loader {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto;
+  border-radius: 999px;
+  border: 4px solid rgba(70, 116, 61, 0.18);
+  border-top-color: #4f7d43;
+  animation: spinLoader 0.8s linear infinite;
+}
+
+@keyframes spinLoader {
+  to {
+    transform: rotate(360deg);
+  }
 }

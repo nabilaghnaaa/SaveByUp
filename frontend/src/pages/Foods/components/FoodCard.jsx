@@ -31,21 +31,23 @@ export default function FoodCard({
           </div>
         )}
 
+        <div className="food-card-overlay" />
+
         <span className={`food-card-status status-${priority.tone}`}>
           {getFoodStatusLabel(food.status)}
+        </span>
+
+        <span className={`food-card-priority priority-${priority.tone}`}>
+          {priority.label}
         </span>
       </div>
 
       <div className="food-card-body">
         <div className="food-card-head">
           <div>
+            <span>{food.category || "Tanpa kategori"}</span>
             <h3>{food.name || "Tanpa nama"}</h3>
-            <p>{food.category || "Tanpa kategori"}</p>
           </div>
-
-          <span className={`food-priority priority-${priority.tone}`}>
-            {priority.label}
-          </span>
         </div>
 
         <div className="food-meta-grid">

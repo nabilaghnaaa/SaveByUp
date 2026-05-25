@@ -1,12 +1,12 @@
 .food-form-fields {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 18px;
 }
 
 .food-field {
   display: grid;
-  gap: 8px;
+  gap: 9px;
 }
 
 .food-field-full {
@@ -14,8 +14,8 @@
 }
 
 .food-field label {
-  color: var(--sb-green-900);
-  font-weight: 850;
+  color: #263f24;
+  font-weight: 900;
   font-size: 14px;
 }
 
@@ -23,33 +23,36 @@
 .food-field select,
 .food-field textarea {
   width: 100%;
-  border: 1px solid rgba(43, 107, 58, 0.14);
-  border-radius: 18px;
-  padding: 14px 15px;
+  border: 1px solid rgba(95, 71, 47, 0.14);
+  border-radius: 20px;
+  padding: 15px 16px;
   outline: none;
-  color: var(--sb-green-900);
-  background: rgba(255, 255, 255, 0.86);
+  color: #263f24;
+  background: rgba(255, 255, 255, 0.76);
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease,
-    background 0.2s ease;
+    background 0.2s ease,
+    transform 0.2s ease;
 }
 
 .food-field input:focus,
 .food-field select:focus,
 .food-field textarea:focus {
-  border-color: rgba(47, 122, 66, 0.45);
-  box-shadow: 0 0 0 4px rgba(200, 255, 98, 0.2);
-  background: white;
+  border-color: rgba(74, 121, 67, 0.42);
+  box-shadow: 0 0 0 4px rgba(123, 153, 91, 0.16);
+  background: #fffdfa;
+  transform: translateY(-1px);
 }
 
 .food-field textarea {
   resize: vertical;
+  min-height: 118px;
 }
 
 .food-field small {
-  color: var(--sb-muted);
-  line-height: 1.55;
+  color: #756b5d;
+  line-height: 1.6;
 }
 
 @media (max-width: 720px) {
