@@ -18,6 +18,7 @@ const initialForm = {
   category: "Snack",
   quantity: 1,
   unit: "pcs",
+  price: "",
   expiry_date: "",
   status: "aman",
   note: "",
@@ -47,6 +48,7 @@ export default function FoodForm() {
         category: data.category || "Snack",
         quantity: data.quantity || 1,
         unit: data.unit || "pcs",
+        price: data.price || "",
         expiry_date: data.expiry_date ? String(data.expiry_date).slice(0, 10) : "",
         status: data.status || "aman",
         note: data.note || data.notes || "",
@@ -84,6 +86,10 @@ export default function FoodForm() {
 
     if (!form.unit) return "Satuan wajib dipilih.";
 
+    if (!form.price || Number(form.price) <= 0) {
+      return "Harga makanan wajib diisi dan harus lebih dari 0.";
+    }
+
     if (!form.expiry_date) return "Tanggal kedaluwarsa wajib diisi.";
 
     return "";
@@ -106,6 +112,7 @@ export default function FoodForm() {
       const payload = {
         ...form,
         quantity: Number(form.quantity),
+        price: Number(form.price),
       };
 
       if (isEdit) {

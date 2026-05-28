@@ -7,11 +7,19 @@ const normalizeFood = (food = {}) => ({
   category: food.category || "",
   quantity: Number(food.quantity || 0),
   unit: food.unit || "pcs",
+  price: Number(food.price || 0),
+  storage_location: food.storage_location || "",
+  purchase_date: food.purchase_date
+    ? String(food.purchase_date).slice(0, 10)
+    : "",
   expiry_date: food.expiry_date ? String(food.expiry_date).slice(0, 10) : "",
+  condition_status: food.condition_status || "",
   status: food.status || "aman",
   priority: food.priority || "rendah",
-  note: food.note || "",
-  image_url: food.image_url || "",
+  note: food.note || food.notes || "",
+  notes: food.notes || food.note || "",
+  image_url: food.image_url || food.image || "",
+  image: food.image || food.image_url || "",
   created_at: food.created_at,
   updated_at: food.updated_at,
 });
@@ -33,9 +41,14 @@ const toFoodPayload = (food) => ({
   category: food.category,
   quantity: Number(food.quantity || 0),
   unit: food.unit,
+  price: Number(food.price || 0),
+  storage_location: food.storage_location || "",
+  purchase_date: food.purchase_date || null,
   expiry_date: food.expiry_date,
-  note: food.note || "",
-  image_url: food.image_url || "",
+  note: food.note || food.notes || "",
+  notes: food.notes || food.note || "",
+  image_url: food.image_url || food.image || "",
+  image: food.image || food.image_url || "",
   status: food.status || "aman",
 });
 

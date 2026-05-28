@@ -65,6 +65,21 @@ export default function FoodFormFields({ form, onChange }) {
       </div>
 
       <div className="food-field">
+        <label>Harga Satuan</label>
+        <input
+          type="number"
+          min="1"
+          value={form.price}
+          placeholder="Contoh: 8000"
+          onChange={(event) => onChange("price", event.target.value)}
+        />
+        <small>
+          Harga ini akan menjadi harga dasar makanan dan bisa dipakai saat
+          makanan ditawarkan ke marketplace.
+        </small>
+      </div>
+
+      <div className="food-field">
         <label>Tanggal Kedaluwarsa</label>
         <input
           type="date"

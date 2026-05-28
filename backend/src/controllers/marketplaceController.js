@@ -12,6 +12,7 @@ const getMarketplaceProducts = async (req, res) => {
         u.rating AS seller_rating
        FROM marketplace_products mp
        JOIN users u ON mp.seller_id = u.id
+       WHERE mp.status IN ('tersedia', 'dalam_proses')
        ORDER BY mp.created_at DESC`
     );
 
@@ -67,7 +68,13 @@ const sellFoodToMarketplace = async (req, res) => {
   try {
     const sellerId = req.user.id;
     const { foodId } = req.params;
-    const { price, description } = req.body;
+    const { quantity, price, description } = req.body;
+
+    if (!quantity || Number(quantity) <= 0) {
+      return res.status(400).json({
+        message: "Jumlah yang dijual wajib diisi dan harus lebih dari 0",
+      });
+    }
 
     if (!price || Number(price) <= 0) {
       return res.status(400).json({
@@ -87,6 +94,18 @@ const sellFoodToMarketplace = async (req, res) => {
     }
 
     const food = foods[0];
+
+    if (Number(food.quantity) <= 0) {
+      return res.status(400).json({
+        message: "Stok makanan sudah habis",
+      });
+    }
+
+    if (Number(quantity) > Number(food.quantity)) {
+      return res.status(400).json({
+        message: "Jumlah yang dijual tidak boleh melebihi stok inventaris",
+      });
+    }
 
     if (food.status === "kedaluwarsa" || food.status === "dibuang") {
       return res.status(400).json({
@@ -114,17 +133,17 @@ const sellFoodToMarketplace = async (req, res) => {
         sellerId,
         food.name,
         food.category,
-        description || food.note || null,
-        food.quantity,
+        description || food.note || food.notes || null,
+        Number(quantity),
         food.unit,
         Number(price),
         food.expiry_date,
-        food.image_url || null,
+        food.image_url || food.image || null,
       ]
     );
 
     await db.query(
-      "UPDATE foods SET status = 'dijual', priority = 'rendah' WHERE id = ? AND user_id = ?",
+      "UPDATE foods SET status = 'dijual', priority = 'sedang' WHERE id = ? AND user_id = ?",
       [foodId, sellerId]
     );
 
@@ -155,15 +174,24 @@ const deleteMarketplaceProduct = async (req, res) => {
       });
     }
 
+    const product = products[0];
+
     await db.query(
       "DELETE FROM marketplace_products WHERE id = ? AND seller_id = ?",
       [id, sellerId]
     );
 
-    await db.query(
-      "UPDATE foods SET status = 'aman' WHERE id = ? AND user_id = ?",
-      [products[0].food_id, sellerId]
+    const [activeProducts] = await db.query(
+      "SELECT id FROM marketplace_products WHERE food_id = ? AND status IN ('tersedia', 'dalam_proses')",
+      [product.food_id]
     );
+
+    if (activeProducts.length === 0) {
+      await db.query(
+        "UPDATE foods SET status = 'aman', priority = 'rendah' WHERE id = ? AND user_id = ? AND status = 'dijual'",
+        [product.food_id, sellerId]
+      );
+    }
 
     return res.status(200).json({
       message: "Produk marketplace berhasil dihapus",

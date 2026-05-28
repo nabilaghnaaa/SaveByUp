@@ -18,6 +18,7 @@ export default function SellProduct() {
 
   const [food, setFood] = useState(null);
   const [form, setForm] = useState({
+    quantity: 1,
     price: "",
     description: "",
   });
@@ -34,8 +35,9 @@ export default function SellProduct() {
 
       setFood(data);
       setForm({
-        price: "",
-        description: data.note || "",
+        quantity: 1,
+        price: data.price || "",
+        description: data.note || data.notes || "",
       });
     } catch (error) {
       console.error("Gagal mengambil makanan:", error);
@@ -64,6 +66,16 @@ export default function SellProduct() {
       return;
     }
 
+    if (!form.quantity || Number(form.quantity) <= 0) {
+      setMessage("Jumlah yang dijual wajib diisi dan harus lebih dari 0.");
+      return;
+    }
+
+    if (Number(form.quantity) > Number(food.quantity)) {
+      setMessage("Jumlah yang dijual tidak boleh melebihi stok inventaris.");
+      return;
+    }
+
     if (!form.price || Number(form.price) <= 0) {
       setMessage("Harga awal wajib diisi dan harus lebih dari 0.");
       return;
@@ -74,6 +86,7 @@ export default function SellProduct() {
       setMessage("");
 
       await createMarketplaceProduct(food.id, {
+        quantity: Number(form.quantity),
         price: Number(form.price),
         description: form.description,
       });
@@ -156,6 +169,11 @@ export default function SellProduct() {
                     Stok: {food.quantity} {food.unit}
                   </p>
 
+                  <p>
+                    Harga inventaris: Rp
+                    {Number(food.price || 0).toLocaleString("id-ID")}
+                  </p>
+
                   <p>Kedaluwarsa: {formatDate(food.expiry_date)}</p>
 
                   <strong>{getDaysLeftLabel(food.expiry_date)}</strong>
@@ -172,7 +190,7 @@ export default function SellProduct() {
               <form className="sell-product-form" onSubmit={handleSubmit}>
                 <div className="sell-form-heading">
                   <span>Marketplace Form</span>
-                  <h3>Atur harga dan deskripsi</h3>
+                  <h3>Atur jumlah, harga, dan deskripsi</h3>
                   <p>
                     Tulis kondisi makanan secara jujur agar pembeli dapat
                     mengambil keputusan dengan aman.
@@ -181,7 +199,26 @@ export default function SellProduct() {
 
                 {message && <div className="sell-message">{message}</div>}
 
-                <label>Harga Awal</label>
+                <label>Jumlah yang Dijual</label>
+                <input
+                  type="number"
+                  min="1"
+                  max={food.quantity}
+                  value={form.quantity}
+                  placeholder="Contoh: 2"
+                  onChange={(event) =>
+                    setForm((prev) => ({
+                      ...prev,
+                      quantity: event.target.value,
+                    }))
+                  }
+                />
+
+                <small>
+                  Stok tersedia: {food.quantity} {food.unit}
+                </small>
+
+                <label>Harga Jual per {food.unit || "pcs"}</label>
                 <input
                   type="number"
                   min="1"
@@ -214,6 +251,7 @@ export default function SellProduct() {
                     <li>Makanan belum melewati tanggal kedaluwarsa.</li>
                     <li>Makanan masih layak konsumsi.</li>
                     <li>Data makanan berasal dari inventaris pengguna.</li>
+                    <li>Jumlah yang dijual tidak boleh melebihi stok inventaris.</li>
                     <li>Penjual bertanggung jawab atas kondisi makanan.</li>
                     <li>Komunikasi lanjutan dilakukan setelah pengajuan disetujui.</li>
                   </ul>

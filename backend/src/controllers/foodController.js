@@ -86,7 +86,6 @@ const mapStatusToCondition = (status) => {
   if (status === "mendekati_kedaluwarsa") return "mendekati_kedaluwarsa";
   if (status === "kedaluwarsa") return "kedaluwarsa";
 
-  // status manual seperti dijual, terjual, digunakan, dibuang tetap dianggap layak/kondisi dasar
   return "layak";
 };
 
@@ -103,6 +102,7 @@ const normalizeFood = (food = {}) => {
     category: food.category || "",
     quantity: Number(food.quantity || 0),
     unit: food.unit || "pcs",
+    price: Number(food.price || 0),
     storage_location: food.storage_location || "",
     purchase_date: food.purchase_date,
     expiry_date: food.expiry_date,
@@ -230,6 +230,7 @@ const createFood = async (req, res) => {
       category,
       quantity,
       unit = "pcs",
+      price,
       storage_location = "",
       purchase_date = null,
       expiry_date,
@@ -259,6 +260,12 @@ const createFood = async (req, res) => {
       });
     }
 
+    if (!price || Number(price) <= 0) {
+      return res.status(400).json({
+        message: "Harga makanan wajib diisi dan harus lebih dari 0",
+      });
+    }
+
     const calculated = calculateFoodStatus(expiry_date, status);
     const finalNote = note || notes || "";
     const finalImage = image_url || image || "";
@@ -272,6 +279,7 @@ const createFood = async (req, res) => {
         category,
         quantity,
         unit,
+        price,
         storage_location,
         purchase_date,
         expiry_date,
@@ -283,7 +291,7 @@ const createFood = async (req, res) => {
         note,
         image_url
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         userId,
@@ -291,6 +299,7 @@ const createFood = async (req, res) => {
         category || null,
         Number(quantity),
         unit,
+        Number(price),
         storage_location || null,
         purchase_date || null,
         expiry_date,
@@ -327,6 +336,7 @@ const updateFood = async (req, res) => {
       category,
       quantity,
       unit = "pcs",
+      price,
       storage_location = "",
       purchase_date = null,
       expiry_date,
@@ -356,6 +366,12 @@ const updateFood = async (req, res) => {
       });
     }
 
+    if (!price || Number(price) <= 0) {
+      return res.status(400).json({
+        message: "Harga makanan wajib diisi dan harus lebih dari 0",
+      });
+    }
+
     const [existingFood] = await db.query(
       "SELECT * FROM foods WHERE id = ? AND user_id = ?",
       [id, userId]
@@ -379,6 +395,7 @@ const updateFood = async (req, res) => {
         category = ?,
         quantity = ?,
         unit = ?,
+        price = ?,
         storage_location = ?,
         purchase_date = ?,
         expiry_date = ?,
@@ -396,6 +413,7 @@ const updateFood = async (req, res) => {
         category || null,
         Number(quantity),
         unit,
+        Number(price),
         storage_location || null,
         purchase_date || null,
         expiry_date,

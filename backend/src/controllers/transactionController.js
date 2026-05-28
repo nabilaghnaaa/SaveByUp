@@ -42,11 +42,13 @@ const getTransactions = async (req, res) => {
 };
 
 const completeTransaction = async (req, res) => {
+  const connection = db;
+
   try {
     const userId = req.user.id;
     const { id } = req.params;
 
-    const [transactions] = await db.query(
+    const [transactions] = await connection.query(
       "SELECT * FROM transactions WHERE id = ? AND (buyer_id = ? OR seller_id = ?)",
       [id, userId, userId]
     );
@@ -59,19 +61,82 @@ const completeTransaction = async (req, res) => {
 
     const transaction = transactions[0];
 
-    await db.query(
+    if (transaction.status === "selesai") {
+      return res.status(400).json({
+        message: "Transaksi ini sudah selesai",
+      });
+    }
+
+    const [products] = await connection.query(
+      "SELECT * FROM marketplace_products WHERE id = ?",
+      [transaction.product_id]
+    );
+
+    if (products.length === 0) {
+      return res.status(404).json({
+        message: "Produk marketplace tidak ditemukan",
+      });
+    }
+
+    const product = products[0];
+
+    const transactionQuantity = Number(transaction.quantity || 1);
+    const marketplaceQuantity = Number(product.quantity || 0);
+    const remainingMarketplaceQuantity = marketplaceQuantity - transactionQuantity;
+
+    if (transactionQuantity <= 0) {
+      return res.status(400).json({
+        message: "Jumlah transaksi tidak valid",
+      });
+    }
+
+    if (marketplaceQuantity <= 0) {
+      return res.status(400).json({
+        message: "Stok produk marketplace sudah habis",
+      });
+    }
+
+    if (transactionQuantity > marketplaceQuantity) {
+      return res.status(400).json({
+        message: "Jumlah transaksi melebihi stok marketplace",
+      });
+    }
+
+    await connection.query(
       "UPDATE transactions SET status = 'selesai', completed_at = NOW() WHERE id = ?",
       [id]
     );
 
-    await db.query(
-      "UPDATE marketplace_products SET status = 'selesai' WHERE id = ?",
-      [transaction.product_id]
+    await connection.query(
+      "UPDATE marketplace_products SET quantity = ?, status = ? WHERE id = ?",
+      [
+        remainingMarketplaceQuantity > 0 ? remainingMarketplaceQuantity : 0,
+        remainingMarketplaceQuantity > 0 ? "tersedia" : "selesai",
+        transaction.product_id,
+      ]
     );
 
-    await db.query(
-      "UPDATE foods SET status = 'terjual' WHERE id = (SELECT food_id FROM marketplace_products WHERE id = ?)",
-      [transaction.product_id]
+    await connection.query(
+      `
+      UPDATE foods
+      SET
+        quantity = GREATEST(quantity - ?, 0),
+        status = CASE
+          WHEN GREATEST(quantity - ?, 0) <= 0 THEN 'terjual'
+          ELSE status
+        END,
+        priority = CASE
+          WHEN GREATEST(quantity - ?, 0) <= 0 THEN 'selesai'
+          ELSE priority
+        END
+      WHERE id = ?
+      `,
+      [
+        transactionQuantity,
+        transactionQuantity,
+        transactionQuantity,
+        product.food_id,
+      ]
     );
 
     const receiverId =

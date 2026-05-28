@@ -59,6 +59,7 @@ export const getMarketplaceProductById = async (id) => {
 
 export const createMarketplaceProduct = async (foodId, payload) => {
   const response = await API.post(`/marketplace/sell/${foodId}`, {
+    quantity: Number(payload.quantity || 1),
     price: Number(payload.price || 0),
     description: payload.description || "",
   });
