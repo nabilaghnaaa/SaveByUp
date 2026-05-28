@@ -10,17 +10,20 @@ function getStatusLabel(status) {
     tersedia: "Tersedia",
     dalam_proses: "Dalam Proses",
     selesai: "Selesai",
+    dibatalkan: "Dibatalkan",
     tidak_tersedia: "Tidak Tersedia",
   };
 
   return labels[status] || "Tersedia";
 }
 
-export default function ProductCard({ product }) {
+export default function ProductCard({ product, currentUserId }) {
   const navigate = useNavigate();
 
+  const isMine = Number(product.seller_id) === Number(currentUserId);
+
   return (
-    <article className="product-card">
+    <article className={`product-card ${isMine ? "product-card-own" : ""}`}>
       <div className="product-card-image">
         {product.image_url ? (
           <img src={product.image_url} alt={product.name} />
@@ -37,6 +40,8 @@ export default function ProductCard({ product }) {
         <span className="product-expiry-badge">
           {getDaysLeftLabel(product.expiry_date)}
         </span>
+
+        {isMine && <span className="product-expiry-badge">Produk Kamu</span>}
       </div>
 
       <div className="product-card-body">
@@ -70,7 +75,10 @@ export default function ProductCard({ product }) {
 
           <div>
             <span>Penjual</span>
-            <strong>{product.seller_name || "Penjual SaveByUp"}</strong>
+            <strong>
+              {product.seller_name || "Penjual SaveByUp"}
+              {isMine ? " (Kamu)" : ""}
+            </strong>
             <small>{product.seller_address || "Area kos UMY"}</small>
           </div>
         </div>
@@ -80,7 +88,7 @@ export default function ProductCard({ product }) {
           className="sb-btn sb-btn-primary product-detail-btn"
           onClick={() => navigate(`/marketplace/${product.id}`)}
         >
-          Lihat Detail
+          {isMine ? "Lihat Produk Kamu" : "Lihat Detail"}
         </button>
       </div>
     </article>

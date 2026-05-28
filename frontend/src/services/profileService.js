@@ -4,10 +4,18 @@ const normalizeProfile = (profile = {}) => ({
   id: profile.id,
   name: profile.name || "",
   email: profile.email || "",
+  phone: profile.phone || "",
   whatsapp: profile.whatsapp || "",
   address: profile.address || "",
-  avatar_url: profile.avatar_url || "",
+  photo: profile.photo || "",
+  avatar_url: profile.avatar_url || profile.photo || "",
+  bio: profile.bio || "",
   rating: Number(profile.rating || 0),
+
+  is_profile_complete: Boolean(profile.is_profile_complete),
+  missing_fields: Array.isArray(profile.missing_fields)
+    ? profile.missing_fields
+    : [],
 });
 
 export const getProfile = async () => {
@@ -18,10 +26,33 @@ export const getProfile = async () => {
 export const updateProfile = async (payload) => {
   const response = await API.put("/profile", {
     name: payload.name,
+    phone: payload.phone || "",
     whatsapp: payload.whatsapp || "",
     address: payload.address || "",
-    avatar_url: payload.avatar_url || "",
+    photo: payload.photo || payload.avatar_url || "",
+    avatar_url: payload.avatar_url || payload.photo || "",
+    bio: payload.bio || "",
   });
 
   return response.data;
+};
+
+export const isProfileComplete = (profile = {}) => {
+  return Boolean(
+    String(profile.name || "").trim() &&
+      String(profile.email || "").trim() &&
+      String(profile.whatsapp || "").trim() &&
+      String(profile.address || "").trim()
+  );
+};
+
+export const getMissingProfileFields = (profile = {}) => {
+  const missing = [];
+
+  if (!String(profile.name || "").trim()) missing.push("Nama");
+  if (!String(profile.email || "").trim()) missing.push("Email");
+  if (!String(profile.whatsapp || "").trim()) missing.push("WhatsApp");
+  if (!String(profile.address || "").trim()) missing.push("Alamat");
+
+  return missing;
 };

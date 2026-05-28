@@ -10,7 +10,9 @@ const authMiddleware = (req, res, next) => {
       });
     }
 
-    const token = authHeader.split(" ")[1];
+    const token = authHeader.startsWith("Bearer ")
+      ? authHeader.split(" ")[1]
+      : authHeader;
 
     if (!token) {
       return res.status(401).json({
@@ -23,7 +25,12 @@ const authMiddleware = (req, res, next) => {
       process.env.JWT_SECRET || "savebyup_secret_key"
     );
 
-    req.user = decoded;
+    req.user = {
+      ...decoded,
+      id: decoded.id || decoded.user_id || decoded.userId,
+      user_id: decoded.user_id || decoded.id || decoded.userId,
+    };
+
     next();
   } catch (error) {
     return res.status(401).json({

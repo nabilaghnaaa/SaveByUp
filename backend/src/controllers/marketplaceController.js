@@ -4,6 +4,31 @@ const getUserId = (req) => {
   return req.user?.id || req.user?.user_id || req.userId;
 };
 
+const getProfileCompleteness = (user = {}) => {
+  const missingFields = [];
+
+  if (!String(user.name || "").trim()) {
+    missingFields.push("name");
+  }
+
+  if (!String(user.email || "").trim()) {
+    missingFields.push("email");
+  }
+
+  if (!String(user.whatsapp || "").trim()) {
+    missingFields.push("whatsapp");
+  }
+
+  if (!String(user.address || "").trim()) {
+    missingFields.push("address");
+  }
+
+  return {
+    isProfileComplete: missingFields.length === 0,
+    missingFields,
+  };
+};
+
 const getMarketplaceProducts = async (req, res) => {
   try {
     const [products] = await db.query(
@@ -84,6 +109,31 @@ const sellFoodToMarketplace = async (req, res) => {
       });
     }
 
+    const [sellers] = await db.query(
+      `SELECT id, name, email, whatsapp, address
+       FROM users
+       WHERE id = ?`,
+      [sellerId]
+    );
+
+    if (sellers.length === 0) {
+      return res.status(404).json({
+        message: "Data penjual tidak ditemukan.",
+      });
+    }
+
+    const seller = sellers[0];
+    const profileCheck = getProfileCompleteness(seller);
+
+    if (!profileCheck.isProfileComplete) {
+      return res.status(400).json({
+        message:
+          "Lengkapi profil terlebih dahulu sebelum menjual produk. Nama, email, WhatsApp, dan alamat wajib diisi.",
+        code: "PROFILE_INCOMPLETE",
+        missing_fields: profileCheck.missingFields,
+      });
+    }
+
     if (!foodId) {
       return res.status(400).json({
         message: "ID makanan tidak ditemukan.",
@@ -112,7 +162,7 @@ const sellFoodToMarketplace = async (req, res) => {
 
     if (foods.length === 0) {
       return res.status(404).json({
-        message: "Data makanan tidak ditemukan",
+        message: "Data makanan tidak ditemukan atau bukan milik kamu.",
       });
     }
 
@@ -133,6 +183,12 @@ const sellFoodToMarketplace = async (req, res) => {
     if (food.status === "kedaluwarsa" || food.status === "dibuang") {
       return res.status(400).json({
         message: "Makanan tidak layak ditawarkan ke marketplace",
+      });
+    }
+
+    if (food.status === "terjual" || food.status === "digunakan") {
+      return res.status(400).json({
+        message: "Makanan yang sudah selesai tidak bisa ditawarkan ke marketplace",
       });
     }
 
@@ -181,7 +237,7 @@ const sellFoodToMarketplace = async (req, res) => {
         food.expiry_date,
         food.image_url || food.image || null,
         food.image || food.image_url || null,
-        food.storage_location || null,
+        food.storage_location || seller.address || null,
         "tersedia",
       ]
     );
@@ -222,11 +278,18 @@ const deleteMarketplaceProduct = async (req, res) => {
 
     if (products.length === 0) {
       return res.status(404).json({
-        message: "Produk marketplace tidak ditemukan",
+        message: "Produk marketplace tidak ditemukan atau bukan milik kamu",
       });
     }
 
     const product = products[0];
+
+    if (product.status === "dalam_proses") {
+      return res.status(400).json({
+        message:
+          "Produk tidak bisa dihapus karena sedang dalam proses transaksi. Selesaikan atau batalkan transaksi terlebih dahulu.",
+      });
+    }
 
     await db.query(
       "DELETE FROM marketplace_products WHERE id = ? AND seller_id = ?",

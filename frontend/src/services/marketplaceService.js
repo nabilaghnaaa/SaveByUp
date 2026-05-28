@@ -12,15 +12,36 @@ const normalizeProduct = (product = {}) => ({
   name: product.name || "",
   category: product.category || "",
   description: product.description || "",
-  quantity: Number(product.quantity || 0),
+  quantity: Number(product.quantity || product.stock || 0),
+  stock: Number(product.stock || product.quantity || 0),
   unit: product.unit || "pcs",
   price: Number(product.price || 0),
   expiry_date: product.expiry_date ? String(product.expiry_date).slice(0, 10) : "",
   image_url: product.image_url || product.image || "",
+  image: product.image || product.image_url || "",
+  location: product.location || "",
   status: product.status || "tersedia",
   created_at: product.created_at,
   updated_at: product.updated_at,
 });
+
+const normalizeRequestStatus = (status) => {
+  const statusMap = {
+    pending: "pending",
+    accepted: "accepted",
+    rejected: "rejected",
+    cancelled: "cancelled",
+    completed: "completed",
+
+    menunggu: "pending",
+    disetujui: "accepted",
+    ditolak: "rejected",
+    dibatalkan: "cancelled",
+    selesai: "completed",
+  };
+
+  return statusMap[status] || status || "pending";
+};
 
 const normalizeRequest = (request = {}) => ({
   id: request.id,
@@ -35,10 +56,15 @@ const normalizeRequest = (request = {}) => ({
   seller_name: request.seller_name || "",
   seller_whatsapp: request.seller_whatsapp || "",
   quantity: Number(request.quantity || 0),
+  original_price: Number(request.original_price || 0),
   offer_price: Number(request.offer_price || 0),
+  is_negotiated: Boolean(request.is_negotiated),
+  cod_location: request.cod_location || "",
+  cod_time: request.cod_time || "",
   note: request.note || "",
-  status: request.status || "menunggu",
+  status: normalizeRequestStatus(request.status),
   created_at: request.created_at,
+  updated_at: request.updated_at,
   responded_at: request.responded_at,
 });
 
@@ -46,8 +72,10 @@ export const getMarketplaceProducts = async () => {
   try {
     const response = await API.get("/marketplace");
     const products = response.data.data || response.data || [];
+
     return Array.isArray(products) ? products.map(normalizeProduct) : [];
-  } catch {
+  } catch (error) {
+    console.error("Get marketplace products service error:", error);
     return [];
   }
 };
@@ -91,8 +119,10 @@ export const getIncomingRequests = async () => {
   try {
     const response = await API.get("/requests/incoming");
     const requests = response.data.data || response.data || [];
+
     return Array.isArray(requests) ? requests.map(normalizeRequest) : [];
-  } catch {
+  } catch (error) {
+    console.error("Get incoming requests service error:", error);
     return [];
   }
 };
@@ -101,8 +131,10 @@ export const getMyRequests = async () => {
   try {
     const response = await API.get("/requests/mine");
     const requests = response.data.data || response.data || [];
+
     return Array.isArray(requests) ? requests.map(normalizeRequest) : [];
-  } catch {
+  } catch (error) {
+    console.error("Get my requests service error:", error);
     return [];
   }
 };
@@ -115,6 +147,19 @@ export const approveRequest = async (id) => {
 export const rejectRequest = async (id) => {
   const response = await API.patch(`/requests/${id}/reject`);
   return response.data;
+};
+
+export const isOwnProduct = (product, currentUserId) => {
+  return Number(product?.seller_id) === Number(currentUserId);
+};
+
+export const canBuyProduct = (product, currentUserId) => {
+  if (!product) return false;
+  if (isOwnProduct(product, currentUserId)) return false;
+  if (product.status !== "tersedia") return false;
+  if (Number(product.quantity || 0) <= 0) return false;
+
+  return true;
 };
 
 export const buildWhatsappUrl = ({

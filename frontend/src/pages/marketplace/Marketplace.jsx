@@ -5,6 +5,7 @@ import EmptyState from "../../components/ui/EmptyState";
 import PageHeader from "../../components/ui/PageHeader";
 
 import { getMarketplaceProducts } from "../../services/marketplaceService";
+import { getProfile } from "../../services/profileService";
 
 import ProductCard from "./components/ProductCard";
 import ProductFilter from "./components/ProductFilter";
@@ -13,11 +14,24 @@ import "./styles/marketplace.css";
 
 export default function Marketplace() {
   const [products, setProducts] = useState([]);
+  const [profile, setProfile] = useState(null);
+
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("semua");
   const [statusFilter, setStatusFilter] = useState("tersedia");
+
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+
+  const fetchProfile = async () => {
+    try {
+      const data = await getProfile();
+      setProfile(data);
+    } catch (error) {
+      console.error("Gagal mengambil profil:", error);
+      setProfile(null);
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -37,9 +51,15 @@ export default function Marketplace() {
     }
   };
 
+  const fetchInitialData = async () => {
+    await Promise.all([fetchProfile(), fetchProducts()]);
+  };
+
   useEffect(() => {
-    fetchProducts();
+    fetchInitialData();
   }, []);
+
+  const currentUserId = profile?.id;
 
   const filteredProducts = useMemo(() => {
     const keyword = search.toLowerCase().trim();
@@ -76,7 +96,7 @@ export default function Marketplace() {
             <button
               type="button"
               className="sb-btn marketplace-btn-outline"
-              onClick={fetchProducts}
+              onClick={fetchInitialData}
             >
               Refresh
             </button>
@@ -163,7 +183,11 @@ export default function Marketplace() {
         ) : (
           <section className="marketplace-grid">
             {filteredProducts.map((product) => (
-              <ProductCard product={product} key={product.id} />
+              <ProductCard
+                product={product}
+                currentUserId={currentUserId}
+                key={product.id}
+              />
             ))}
           </section>
         )}

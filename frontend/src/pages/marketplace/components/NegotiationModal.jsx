@@ -1,19 +1,41 @@
 import { useState } from "react";
 
-import { createPurchaseRequest } from "../../../services/marketplaceService";
+import {
+  canBuyProduct,
+  createPurchaseRequest,
+  isOwnProduct,
+} from "../../../services/marketplaceService";
 import { formatCurrency } from "../../../utils/formatCurrency";
 
 import "../styles/productDetail.css";
 
-export default function NegotiationModal({ product, onClose, onSuccess }) {
+export default function NegotiationModal({
+  product,
+  currentUserId,
+  onClose,
+  onSuccess,
+}) {
   const [quantity, setQuantity] = useState(1);
   const [offerPrice, setOfferPrice] = useState(product.price);
   const [note, setNote] = useState("");
   const [message, setMessage] = useState("");
   const [saving, setSaving] = useState(false);
 
+  const productIsMine = isOwnProduct(product, currentUserId);
+  const productCanBeBought = canBuyProduct(product, currentUserId);
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+
+    if (productIsMine) {
+      setMessage("Kamu tidak bisa membeli produk yang kamu jual sendiri.");
+      return;
+    }
+
+    if (!productCanBeBought) {
+      setMessage("Produk ini tidak tersedia untuk diajukan pembelian.");
+      return;
+    }
 
     if (Number(quantity) <= 0) {
       setMessage("Jumlah pembelian harus lebih dari 0.");
@@ -76,11 +98,18 @@ export default function NegotiationModal({ product, onClose, onSuccess }) {
           </button>
         </div>
 
-        <p>
-          Harga awal produk ini adalah{" "}
-          <strong>{formatCurrency(product.price)}</strong>. Kamu dapat
-          mengajukan pembelian atau menawar harga sesuai kesepakatan.
-        </p>
+        {productIsMine ? (
+          <p>
+            Produk ini adalah produk yang kamu jual sendiri. Kamu tetap bisa
+            melihat detailnya, tetapi tidak bisa mengajukan pembelian.
+          </p>
+        ) : (
+          <p>
+            Harga awal produk ini adalah{" "}
+            <strong>{formatCurrency(product.price)}</strong>. Kamu dapat
+            mengajukan pembelian atau menawar harga sesuai kesepakatan.
+          </p>
+        )}
 
         {message && <div className="negotiation-message">{message}</div>}
 
@@ -90,6 +119,7 @@ export default function NegotiationModal({ product, onClose, onSuccess }) {
           min="1"
           max={product.quantity}
           value={quantity}
+          disabled={productIsMine || saving}
           onChange={(event) => setQuantity(event.target.value)}
         />
 
@@ -98,6 +128,7 @@ export default function NegotiationModal({ product, onClose, onSuccess }) {
           type="number"
           min="1"
           value={offerPrice}
+          disabled={productIsMine || saving}
           onChange={(event) => setOfferPrice(event.target.value)}
         />
 
@@ -105,6 +136,7 @@ export default function NegotiationModal({ product, onClose, onSuccess }) {
         <textarea
           rows="4"
           value={note}
+          disabled={productIsMine || saving}
           placeholder="Contoh: Bisa COD di sekitar kampus UMY?"
           onChange={(event) => setNote(event.target.value)}
         />
@@ -121,7 +153,7 @@ export default function NegotiationModal({ product, onClose, onSuccess }) {
           <button
             type="submit"
             className="sb-btn sb-btn-primary"
-            disabled={saving}
+            disabled={saving || productIsMine || !productCanBeBought}
           >
             {saving ? "Mengirim..." : "Kirim Pengajuan"}
           </button>

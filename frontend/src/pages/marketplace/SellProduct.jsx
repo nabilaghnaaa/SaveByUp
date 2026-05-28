@@ -6,6 +6,11 @@ import PageHeader from "../../components/ui/PageHeader";
 
 import { getFoodById } from "../../services/foodService";
 import { createMarketplaceProduct } from "../../services/marketplaceService";
+import {
+  getMissingProfileFields,
+  getProfile,
+  isProfileComplete,
+} from "../../services/profileService";
 
 import { formatDate, getDaysLeftLabel } from "../../utils/formatDate";
 import { canSellFood } from "../../utils/foodStatus";
@@ -17,33 +22,54 @@ export default function SellProduct() {
   const navigate = useNavigate();
 
   const [food, setFood] = useState(null);
+  const [profile, setProfile] = useState(null);
+
   const [form, setForm] = useState({
     quantity: 1,
     price: "",
     description: "",
   });
+
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
 
-  const fetchFood = async () => {
+  const [message, setMessage] = useState("");
+  const [profileWarning, setProfileWarning] = useState("");
+
+  const fetchData = async () => {
     try {
       setLoading(true);
       setMessage("");
+      setProfileWarning("");
 
-      const data = await getFoodById(foodId);
+      const [foodData, profileData] = await Promise.all([
+        getFoodById(foodId),
+        getProfile(),
+      ]);
 
-      setFood(data);
+      setFood(foodData);
+      setProfile(profileData);
+
       setForm({
         quantity: 1,
-        price: data.price || "",
-        description: data.note || data.notes || "",
+        price: foodData.price || "",
+        description: foodData.note || foodData.notes || "",
       });
+
+      if (!isProfileComplete(profileData)) {
+        const missingFields = getMissingProfileFields(profileData);
+
+        setProfileWarning(
+          `Lengkapi profil terlebih dahulu sebelum menjual produk. Data yang belum lengkap: ${missingFields.join(
+            ", "
+          )}.`
+        );
+      }
     } catch (error) {
-      console.error("Gagal mengambil makanan:", error);
+      console.error("Gagal mengambil data jual makanan:", error);
       setMessage(
         error.response?.data?.message ||
-          "Gagal mengambil data makanan dari inventaris."
+          "Gagal mengambil data makanan atau profil pengguna."
       );
     } finally {
       setLoading(false);
@@ -51,13 +77,24 @@ export default function SellProduct() {
   };
 
   useEffect(() => {
-    fetchFood();
+    fetchData();
   }, [foodId]);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
 
     if (!food) return;
+
+    if (!profile || !isProfileComplete(profile)) {
+      const missingFields = getMissingProfileFields(profile || {});
+
+      setProfileWarning(
+        `Lengkapi profil terlebih dahulu sebelum menjual produk. Data yang belum lengkap: ${missingFields.join(
+          ", "
+        )}.`
+      );
+      return;
+    }
 
     if (!canSellFood(food)) {
       setMessage(
@@ -84,6 +121,7 @@ export default function SellProduct() {
     try {
       setSaving(true);
       setMessage("");
+      setProfileWarning("");
 
       await createMarketplaceProduct(food.id, {
         quantity: Number(form.quantity),
@@ -98,15 +136,24 @@ export default function SellProduct() {
       }, 800);
     } catch (error) {
       console.error("Gagal menambahkan produk marketplace:", error);
-      setMessage(
+
+      const errorCode = error.response?.data?.code;
+      const errorMessage =
         error.response?.data?.message ||
-          error.message ||
-          "Gagal menambahkan produk ke marketplace."
-      );
+        error.message ||
+        "Gagal menambahkan produk ke marketplace.";
+
+      if (errorCode === "PROFILE_INCOMPLETE") {
+        setProfileWarning(errorMessage);
+      } else {
+        setMessage(errorMessage);
+      }
     } finally {
       setSaving(false);
     }
   };
+
+  const profileIsComplete = profile ? isProfileComplete(profile) : false;
 
   return (
     <AppShell>
@@ -133,7 +180,7 @@ export default function SellProduct() {
           <div className="sell-product-state">
             <div className="marketplace-loader" />
             <h3>Memuat makanan...</h3>
-            <p>Sedang mengambil data makanan dari inventaris.</p>
+            <p>Sedang mengambil data makanan dan profil pengguna.</p>
           </div>
         ) : message && !food ? (
           <div className="sell-product-state">
@@ -184,6 +231,20 @@ export default function SellProduct() {
                       kedaluwarsanya tidak memenuhi syarat.
                     </div>
                   )}
+
+                  {profileWarning && (
+                    <div className="sell-warning">
+                      {profileWarning}
+                      <br />
+                      <button
+                        type="button"
+                        className="sb-btn marketplace-btn-outline"
+                        onClick={() => navigate("/profile")}
+                      >
+                        Lengkapi Profil
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -206,6 +267,7 @@ export default function SellProduct() {
                   max={food.quantity}
                   value={form.quantity}
                   placeholder="Contoh: 2"
+                  disabled={!profileIsComplete || saving}
                   onChange={(event) =>
                     setForm((prev) => ({
                       ...prev,
@@ -224,6 +286,7 @@ export default function SellProduct() {
                   min="1"
                   value={form.price}
                   placeholder="Contoh: 8000"
+                  disabled={!profileIsComplete || saving}
                   onChange={(event) =>
                     setForm((prev) => ({
                       ...prev,
@@ -236,6 +299,7 @@ export default function SellProduct() {
                 <textarea
                   rows="5"
                   value={form.description}
+                  disabled={!profileIsComplete || saving}
                   placeholder="Jelaskan kondisi makanan, masih tersegel/tidak, lokasi COD, dan informasi penting lainnya."
                   onChange={(event) =>
                     setForm((prev) => ({
@@ -248,6 +312,7 @@ export default function SellProduct() {
                 <div className="sell-rules">
                   <strong>Kriteria marketplace:</strong>
                   <ul>
+                    <li>Profil penjual wajib lengkap.</li>
                     <li>Makanan belum melewati tanggal kedaluwarsa.</li>
                     <li>Makanan masih layak konsumsi.</li>
                     <li>Data makanan berasal dari inventaris pengguna.</li>
@@ -260,7 +325,7 @@ export default function SellProduct() {
                 <button
                   type="submit"
                   className="sb-btn sb-btn-primary"
-                  disabled={saving || !canSellFood(food)}
+                  disabled={saving || !canSellFood(food) || !profileIsComplete}
                 >
                   {saving ? "Menyimpan..." : "Tawarkan ke Marketplace"}
                 </button>

@@ -1,15 +1,29 @@
 const db = require("../config/db");
 
+const getUserId = (req) => {
+  return req.user?.id || req.user?.user_id || req.userId;
+};
+
 const createNotification = async (userId, title, message, type = "system") => {
-  await db.query(
-    "INSERT INTO notifications (user_id, title, message, type) VALUES (?, ?, ?, ?)",
-    [userId, title, message, type]
-  );
+  try {
+    await db.query(
+      "INSERT INTO notifications (user_id, title, message, type) VALUES (?, ?, ?, ?)",
+      [userId, title, message, type]
+    );
+  } catch (error) {
+    console.error("Create notification error:", error.message);
+  }
 };
 
 const getTransactions = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = getUserId(req);
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "User tidak terautentikasi.",
+      });
+    }
 
     const [transactions] = await db.query(
       `SELECT 
@@ -35,20 +49,26 @@ const getTransactions = async (req, res) => {
     });
   } catch (error) {
     console.error("Get transactions error:", error);
+
     return res.status(500).json({
       message: "Terjadi kesalahan pada server",
+      error: error.message,
     });
   }
 };
 
 const completeTransaction = async (req, res) => {
-  const connection = db;
-
   try {
-    const userId = req.user.id;
+    const userId = getUserId(req);
     const { id } = req.params;
 
-    const [transactions] = await connection.query(
+    if (!userId) {
+      return res.status(401).json({
+        message: "User tidak terautentikasi.",
+      });
+    }
+
+    const [transactions] = await db.query(
       "SELECT * FROM transactions WHERE id = ? AND (buyer_id = ? OR seller_id = ?)",
       [id, userId, userId]
     );
@@ -61,13 +81,19 @@ const completeTransaction = async (req, res) => {
 
     const transaction = transactions[0];
 
-    if (transaction.status === "selesai") {
+    if (transaction.status === "completed") {
       return res.status(400).json({
         message: "Transaksi ini sudah selesai",
       });
     }
 
-    const [products] = await connection.query(
+    if (transaction.status === "cancelled") {
+      return res.status(400).json({
+        message: "Transaksi yang dibatalkan tidak bisa diselesaikan",
+      });
+    }
+
+    const [products] = await db.query(
       "SELECT * FROM marketplace_products WHERE id = ?",
       [transaction.product_id]
     );
@@ -102,21 +128,29 @@ const completeTransaction = async (req, res) => {
       });
     }
 
-    await connection.query(
-      "UPDATE transactions SET status = 'selesai', completed_at = NOW() WHERE id = ?",
+    await db.query(
+      "UPDATE transactions SET status = 'completed', completed_at = NOW() WHERE id = ?",
       [id]
     );
 
-    await connection.query(
-      "UPDATE marketplace_products SET quantity = ?, status = ? WHERE id = ?",
+    await db.query(
+      "UPDATE purchase_requests SET status = 'completed', updated_at = NOW() WHERE id = ?",
+      [transaction.purchase_request_id]
+    );
+
+    await db.query(
+      `UPDATE marketplace_products 
+       SET quantity = ?, stock = ?, status = ? 
+       WHERE id = ?`,
       [
+        remainingMarketplaceQuantity > 0 ? remainingMarketplaceQuantity : 0,
         remainingMarketplaceQuantity > 0 ? remainingMarketplaceQuantity : 0,
         remainingMarketplaceQuantity > 0 ? "tersedia" : "selesai",
         transaction.product_id,
       ]
     );
 
-    await connection.query(
+    await db.query(
       `
       UPDATE foods
       SET
@@ -140,7 +174,9 @@ const completeTransaction = async (req, res) => {
     );
 
     const receiverId =
-      transaction.buyer_id === userId ? transaction.seller_id : transaction.buyer_id;
+      Number(transaction.buyer_id) === Number(userId)
+        ? transaction.seller_id
+        : transaction.buyer_id;
 
     await createNotification(
       receiverId,
@@ -154,17 +190,25 @@ const completeTransaction = async (req, res) => {
     });
   } catch (error) {
     console.error("Complete transaction error:", error);
+
     return res.status(500).json({
       message: "Terjadi kesalahan pada server",
+      error: error.message,
     });
   }
 };
 
 const rateTransaction = async (req, res) => {
   try {
-    const buyerId = req.user.id;
+    const buyerId = getUserId(req);
     const { id } = req.params;
     const { rating, review } = req.body;
+
+    if (!buyerId) {
+      return res.status(401).json({
+        message: "User tidak terautentikasi.",
+      });
+    }
 
     if (!rating || Number(rating) < 1 || Number(rating) > 5) {
       return res.status(400).json({
@@ -185,7 +229,7 @@ const rateTransaction = async (req, res) => {
 
     const transaction = transactions[0];
 
-    if (transaction.status !== "selesai") {
+    if (transaction.status !== "completed") {
       return res.status(400).json({
         message: "Rating hanya bisa diberikan setelah transaksi selesai",
       });
@@ -211,8 +255,10 @@ const rateTransaction = async (req, res) => {
     });
   } catch (error) {
     console.error("Rate transaction error:", error);
+
     return res.status(500).json({
       message: "Terjadi kesalahan pada server",
+      error: error.message,
     });
   }
 };

@@ -4,7 +4,13 @@ import { useNavigate, useParams } from "react-router-dom";
 import AppShell from "../../components/layout/AppShell";
 import PageHeader from "../../components/ui/PageHeader";
 
-import { getMarketplaceProductById } from "../../services/marketplaceService";
+import {
+  canBuyProduct,
+  getMarketplaceProductById,
+  isOwnProduct,
+} from "../../services/marketplaceService";
+import { getProfile } from "../../services/profileService";
+
 import { formatCurrency } from "../../utils/formatCurrency";
 import { formatDate, getDaysLeftLabel } from "../../utils/formatDate";
 
@@ -17,6 +23,7 @@ function getProductStatusLabel(status) {
     tersedia: "Tersedia",
     dalam_proses: "Dalam Proses",
     selesai: "Selesai",
+    dibatalkan: "Dibatalkan",
     tidak_tersedia: "Tidak Tersedia",
   };
 
@@ -28,6 +35,8 @@ export default function MarketplaceDetail() {
   const navigate = useNavigate();
 
   const [product, setProduct] = useState(null);
+  const [profile, setProfile] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [showNegotiation, setShowNegotiation] = useState(false);
@@ -37,8 +46,13 @@ export default function MarketplaceDetail() {
       setLoading(true);
       setMessage("");
 
-      const data = await getMarketplaceProductById(id);
-      setProduct(data);
+      const [productData, profileData] = await Promise.all([
+        getMarketplaceProductById(id),
+        getProfile(),
+      ]);
+
+      setProduct(productData);
+      setProfile(profileData);
     } catch (error) {
       console.error("Gagal mengambil detail produk:", error);
       setMessage(
@@ -52,6 +66,30 @@ export default function MarketplaceDetail() {
   useEffect(() => {
     fetchProduct();
   }, [id]);
+
+  const currentUserId = profile?.id;
+  const productIsMine = product ? isOwnProduct(product, currentUserId) : false;
+  const productCanBeBought = product ? canBuyProduct(product, currentUserId) : false;
+
+  const getDisabledReason = () => {
+    if (!product) return "";
+
+    if (productIsMine) {
+      return "Produk ini adalah produk yang kamu jual sendiri, jadi kamu tidak bisa mengajukan pembelian.";
+    }
+
+    if (product.status !== "tersedia") {
+      return "Produk ini sedang tidak tersedia untuk pengajuan baru.";
+    }
+
+    if (Number(product.quantity || 0) <= 0) {
+      return "Stok produk sudah habis.";
+    }
+
+    return "";
+  };
+
+  const disabledReason = getDisabledReason();
 
   return (
     <AppShell>
@@ -108,6 +146,12 @@ export default function MarketplaceDetail() {
                   <span className={`product-detail-status status-${product.status}`}>
                     {getProductStatusLabel(product.status)}
                   </span>
+
+                  {productIsMine && (
+                    <span className="product-detail-expiry">
+                      Produk Kamu
+                    </span>
+                  )}
                 </div>
 
                 <div className="product-detail-content">
@@ -163,7 +207,10 @@ export default function MarketplaceDetail() {
 
                     <div>
                       <span>Penjual</span>
-                      <strong>{product.seller_name || "Penjual SaveByUp"}</strong>
+                      <strong>
+                        {product.seller_name || "Penjual SaveByUp"}
+                        {productIsMine ? " (Kamu)" : ""}
+                      </strong>
                       <small>
                         Rating {product.seller_rating || 0}/5 •{" "}
                         {product.seller_address || "Area kos UMY"}
@@ -171,18 +218,32 @@ export default function MarketplaceDetail() {
                     </div>
                   </div>
 
+                  {productIsMine && (
+                    <div className="product-detail-note">
+                      Ini adalah produk yang kamu tawarkan ke marketplace. Kamu
+                      bisa melihat detailnya, tetapi tidak bisa membeli produk
+                      milik sendiri.
+                    </div>
+                  )}
+
                   <button
                     type="button"
                     className="sb-btn sb-btn-primary product-request-button"
-                    disabled={product.status !== "tersedia"}
+                    disabled={!productCanBeBought}
                     onClick={() => setShowNegotiation(true)}
                   >
-                    Ajukan Pembelian / Negosiasi
+                    {productIsMine
+                      ? "Produk Milik Kamu"
+                      : product.status !== "tersedia"
+                        ? "Produk Tidak Tersedia"
+                        : Number(product.quantity || 0) <= 0
+                          ? "Stok Habis"
+                          : "Ajukan Pembelian / Negosiasi"}
                   </button>
 
-                  {product.status !== "tersedia" && (
+                  {disabledReason && (
                     <small className="product-detail-note">
-                      Produk ini sedang tidak tersedia untuk pengajuan baru.
+                      {disabledReason}
                     </small>
                   )}
                 </div>
@@ -191,6 +252,7 @@ export default function MarketplaceDetail() {
               {showNegotiation && (
                 <NegotiationModal
                   product={product}
+                  currentUserId={currentUserId}
                   onClose={() => setShowNegotiation(false)}
                   onSuccess={fetchProduct}
                 />

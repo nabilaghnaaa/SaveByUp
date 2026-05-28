@@ -1,32 +1,56 @@
 const db = require("../config/db");
 
+const getUserId = (req) => {
+  return req.user?.id || req.user?.user_id || req.userId;
+};
+
 const createNotification = async (userId, title, message, type = "system") => {
-  await db.query(
-    "INSERT INTO notifications (user_id, title, message, type) VALUES (?, ?, ?, ?)",
-    [userId, title, message, type]
-  );
+  try {
+    await db.query(
+      "INSERT INTO notifications (user_id, title, message, type) VALUES (?, ?, ?, ?)",
+      [userId, title, message, type]
+    );
+  } catch (error) {
+    console.error("Create notification error:", error.message);
+  }
 };
 
 const createPurchaseRequest = async (req, res) => {
   try {
-    const buyerId = req.user.id;
+    const buyerId = getUserId(req);
     const { productId } = req.params;
     const { quantity, offer_price, note } = req.body;
 
+    if (!buyerId) {
+      return res.status(401).json({
+        message: "User tidak terautentikasi.",
+      });
+    }
+
     if (!quantity || Number(quantity) <= 0) {
       return res.status(400).json({
-        message: "Jumlah pembelian wajib diisi",
+        message: "Jumlah pembelian wajib diisi dan harus lebih dari 0",
       });
     }
 
     if (!offer_price || Number(offer_price) <= 0) {
       return res.status(400).json({
-        message: "Harga penawaran wajib diisi",
+        message: "Harga penawaran wajib diisi dan harus lebih dari 0",
       });
     }
 
+    const buyQuantity = Number(quantity);
+    const offerPrice = Number(offer_price);
+
     const [products] = await db.query(
-      "SELECT * FROM marketplace_products WHERE id = ?",
+      `SELECT 
+        mp.*,
+        u.name AS seller_name,
+        u.whatsapp AS seller_whatsapp,
+        u.address AS seller_address
+       FROM marketplace_products mp
+       JOIN users u ON mp.seller_id = u.id
+       WHERE mp.id = ?`,
       [productId]
     );
 
@@ -44,13 +68,20 @@ const createPurchaseRequest = async (req, res) => {
       });
     }
 
-    if (product.seller_id === buyerId) {
+    if (Number(product.seller_id) === Number(buyerId)) {
       return res.status(400).json({
         message: "Kamu tidak bisa membeli produk milik sendiri",
+        code: "BUY_OWN_PRODUCT",
       });
     }
 
-    if (Number(quantity) > Number(product.quantity)) {
+    if (Number(product.quantity) <= 0) {
+      return res.status(400).json({
+        message: "Stok produk sudah habis",
+      });
+    }
+
+    if (buyQuantity > Number(product.quantity)) {
       return res.status(400).json({
         message: "Jumlah pembelian melebihi stok tersedia",
       });
@@ -58,7 +89,9 @@ const createPurchaseRequest = async (req, res) => {
 
     const [existingRequests] = await db.query(
       `SELECT id FROM purchase_requests 
-       WHERE product_id = ? AND buyer_id = ? AND status = 'menunggu'`,
+       WHERE product_id = ? 
+       AND buyer_id = ? 
+       AND status = 'pending'`,
       [productId, buyerId]
     );
 
@@ -70,15 +103,28 @@ const createPurchaseRequest = async (req, res) => {
 
     await db.query(
       `INSERT INTO purchase_requests
-      (product_id, buyer_id, seller_id, quantity, offer_price, note, status)
-      VALUES (?, ?, ?, ?, ?, ?, 'menunggu')`,
+      (
+        product_id, 
+        buyer_id, 
+        seller_id, 
+        quantity, 
+        original_price,
+        offer_price, 
+        is_negotiated,
+        note, 
+        status
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         productId,
         buyerId,
         product.seller_id,
-        Number(quantity),
-        Number(offer_price),
+        buyQuantity,
+        Number(product.price),
+        offerPrice,
+        offerPrice !== Number(product.price) ? 1 : 0,
         note || null,
+        "pending",
       ]
     );
 
@@ -94,15 +140,23 @@ const createPurchaseRequest = async (req, res) => {
     });
   } catch (error) {
     console.error("Create purchase request error:", error);
+
     return res.status(500).json({
       message: "Terjadi kesalahan pada server",
+      error: error.message,
     });
   }
 };
 
 const getIncomingRequests = async (req, res) => {
   try {
-    const sellerId = req.user.id;
+    const sellerId = getUserId(req);
+
+    if (!sellerId) {
+      return res.status(401).json({
+        message: "User tidak terautentikasi.",
+      });
+    }
 
     const [requests] = await db.query(
       `SELECT 
@@ -126,15 +180,23 @@ const getIncomingRequests = async (req, res) => {
     });
   } catch (error) {
     console.error("Get incoming requests error:", error);
+
     return res.status(500).json({
       message: "Terjadi kesalahan pada server",
+      error: error.message,
     });
   }
 };
 
 const getMyRequests = async (req, res) => {
   try {
-    const buyerId = req.user.id;
+    const buyerId = getUserId(req);
+
+    if (!buyerId) {
+      return res.status(401).json({
+        message: "User tidak terautentikasi.",
+      });
+    }
 
     const [requests] = await db.query(
       `SELECT 
@@ -157,19 +219,32 @@ const getMyRequests = async (req, res) => {
     });
   } catch (error) {
     console.error("Get my requests error:", error);
+
     return res.status(500).json({
       message: "Terjadi kesalahan pada server",
+      error: error.message,
     });
   }
 };
 
 const approveRequest = async (req, res) => {
   try {
-    const sellerId = req.user.id;
+    const sellerId = getUserId(req);
     const { id } = req.params;
 
+    if (!sellerId) {
+      return res.status(401).json({
+        message: "User tidak terautentikasi.",
+      });
+    }
+
     const [requests] = await db.query(
-      `SELECT pr.*, mp.name AS product_name, mp.food_id
+      `SELECT 
+        pr.*, 
+        mp.name AS product_name, 
+        mp.food_id,
+        mp.quantity AS marketplace_quantity,
+        mp.status AS marketplace_status
        FROM purchase_requests pr
        JOIN marketplace_products mp ON pr.product_id = mp.id
        WHERE pr.id = ? AND pr.seller_id = ?`,
@@ -178,20 +253,36 @@ const approveRequest = async (req, res) => {
 
     if (requests.length === 0) {
       return res.status(404).json({
-        message: "Pengajuan tidak ditemukan",
+        message: "Pengajuan tidak ditemukan atau bukan milik produk kamu",
       });
     }
 
     const request = requests[0];
 
-    if (request.status !== "menunggu") {
+    if (request.status !== "pending") {
       return res.status(400).json({
         message: "Pengajuan ini sudah diproses",
       });
     }
 
+    if (request.marketplace_status !== "tersedia") {
+      return res.status(400).json({
+        message: "Produk sedang tidak tersedia untuk diproses",
+      });
+    }
+
+    if (Number(request.quantity) > Number(request.marketplace_quantity)) {
+      return res.status(400).json({
+        message: "Jumlah pengajuan melebihi stok marketplace saat ini",
+      });
+    }
+
+    const finalPrice = Number(request.offer_price);
+    const quantity = Number(request.quantity);
+    const totalPrice = finalPrice * quantity;
+
     await db.query(
-      "UPDATE purchase_requests SET status = 'disetujui', responded_at = NOW() WHERE id = ?",
+      "UPDATE purchase_requests SET status = 'accepted', updated_at = NOW() WHERE id = ?",
       [id]
     );
 
@@ -201,16 +292,40 @@ const approveRequest = async (req, res) => {
     );
 
     await db.query(
+      `UPDATE purchase_requests
+       SET status = 'rejected', updated_at = NOW()
+       WHERE product_id = ?
+       AND id <> ?
+       AND status = 'pending'`,
+      [request.product_id, id]
+    );
+
+    await db.query(
       `INSERT INTO transactions
-      (request_id, product_id, buyer_id, seller_id, quantity, final_price, status)
-      VALUES (?, ?, ?, ?, ?, ?, 'menunggu_komunikasi')`,
+      (
+        purchase_request_id,
+        product_id, 
+        buyer_id, 
+        seller_id, 
+        final_price, 
+        quantity, 
+        total_price, 
+        cod_location,
+        cod_time,
+        status
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         request.id,
         request.product_id,
         request.buyer_id,
         request.seller_id,
-        request.quantity,
-        request.offer_price,
+        finalPrice,
+        quantity,
+        totalPrice,
+        request.cod_location || null,
+        request.cod_time || null,
+        "waiting_cod",
       ]
     );
 
@@ -226,19 +341,29 @@ const approveRequest = async (req, res) => {
     });
   } catch (error) {
     console.error("Approve request error:", error);
+
     return res.status(500).json({
       message: "Terjadi kesalahan pada server",
+      error: error.message,
     });
   }
 };
 
 const rejectRequest = async (req, res) => {
   try {
-    const sellerId = req.user.id;
+    const sellerId = getUserId(req);
     const { id } = req.params;
 
+    if (!sellerId) {
+      return res.status(401).json({
+        message: "User tidak terautentikasi.",
+      });
+    }
+
     const [requests] = await db.query(
-      `SELECT pr.*, mp.name AS product_name
+      `SELECT 
+        pr.*, 
+        mp.name AS product_name
        FROM purchase_requests pr
        JOIN marketplace_products mp ON pr.product_id = mp.id
        WHERE pr.id = ? AND pr.seller_id = ?`,
@@ -247,20 +372,20 @@ const rejectRequest = async (req, res) => {
 
     if (requests.length === 0) {
       return res.status(404).json({
-        message: "Pengajuan tidak ditemukan",
+        message: "Pengajuan tidak ditemukan atau bukan milik produk kamu",
       });
     }
 
     const request = requests[0];
 
-    if (request.status !== "menunggu") {
+    if (request.status !== "pending") {
       return res.status(400).json({
         message: "Pengajuan ini sudah diproses",
       });
     }
 
     await db.query(
-      "UPDATE purchase_requests SET status = 'ditolak', responded_at = NOW() WHERE id = ?",
+      "UPDATE purchase_requests SET status = 'rejected', updated_at = NOW() WHERE id = ?",
       [id]
     );
 
@@ -276,8 +401,10 @@ const rejectRequest = async (req, res) => {
     });
   } catch (error) {
     console.error("Reject request error:", error);
+
     return res.status(500).json({
       message: "Terjadi kesalahan pada server",
+      error: error.message,
     });
   }
 };
