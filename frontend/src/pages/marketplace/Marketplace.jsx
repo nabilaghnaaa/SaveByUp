@@ -19,6 +19,7 @@ export default function Marketplace() {
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("semua");
   const [statusFilter, setStatusFilter] = useState("tersedia");
+  const [ownerFilter, setOwnerFilter] = useState("semua");
 
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
@@ -78,9 +79,23 @@ export default function Marketplace() {
       const matchStatus =
         statusFilter === "semua" || product.status === statusFilter;
 
-      return matchSearch && matchCategory && matchStatus;
+      const isMine = Number(product.seller_id) === Number(currentUserId);
+
+      const matchOwner =
+        ownerFilter === "semua" ||
+        (ownerFilter === "tokoku" && isMine) ||
+        (ownerFilter === "produk_lain" && !isMine);
+
+      return matchSearch && matchCategory && matchStatus && matchOwner;
     });
-  }, [products, search, categoryFilter, statusFilter]);
+  }, [
+    products,
+    search,
+    categoryFilter,
+    statusFilter,
+    ownerFilter,
+    currentUserId,
+  ]);
 
   return (
     <AppShell>
@@ -121,24 +136,54 @@ export default function Marketplace() {
             </div>
 
             <div>
-              <span>Tersedia</span>
+              <span>Tokoku</span>
               <strong>
                 {loading
                   ? "..."
-                  : products.filter((item) => item.status === "tersedia").length}
+                  : products.filter(
+                      (item) => Number(item.seller_id) === Number(currentUserId)
+                    ).length}
               </strong>
             </div>
 
             <div>
-              <span>Dalam Proses</span>
+              <span>Produk Lain</span>
               <strong>
                 {loading
                   ? "..."
-                  : products.filter((item) => item.status === "dalam_proses").length}
+                  : products.filter(
+                      (item) => Number(item.seller_id) !== Number(currentUserId)
+                    ).length}
               </strong>
             </div>
           </div>
         </section>
+
+        <div className="marketplace-owner-filter">
+          <button
+            type="button"
+            className={ownerFilter === "semua" ? "active" : ""}
+            onClick={() => setOwnerFilter("semua")}
+          >
+            Semua
+          </button>
+
+          <button
+            type="button"
+            className={ownerFilter === "tokoku" ? "active" : ""}
+            onClick={() => setOwnerFilter("tokoku")}
+          >
+            Tokoku
+          </button>
+
+          <button
+            type="button"
+            className={ownerFilter === "produk_lain" ? "active" : ""}
+            onClick={() => setOwnerFilter("produk_lain")}
+          >
+            Produk Lain
+          </button>
+        </div>
 
         <ProductFilter
           search={search}
@@ -165,7 +210,7 @@ export default function Marketplace() {
         ) : filteredProducts.length === 0 ? (
           <EmptyState
             title="Produk tidak ditemukan"
-            description="Coba ubah kata kunci pencarian, kategori, atau status produk."
+            description="Coba ubah kata kunci pencarian, kategori, status, atau filter toko."
             action={
               <button
                 type="button"
@@ -174,6 +219,7 @@ export default function Marketplace() {
                   setSearch("");
                   setCategoryFilter("semua");
                   setStatusFilter("semua");
+                  setOwnerFilter("semua");
                 }}
               >
                 Reset Filter

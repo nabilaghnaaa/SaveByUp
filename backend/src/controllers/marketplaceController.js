@@ -7,21 +7,10 @@ const getUserId = (req) => {
 const getProfileCompleteness = (user = {}) => {
   const missingFields = [];
 
-  if (!String(user.name || "").trim()) {
-    missingFields.push("name");
-  }
-
-  if (!String(user.email || "").trim()) {
-    missingFields.push("email");
-  }
-
-  if (!String(user.whatsapp || "").trim()) {
-    missingFields.push("whatsapp");
-  }
-
-  if (!String(user.address || "").trim()) {
-    missingFields.push("address");
-  }
+  if (!String(user.name || "").trim()) missingFields.push("name");
+  if (!String(user.email || "").trim()) missingFields.push("email");
+  if (!String(user.whatsapp || "").trim()) missingFields.push("whatsapp");
+  if (!String(user.address || "").trim()) missingFields.push("address");
 
   return {
     isProfileComplete: missingFields.length === 0,
@@ -174,15 +163,11 @@ const sellFoodToMarketplace = async (req, res) => {
       });
     }
 
-    if (food.status === "kedaluwarsa" || food.status === "dibuang") {
+    if (
+      ["kedaluwarsa", "dibuang", "terjual", "digunakan"].includes(food.status)
+    ) {
       return res.status(400).json({
-        message: "Makanan tidak layak ditawarkan ke marketplace",
-      });
-    }
-
-    if (food.status === "terjual" || food.status === "digunakan") {
-      return res.status(400).json({
-        message: "Makanan yang sudah selesai tidak bisa ditawarkan ke marketplace",
+        message: "Makanan ini tidak bisa ditawarkan ke marketplace",
       });
     }
 
@@ -249,7 +234,11 @@ const sellFoodToMarketplace = async (req, res) => {
           newQuantity,
           newQuantity,
           sellPrice,
-          description || food.note || food.notes || existingProduct.description || null,
+          description ||
+            food.note ||
+            food.notes ||
+            existingProduct.description ||
+            null,
           food.unit || "pcs",
           food.expiry_date,
           food.image_url || food.image || existingProduct.image_url || null,
@@ -278,8 +267,7 @@ const sellFoodToMarketplace = async (req, res) => {
     }
 
     const [insertResult] = await db.query(
-      `
-      INSERT INTO marketplace_products
+      `INSERT INTO marketplace_products
       (
         food_id,
         seller_id,
@@ -296,8 +284,7 @@ const sellFoodToMarketplace = async (req, res) => {
         location,
         status
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         food.id,
         sellerId,
@@ -341,7 +328,110 @@ const sellFoodToMarketplace = async (req, res) => {
   }
 };
 
-const deleteMarketplaceProduct = async (req, res) => {
+const updateMarketplaceProduct = async (req, res) => {
+  try {
+    const sellerId = getUserId(req);
+    const { id } = req.params;
+    const { quantity, price, description } = req.body;
+
+    if (!sellerId) {
+      return res.status(401).json({
+        message: "User tidak terautentikasi.",
+      });
+    }
+
+    if (!quantity || Number(quantity) <= 0) {
+      return res.status(400).json({
+        message: "Jumlah produk wajib diisi dan harus lebih dari 0",
+      });
+    }
+
+    if (!price || Number(price) <= 0) {
+      return res.status(400).json({
+        message: "Harga produk wajib diisi dan harus lebih dari 0",
+      });
+    }
+
+    const [products] = await db.query(
+      `SELECT 
+        mp.*, 
+        f.quantity AS food_quantity,
+        f.unit AS food_unit
+       FROM marketplace_products mp
+       JOIN foods f ON mp.food_id = f.id
+       WHERE mp.id = ? AND mp.seller_id = ?`,
+      [id, sellerId]
+    );
+
+    if (products.length === 0) {
+      return res.status(404).json({
+        message: "Produk marketplace tidak ditemukan atau bukan milik kamu",
+      });
+    }
+
+    const product = products[0];
+
+    if (product.status === "dalam_proses") {
+      return res.status(400).json({
+        message: "Produk tidak bisa diedit karena sedang dalam proses transaksi.",
+      });
+    }
+
+    if (product.status !== "tersedia") {
+      return res.status(400).json({
+        message: "Produk yang tidak tersedia tidak bisa diedit",
+      });
+    }
+
+    const [otherRows] = await db.query(
+      `SELECT COALESCE(SUM(quantity), 0) AS other_quantity
+       FROM marketplace_products
+       WHERE food_id = ?
+       AND seller_id = ?
+       AND id <> ?
+       AND status IN ('tersedia', 'dalam_proses')`,
+      [product.food_id, sellerId, id]
+    );
+
+    const otherQuantity = Number(otherRows[0]?.other_quantity || 0);
+    const maxAllowedQuantity = Number(product.food_quantity || 0) - otherQuantity;
+
+    if (Number(quantity) > maxAllowedQuantity) {
+      return res.status(400).json({
+        message: `Jumlah produk melebihi stok yang masih bisa ditawarkan. Maksimal: ${maxAllowedQuantity} ${
+          product.food_unit || "pcs"
+        }.`,
+      });
+    }
+
+    await db.query(
+      `UPDATE marketplace_products
+       SET quantity = ?, stock = ?, price = ?, description = ?
+       WHERE id = ? AND seller_id = ?`,
+      [
+        Number(quantity),
+        Number(quantity),
+        Number(price),
+        description || null,
+        id,
+        sellerId,
+      ]
+    );
+
+    return res.status(200).json({
+      message: "Produk marketplace berhasil diperbarui",
+    });
+  } catch (error) {
+    console.error("Update marketplace product error:", error);
+
+    return res.status(500).json({
+      message: "Terjadi kesalahan pada server",
+      error: error.message,
+    });
+  }
+};
+
+const cancelMarketplaceProduct = async (req, res) => {
   try {
     const sellerId = getUserId(req);
     const { id } = req.params;
@@ -368,18 +458,31 @@ const deleteMarketplaceProduct = async (req, res) => {
     if (product.status === "dalam_proses") {
       return res.status(400).json({
         message:
-          "Produk tidak bisa dihapus karena sedang dalam proses transaksi. Selesaikan atau batalkan transaksi terlebih dahulu.",
+          "Produk tidak bisa dibatalkan karena sedang dalam proses transaksi.",
+      });
+    }
+
+    if (product.status !== "tersedia") {
+      return res.status(400).json({
+        message: "Produk ini sudah tidak aktif di marketplace",
       });
     }
 
     await db.query(
-      "DELETE FROM marketplace_products WHERE id = ? AND seller_id = ?",
+      `UPDATE marketplace_products
+       SET status = 'dibatalkan',
+           quantity = 0,
+           stock = 0
+       WHERE id = ? AND seller_id = ?`,
       [id, sellerId]
     );
 
     const [activeProducts] = await db.query(
-      "SELECT id FROM marketplace_products WHERE food_id = ? AND status IN ('tersedia', 'dalam_proses')",
-      [product.food_id]
+      `SELECT id FROM marketplace_products
+       WHERE food_id = ?
+       AND seller_id = ?
+       AND status IN ('tersedia', 'dalam_proses')`,
+      [product.food_id, sellerId]
     );
 
     if (activeProducts.length === 0) {
@@ -390,10 +493,10 @@ const deleteMarketplaceProduct = async (req, res) => {
     }
 
     return res.status(200).json({
-      message: "Produk marketplace berhasil dihapus",
+      message: "Produk berhasil dibatalkan dari marketplace",
     });
   } catch (error) {
-    console.error("Delete marketplace product error:", error);
+    console.error("Cancel marketplace product error:", error);
 
     return res.status(500).json({
       message: "Terjadi kesalahan pada server",
@@ -402,9 +505,15 @@ const deleteMarketplaceProduct = async (req, res) => {
   }
 };
 
+const deleteMarketplaceProduct = async (req, res) => {
+  return cancelMarketplaceProduct(req, res);
+};
+
 module.exports = {
   getMarketplaceProducts,
   getMarketplaceProductById,
   sellFoodToMarketplace,
+  updateMarketplaceProduct,
+  cancelMarketplaceProduct,
   deleteMarketplaceProduct,
 };

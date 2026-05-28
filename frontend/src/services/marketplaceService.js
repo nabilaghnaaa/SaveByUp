@@ -95,6 +95,21 @@ export const createMarketplaceProduct = async (foodId, payload) => {
   return response.data;
 };
 
+export const updateMarketplaceProduct = async (id, payload) => {
+  const response = await API.put(`/marketplace/${id}`, {
+    quantity: Number(payload.quantity || 1),
+    price: Number(payload.price || 0),
+    description: payload.description || "",
+  });
+
+  return response.data;
+};
+
+export const cancelMarketplaceProduct = async (id) => {
+  const response = await API.patch(`/marketplace/${id}/cancel`);
+  return response.data;
+};
+
 export const deleteMarketplaceProduct = async (id) => {
   const response = await API.delete(`/marketplace/${id}`);
   return response.data;

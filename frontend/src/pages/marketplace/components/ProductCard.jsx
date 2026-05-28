@@ -88,7 +88,7 @@ export default function ProductCard({ product, currentUserId }) {
           className="sb-btn sb-btn-primary product-detail-btn"
           onClick={() => navigate(`/marketplace/${product.id}`)}
         >
-          {isMine ? "Lihat Produk Kamu" : "Lihat Detail"}
+          {isMine ? "Kelola Produk" : "Lihat Detail"}
         </button>
       </div>
     </article>

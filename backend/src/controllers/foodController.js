@@ -4,6 +4,19 @@ const getUserId = (req) => {
   return req.user?.id || req.user?.user_id || req.userId;
 };
 
+const cancelActiveMarketplaceByFood = async (foodId, userId) => {
+  await db.query(
+    `UPDATE marketplace_products
+     SET status = 'dibatalkan',
+         quantity = 0,
+         stock = 0
+     WHERE food_id = ?
+     AND seller_id = ?
+     AND status = 'tersedia'`,
+    [foodId, userId]
+  );
+};
+
 const calculateFoodStatus = (expiryDate, manualStatus = "") => {
   if (["dijual", "terjual", "digunakan", "dibuang"].includes(manualStatus)) {
     return {
@@ -124,32 +137,24 @@ const buildSummaryFromFoods = (foods = []) => {
 
   return {
     total_foods: normalizedFoods.length,
-
     total_aman: normalizedFoods.filter((food) => food.status === "aman").length,
-
     total_mendekati: normalizedFoods.filter(
       (food) => food.status === "mendekati_kedaluwarsa"
     ).length,
-
     total_kedaluwarsa: normalizedFoods.filter(
       (food) => food.status === "kedaluwarsa"
     ).length,
-
     total_dibuang: normalizedFoods.filter((food) => food.status === "dibuang")
       .length,
-
     total_digunakan: normalizedFoods.filter(
       (food) => food.status === "digunakan"
     ).length,
-
     total_prioritas_tinggi: normalizedFoods.filter(
       (food) => food.priority === "tinggi"
     ).length,
-
     total_prioritas_sedang: normalizedFoods.filter(
       (food) => food.priority === "sedang"
     ).length,
-
     total_prioritas_rendah: normalizedFoods.filter(
       (food) => food.priority === "rendah"
     ).length,
@@ -271,8 +276,7 @@ const createFood = async (req, res) => {
     const finalImage = image_url || image || "";
 
     await db.query(
-      `
-      INSERT INTO foods
+      `INSERT INTO foods
       (
         user_id,
         name,
@@ -291,8 +295,7 @@ const createFood = async (req, res) => {
         note,
         image_url
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userId,
         name,
@@ -388,8 +391,7 @@ const updateFood = async (req, res) => {
     const finalImage = image_url || image || "";
 
     await db.query(
-      `
-      UPDATE foods
+      `UPDATE foods
       SET
         name = ?,
         category = ?,
@@ -406,8 +408,7 @@ const updateFood = async (req, res) => {
         image = ?,
         note = ?,
         image_url = ?
-      WHERE id = ? AND user_id = ?
-      `,
+      WHERE id = ? AND user_id = ?`,
       [
         name,
         category || null,
@@ -428,6 +429,14 @@ const updateFood = async (req, res) => {
         userId,
       ]
     );
+
+    if (
+      ["digunakan", "dibuang", "terjual", "kedaluwarsa"].includes(
+        calculated.status
+      )
+    ) {
+      await cancelActiveMarketplaceByFood(id, userId);
+    }
 
     return res.status(200).json({
       message: "Data makanan berhasil diperbarui",
@@ -491,14 +500,12 @@ const updateFoodStatus = async (req, res) => {
     const calculated = calculateFoodStatus(currentFood.expiry_date, status);
 
     await db.query(
-      `
-      UPDATE foods
+      `UPDATE foods
       SET
         status = ?,
         priority = ?,
         condition_status = ?
-      WHERE id = ? AND user_id = ?
-      `,
+      WHERE id = ? AND user_id = ?`,
       [
         calculated.status,
         calculated.priority,
@@ -507,6 +514,14 @@ const updateFoodStatus = async (req, res) => {
         userId,
       ]
     );
+
+    if (
+      ["digunakan", "dibuang", "terjual", "kedaluwarsa"].includes(
+        calculated.status
+      )
+    ) {
+      await cancelActiveMarketplaceByFood(id, userId);
+    }
 
     return res.status(200).json({
       message: "Status makanan berhasil diperbarui",
@@ -542,6 +557,8 @@ const deleteFood = async (req, res) => {
         message: "Data makanan tidak ditemukan",
       });
     }
+
+    await cancelActiveMarketplaceByFood(id, userId);
 
     await db.query("DELETE FROM foods WHERE id = ? AND user_id = ?", [
       id,

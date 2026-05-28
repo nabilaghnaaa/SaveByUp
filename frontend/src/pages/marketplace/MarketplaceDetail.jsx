@@ -6,8 +6,10 @@ import PageHeader from "../../components/ui/PageHeader";
 
 import {
   canBuyProduct,
+  cancelMarketplaceProduct,
   getMarketplaceProductById,
   isOwnProduct,
+  updateMarketplaceProduct,
 } from "../../services/marketplaceService";
 import { getProfile } from "../../services/profileService";
 
@@ -38,8 +40,16 @@ export default function MarketplaceDetail() {
   const [profile, setProfile] = useState(null);
 
   const [loading, setLoading] = useState(true);
+  const [savingEdit, setSavingEdit] = useState(false);
   const [message, setMessage] = useState("");
   const [showNegotiation, setShowNegotiation] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+
+  const [editForm, setEditForm] = useState({
+    quantity: 1,
+    price: "",
+    description: "",
+  });
 
   const fetchProduct = async () => {
     try {
@@ -53,6 +63,12 @@ export default function MarketplaceDetail() {
 
       setProduct(productData);
       setProfile(profileData);
+
+      setEditForm({
+        quantity: productData.quantity || 1,
+        price: productData.price || "",
+        description: productData.description || "",
+      });
     } catch (error) {
       console.error("Gagal mengambil detail produk:", error);
       setMessage(
@@ -89,6 +105,73 @@ export default function MarketplaceDetail() {
     return "";
   };
 
+  const handleCancelSell = async () => {
+    const confirmCancel = window.confirm(
+      "Yakin ingin membatalkan produk ini dari marketplace?"
+    );
+
+    if (!confirmCancel) return;
+
+    try {
+      setMessage("");
+      await cancelMarketplaceProduct(product.id);
+      setMessage("Produk berhasil dibatalkan dari marketplace.");
+
+      setTimeout(() => {
+        navigate("/marketplace");
+      }, 900);
+    } catch (error) {
+      console.error("Gagal membatalkan produk:", error);
+      setMessage(
+        error.response?.data?.message ||
+          "Gagal membatalkan produk dari marketplace."
+      );
+    }
+  };
+
+  const handleSaveEdit = async (event) => {
+    event.preventDefault();
+
+    if (!productIsMine) {
+      setMessage("Kamu tidak bisa mengedit produk milik orang lain.");
+      return;
+    }
+
+    if (!editForm.quantity || Number(editForm.quantity) <= 0) {
+      setMessage("Jumlah produk harus lebih dari 0.");
+      return;
+    }
+
+    if (!editForm.price || Number(editForm.price) <= 0) {
+      setMessage("Harga produk harus lebih dari 0.");
+      return;
+    }
+
+    try {
+      setSavingEdit(true);
+      setMessage("");
+
+      await updateMarketplaceProduct(product.id, {
+        quantity: Number(editForm.quantity),
+        price: Number(editForm.price),
+        description: editForm.description,
+      });
+
+      setMessage("Produk marketplace berhasil diperbarui.");
+      setEditMode(false);
+
+      await fetchProduct();
+    } catch (error) {
+      console.error("Gagal update produk marketplace:", error);
+      setMessage(
+        error.response?.data?.message ||
+          "Gagal memperbarui produk marketplace."
+      );
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
   const disabledReason = getDisabledReason();
 
   return (
@@ -118,7 +201,7 @@ export default function MarketplaceDetail() {
             <h3>Memuat detail produk...</h3>
             <p>Sedang mengambil informasi produk marketplace.</p>
           </div>
-        ) : message ? (
+        ) : message && !product ? (
           <div className="product-detail-loading">
             <h3>Produk tidak dapat ditampilkan</h3>
             <p>{message}</p>
@@ -148,9 +231,7 @@ export default function MarketplaceDetail() {
                   </span>
 
                   {productIsMine && (
-                    <span className="product-detail-expiry">
-                      Produk Kamu
-                    </span>
+                    <span className="product-detail-expiry">Produk Kamu</span>
                   )}
                 </div>
 
@@ -218,33 +299,120 @@ export default function MarketplaceDetail() {
                     </div>
                   </div>
 
-                  {productIsMine && (
-                    <div className="product-detail-note">
-                      Ini adalah produk yang kamu tawarkan ke marketplace. Kamu
-                      bisa melihat detailnya, tetapi tidak bisa membeli produk
-                      milik sendiri.
+                  {message && <div className="product-detail-note">{message}</div>}
+
+                  {productIsMine ? (
+                    <div className="product-owner-actions">
+                      <button
+                        type="button"
+                        className="sb-btn sb-btn-primary product-request-button"
+                        disabled={product.status !== "tersedia"}
+                        onClick={() => setEditMode((prev) => !prev)}
+                      >
+                        {editMode ? "Tutup Edit" : "Edit Produk Jual"}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="sb-btn marketplace-btn-outline product-request-button"
+                        disabled={product.status !== "tersedia"}
+                        onClick={handleCancelSell}
+                      >
+                        Batal Jual
+                      </button>
                     </div>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        className="sb-btn sb-btn-primary product-request-button"
+                        disabled={!productCanBeBought}
+                        onClick={() => setShowNegotiation(true)}
+                      >
+                        {product.status !== "tersedia"
+                          ? "Produk Tidak Tersedia"
+                          : Number(product.quantity || 0) <= 0
+                            ? "Stok Habis"
+                            : "Ajukan Pembelian / Negosiasi"}
+                      </button>
+
+                      {disabledReason && (
+                        <small className="product-detail-note">
+                          {disabledReason}
+                        </small>
+                      )}
+                    </>
                   )}
 
-                  <button
-                    type="button"
-                    className="sb-btn sb-btn-primary product-request-button"
-                    disabled={!productCanBeBought}
-                    onClick={() => setShowNegotiation(true)}
-                  >
-                    {productIsMine
-                      ? "Produk Milik Kamu"
-                      : product.status !== "tersedia"
-                        ? "Produk Tidak Tersedia"
-                        : Number(product.quantity || 0) <= 0
-                          ? "Stok Habis"
-                          : "Ajukan Pembelian / Negosiasi"}
-                  </button>
+                  {productIsMine && editMode && (
+                    <form className="negotiation-modal" onSubmit={handleSaveEdit}>
+                      <div className="negotiation-header">
+                        <div>
+                          <span>Edit Produk Jual</span>
+                          <h3>{product.name}</h3>
+                        </div>
+                      </div>
 
-                  {disabledReason && (
-                    <small className="product-detail-note">
-                      {disabledReason}
-                    </small>
+                      <label>Jumlah Dijual</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={editForm.quantity}
+                        disabled={savingEdit}
+                        onChange={(event) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            quantity: event.target.value,
+                          }))
+                        }
+                      />
+
+                      <label>Harga Jual</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={editForm.price}
+                        disabled={savingEdit}
+                        onChange={(event) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            price: event.target.value,
+                          }))
+                        }
+                      />
+
+                      <label>Deskripsi Produk</label>
+                      <textarea
+                        rows="4"
+                        value={editForm.description}
+                        disabled={savingEdit}
+                        onChange={(event) =>
+                          setEditForm((prev) => ({
+                            ...prev,
+                            description: event.target.value,
+                          }))
+                        }
+                      />
+
+                      <div className="negotiation-actions">
+                        <button
+                          type="button"
+                          className="sb-btn marketplace-btn-outline"
+                          disabled={savingEdit}
+                          onClick={() => setEditMode(false)}
+                        >
+                          Batal
+                        </button>
+
+                        <button
+                          type="submit"
+                          className="sb-btn sb-btn-primary"
+                          disabled={savingEdit}
+                        >
+                          {savingEdit ? "Menyimpan..." : "Simpan Perubahan"}
+                        </button>
+                      </div>
+                    </form>
                   )}
                 </div>
               </section>
