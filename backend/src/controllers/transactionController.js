@@ -133,10 +133,12 @@ const completeTransaction = async (req, res) => {
       [id]
     );
 
-    await db.query(
-      "UPDATE purchase_requests SET status = 'completed', updated_at = NOW() WHERE id = ?",
-      [transaction.purchase_request_id]
-    );
+    if (transaction.purchase_request_id) {
+      await db.query(
+        "UPDATE purchase_requests SET status = 'completed', updated_at = NOW() WHERE id = ?",
+        [transaction.purchase_request_id]
+      );
+    }
 
     await db.query(
       `UPDATE marketplace_products 
@@ -187,6 +189,13 @@ const completeTransaction = async (req, res) => {
 
     return res.status(200).json({
       message: "Transaksi berhasil diselesaikan",
+      data: {
+        transaction_id: Number(id),
+        product_id: transaction.product_id,
+        quantity_sold: transactionQuantity,
+        remaining_marketplace_quantity:
+          remainingMarketplaceQuantity > 0 ? remainingMarketplaceQuantity : 0,
+      },
     });
   } catch (error) {
     console.error("Complete transaction error:", error);

@@ -174,12 +174,6 @@ const sellFoodToMarketplace = async (req, res) => {
       });
     }
 
-    if (sellQuantity > Number(food.quantity)) {
-      return res.status(400).json({
-        message: "Jumlah yang dijual tidak boleh melebihi stok inventaris",
-      });
-    }
-
     if (food.status === "kedaluwarsa" || food.status === "dibuang") {
       return res.status(400).json({
         message: "Makanan tidak layak ditawarkan ke marketplace",
@@ -192,18 +186,98 @@ const sellFoodToMarketplace = async (req, res) => {
       });
     }
 
-    const [existingProducts] = await db.query(
-      "SELECT id FROM marketplace_products WHERE food_id = ? AND status IN ('tersedia', 'dalam_proses')",
-      [foodId]
+    const [activeMarketplaceRows] = await db.query(
+      `SELECT COALESCE(SUM(quantity), 0) AS total_marketplace_quantity
+       FROM marketplace_products
+       WHERE food_id = ?
+       AND seller_id = ?
+       AND status IN ('tersedia', 'dalam_proses')`,
+      [foodId, sellerId]
     );
 
-    if (existingProducts.length > 0) {
-      return res.status(409).json({
-        message: "Makanan ini sudah ditawarkan di marketplace",
+    const totalMarketplaceQuantity = Number(
+      activeMarketplaceRows[0]?.total_marketplace_quantity || 0
+    );
+
+    const availableToSell = Number(food.quantity) - totalMarketplaceQuantity;
+
+    if (availableToSell <= 0) {
+      return res.status(400).json({
+        message:
+          "Seluruh stok makanan ini sudah sedang ditawarkan di marketplace.",
       });
     }
 
-    await db.query(
+    if (sellQuantity > availableToSell) {
+      return res.status(400).json({
+        message: `Jumlah yang dijual melebihi stok yang masih bisa ditawarkan. Sisa stok yang bisa dijual: ${availableToSell} ${
+          food.unit || "pcs"
+        }.`,
+      });
+    }
+
+    const [existingAvailableProducts] = await db.query(
+      `SELECT *
+       FROM marketplace_products
+       WHERE food_id = ?
+       AND seller_id = ?
+       AND status = 'tersedia'
+       ORDER BY id ASC
+       LIMIT 1`,
+      [foodId, sellerId]
+    );
+
+    if (existingAvailableProducts.length > 0) {
+      const existingProduct = existingAvailableProducts[0];
+      const newQuantity = Number(existingProduct.quantity || 0) + sellQuantity;
+
+      await db.query(
+        `UPDATE marketplace_products
+         SET
+          quantity = ?,
+          stock = ?,
+          price = ?,
+          description = ?,
+          unit = ?,
+          expiry_date = ?,
+          image_url = ?,
+          image = ?,
+          location = ?,
+          status = 'tersedia'
+         WHERE id = ? AND seller_id = ?`,
+        [
+          newQuantity,
+          newQuantity,
+          sellPrice,
+          description || food.note || food.notes || existingProduct.description || null,
+          food.unit || "pcs",
+          food.expiry_date,
+          food.image_url || food.image || existingProduct.image_url || null,
+          food.image || food.image_url || existingProduct.image || null,
+          food.storage_location || seller.address || existingProduct.location || null,
+          existingProduct.id,
+          sellerId,
+        ]
+      );
+
+      await db.query(
+        "UPDATE foods SET status = 'dijual', priority = 'sedang' WHERE id = ? AND user_id = ?",
+        [foodId, sellerId]
+      );
+
+      return res.status(200).json({
+        message: "Stok produk marketplace berhasil ditambahkan",
+        data: {
+          food_id: Number(foodId),
+          marketplace_product_id: existingProduct.id,
+          quantity_added: sellQuantity,
+          marketplace_quantity: newQuantity,
+          remaining_available_to_sell: availableToSell - sellQuantity,
+        },
+      });
+    }
+
+    const [insertResult] = await db.query(
       `
       INSERT INTO marketplace_products
       (
@@ -249,6 +323,13 @@ const sellFoodToMarketplace = async (req, res) => {
 
     return res.status(201).json({
       message: "Makanan berhasil ditawarkan ke marketplace",
+      data: {
+        food_id: Number(foodId),
+        marketplace_product_id: insertResult.insertId,
+        quantity_added: sellQuantity,
+        marketplace_quantity: sellQuantity,
+        remaining_available_to_sell: availableToSell - sellQuantity,
+      },
     });
   } catch (error) {
     console.error("Sell food marketplace error:", error);

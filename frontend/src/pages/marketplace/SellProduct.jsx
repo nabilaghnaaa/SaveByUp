@@ -123,17 +123,26 @@ export default function SellProduct() {
       setMessage("");
       setProfileWarning("");
 
-      await createMarketplaceProduct(food.id, {
+      const response = await createMarketplaceProduct(food.id, {
         quantity: Number(form.quantity),
         price: Number(form.price),
         description: form.description,
       });
 
-      setMessage("Produk berhasil ditambahkan ke marketplace.");
+      const responseData = response.data || {};
+
+      const successMessage =
+        responseData.remaining_available_to_sell !== undefined
+          ? `${response.message} Sisa stok yang masih bisa ditawarkan: ${responseData.remaining_available_to_sell} ${
+              food.unit || "pcs"
+            }.`
+          : response.message || "Produk berhasil ditambahkan ke marketplace.";
+
+      setMessage(successMessage);
 
       setTimeout(() => {
         navigate("/marketplace");
-      }, 800);
+      }, 1000);
     } catch (error) {
       console.error("Gagal menambahkan produk marketplace:", error);
 
@@ -213,7 +222,7 @@ export default function SellProduct() {
                   <h2>{food.name}</h2>
 
                   <p>
-                    Stok: {food.quantity} {food.unit}
+                    Stok inventaris: {food.quantity} {food.unit}
                   </p>
 
                   <p>
@@ -253,8 +262,9 @@ export default function SellProduct() {
                   <span>Marketplace Form</span>
                   <h3>Atur jumlah, harga, dan deskripsi</h3>
                   <p>
-                    Tulis kondisi makanan secara jujur agar pembeli dapat
-                    mengambil keputusan dengan aman.
+                    Kalau produk yang sama sudah ada di marketplace, jumlah yang
+                    kamu input akan ditambahkan ke stok marketplace, bukan
+                    membuat data baru.
                   </p>
                 </div>
 
@@ -277,7 +287,9 @@ export default function SellProduct() {
                 />
 
                 <small>
-                  Stok tersedia: {food.quantity} {food.unit}
+                  Stok inventaris: {food.quantity} {food.unit}. Kalau sebagian
+                  sudah ada di marketplace, backend otomatis menghitung sisa stok
+                  yang masih boleh ditawarkan.
                 </small>
 
                 <label>Harga Jual per {food.unit || "pcs"}</label>
@@ -317,8 +329,14 @@ export default function SellProduct() {
                     <li>Makanan masih layak konsumsi.</li>
                     <li>Data makanan berasal dari inventaris pengguna.</li>
                     <li>Jumlah yang dijual tidak boleh melebihi stok inventaris.</li>
-                    <li>Penjual bertanggung jawab atas kondisi makanan.</li>
-                    <li>Komunikasi lanjutan dilakukan setelah pengajuan disetujui.</li>
+                    <li>
+                      Kalau makanan yang sama sudah tersedia di marketplace,
+                      stok marketplace akan ditambahkan.
+                    </li>
+                    <li>
+                      Stok inventaris baru berkurang ketika transaksi selesai,
+                      bukan saat produk ditawarkan.
+                    </li>
                   </ul>
                 </div>
 
