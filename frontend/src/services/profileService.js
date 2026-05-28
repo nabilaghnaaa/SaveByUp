@@ -1,5 +1,18 @@
 import API from "./api";
 
+const getFileUrl = (filePath = "") => {
+  if (!filePath) return "";
+
+  if (filePath.startsWith("http://") || filePath.startsWith("https://")) {
+    return filePath;
+  }
+
+  const baseURL = API.defaults.baseURL || "http://localhost:5000/api";
+  const appURL = baseURL.replace("/api", "");
+
+  return `${appURL}${filePath}`;
+};
+
 const normalizeProfile = (profile = {}) => ({
   id: profile.id,
   name: profile.name || "",
@@ -7,7 +20,8 @@ const normalizeProfile = (profile = {}) => ({
   phone: profile.phone || "",
   whatsapp: profile.whatsapp || "",
   address: profile.address || "",
-  photo: profile.photo || "",
+  photo: profile.photo || profile.avatar_url || "",
+  photo_url: getFileUrl(profile.photo || profile.avatar_url || ""),
   avatar_url: profile.avatar_url || profile.photo || "",
   bio: profile.bio || "",
   rating: Number(profile.rating || 0),
@@ -24,14 +38,22 @@ export const getProfile = async () => {
 };
 
 export const updateProfile = async (payload) => {
-  const response = await API.put("/profile", {
-    name: payload.name,
-    phone: payload.phone || "",
-    whatsapp: payload.whatsapp || "",
-    address: payload.address || "",
-    photo: payload.photo || payload.avatar_url || "",
-    avatar_url: payload.avatar_url || payload.photo || "",
-    bio: payload.bio || "",
+  const formData = new FormData();
+
+  formData.append("name", payload.name || "");
+  formData.append("phone", payload.phone || "");
+  formData.append("whatsapp", payload.whatsapp || "");
+  formData.append("address", payload.address || "");
+  formData.append("bio", payload.bio || "");
+
+  if (payload.photoFile) {
+    formData.append("photo", payload.photoFile);
+  }
+
+  const response = await API.put("/profile", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
   });
 
   return response.data;

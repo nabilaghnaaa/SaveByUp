@@ -5,15 +5,24 @@ function getInitial(name) {
   return name.charAt(0).toUpperCase();
 }
 
-export default function ProfileCard({ profile, saving, onChange, onSubmit }) {
+export default function ProfileCard({
+  profile,
+  saving,
+  onChange,
+  onPhotoChange,
+  onSubmit,
+}) {
+  const photoSource =
+    profile.photoPreview || profile.photo_url || profile.avatar_url || "";
+
   return (
     <form className="profile-page" onSubmit={onSubmit}>
       <aside className="profile-side">
         <div className="profile-side-glow" />
 
         <div className="profile-avatar">
-          {profile.avatar_url ? (
-            <img src={profile.avatar_url} alt={profile.name} />
+          {photoSource ? (
+            <img src={photoSource} alt={profile.name || "Foto profil"} />
           ) : (
             <span>{getInitial(profile.name)}</span>
           )}
@@ -45,8 +54,8 @@ export default function ProfileCard({ profile, saving, onChange, onSubmit }) {
         <div className="profile-tips">
           <span>Tips Profil</span>
           <p>
-            Nomor WhatsApp dan area COD membantu proses komunikasi setelah
-            pengajuan marketplace disetujui.
+            Foto profil, nomor WhatsApp, dan area COD membantu proses komunikasi
+            setelah pengajuan marketplace disetujui.
           </p>
         </div>
       </aside>
@@ -93,13 +102,18 @@ export default function ProfileCard({ profile, saving, onChange, onSubmit }) {
           </div>
 
           <div className="profile-group">
-            <label>URL Foto Profil</label>
+            <label>Foto Profil</label>
             <input
-              type="url"
-              value={profile.avatar_url}
-              placeholder="https://contoh.com/foto-profil.jpg"
-              onChange={(event) => onChange("avatar_url", event.target.value)}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
+              onChange={(event) =>
+                onPhotoChange(event.target.files?.[0] || null)
+              }
             />
+            <small>
+              Pilih foto dari perangkat kamu. Format JPG, JPEG, PNG, atau WEBP.
+              Maksimal 2MB.
+            </small>
           </div>
 
           <div className="profile-group profile-group-full">
@@ -114,6 +128,16 @@ export default function ProfileCard({ profile, saving, onChange, onSubmit }) {
               Tidak harus alamat lengkap. Cukup tulis area COD yang aman dan
               mudah ditemukan.
             </small>
+          </div>
+
+          <div className="profile-group profile-group-full">
+            <label>Bio Singkat</label>
+            <textarea
+              rows="4"
+              value={profile.bio || ""}
+              placeholder="Contoh: Mahasiswa UMY, biasa COD sekitar kampus atau kos."
+              onChange={(event) => onChange("bio", event.target.value)}
+            />
           </div>
         </div>
 

@@ -13,10 +13,16 @@ const initialProfile = {
   id: "",
   name: "",
   email: "",
+  phone: "",
   whatsapp: "",
   address: "",
+  photo: "",
+  photo_url: "",
   avatar_url: "",
+  bio: "",
   rating: 0,
+  photoFile: null,
+  photoPreview: "",
 };
 
 export default function Profile() {
@@ -35,9 +41,12 @@ export default function Profile() {
       setProfile({
         ...initialProfile,
         ...data,
+        photoFile: null,
+        photoPreview: "",
       });
     } catch (error) {
       console.error("Gagal mengambil profil:", error);
+
       setMessage(
         error.response?.data?.message || "Gagal mengambil data profil."
       );
@@ -55,6 +64,40 @@ export default function Profile() {
       ...prev,
       [name]: value,
     }));
+  };
+
+  const handlePhotoChange = (file) => {
+    if (!file) {
+      setProfile((prev) => ({
+        ...prev,
+        photoFile: null,
+        photoPreview: "",
+      }));
+
+      return;
+    }
+
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+    if (!allowedTypes.includes(file.type)) {
+      setMessage("Format foto harus JPG, JPEG, PNG, atau WEBP.");
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      setMessage("Ukuran foto maksimal 2MB.");
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+
+    setProfile((prev) => ({
+      ...prev,
+      photoFile: file,
+      photoPreview: previewUrl,
+    }));
+
+    setMessage("");
   };
 
   const validateProfile = () => {
@@ -83,27 +126,48 @@ export default function Profile() {
       setSaving(true);
       setMessage("");
 
-      await updateProfile(profile);
+      const response = await updateProfile({
+        name: profile.name,
+        phone: profile.phone,
+        whatsapp: profile.whatsapp,
+        address: profile.address,
+        bio: profile.bio,
+        photoFile: profile.photoFile,
+      });
+
+      const updatedProfile = response.data || {};
 
       const currentUser = JSON.parse(localStorage.getItem("user") || "{}");
 
       const updatedUser = {
         ...currentUser,
-        id: profile.id || currentUser.id,
-        name: profile.name,
-        email: profile.email || currentUser.email,
-        whatsapp: profile.whatsapp,
-        address: profile.address,
-        avatar_url: profile.avatar_url,
-        rating: profile.rating,
+        id: updatedProfile.id || profile.id || currentUser.id,
+        name: updatedProfile.name || profile.name,
+        email: updatedProfile.email || profile.email || currentUser.email,
+        phone: updatedProfile.phone || profile.phone,
+        whatsapp: updatedProfile.whatsapp || profile.whatsapp,
+        address: updatedProfile.address || profile.address,
+        avatar_url:
+          updatedProfile.avatar_url ||
+          updatedProfile.photo ||
+          profile.avatar_url ||
+          profile.photo,
+        photo:
+          updatedProfile.photo ||
+          updatedProfile.avatar_url ||
+          profile.photo ||
+          profile.avatar_url,
+        rating: updatedProfile.rating ?? profile.rating,
       };
 
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
       setMessage("Profil berhasil diperbarui.");
+
       await fetchProfile();
     } catch (error) {
       console.error("Gagal memperbarui profil:", error);
+
       setMessage(
         error.response?.data?.message || "Gagal memperbarui data profil."
       );
@@ -127,6 +191,7 @@ export default function Profile() {
               type="button"
               className="sb-btn profile-btn-outline"
               onClick={fetchProfile}
+              disabled={loading || saving}
             >
               Refresh
             </button>
@@ -138,15 +203,17 @@ export default function Profile() {
             <span>User Identity</span>
             <h2>Profil yang jelas membuat transaksi lebih dipercaya.</h2>
             <p>
-              Data seperti nama, WhatsApp, area COD, dan rating membantu proses
-              marketplace berjalan lebih aman, rapi, dan mudah dikenali oleh
-              pengguna lain.
+              Data seperti nama, WhatsApp, area COD, foto profil, dan rating
+              membantu proses marketplace berjalan lebih aman, rapi, dan mudah
+              dikenali oleh pengguna lain.
             </p>
           </div>
 
           <div className="profile-hero-card">
             <span>Rating Akun</span>
-            <strong>{loading ? "..." : Number(profile.rating || 0).toFixed(1)}</strong>
+            <strong>
+              {loading ? "..." : Number(profile.rating || 0).toFixed(1)}
+            </strong>
             <p>Nilai kepercayaan berdasarkan transaksi yang sudah selesai.</p>
           </div>
         </section>
@@ -164,6 +231,7 @@ export default function Profile() {
             profile={profile}
             saving={saving}
             onChange={handleChange}
+            onPhotoChange={handlePhotoChange}
             onSubmit={handleSubmit}
           />
         )}
