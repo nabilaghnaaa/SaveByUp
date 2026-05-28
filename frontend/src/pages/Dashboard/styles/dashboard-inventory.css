@@ -22,7 +22,7 @@
   gap: 12px;
   padding: 14px;
   border-radius: 28px;
-  background: rgba(255, 251, 244, 0.68);
+  background: rgba(255, 251, 244, 0.72);
   border: 1px solid rgba(95, 71, 47, 0.13);
   box-shadow: 0 20px 54px rgba(69, 48, 31, 0.07);
   backdrop-filter: blur(20px);
@@ -36,7 +36,7 @@
   border-radius: 18px;
   padding: 0 15px;
   color: #263f24;
-  background: rgba(255, 255, 255, 0.76);
+  background: rgba(255, 255, 255, 0.82);
   outline: none;
   transition:
     border-color 0.2s ease,
@@ -55,13 +55,307 @@
   padding: 15px 17px;
   border-radius: 20px;
   color: #274622;
-  background: rgba(223, 239, 198, 0.78);
+  background: rgba(223, 239, 198, 0.82);
   border: 1px solid rgba(74, 121, 67, 0.16);
   font-weight: 850;
+}
+
+.inventory-state {
+  padding: 44px;
+  border-radius: 32px;
+  text-align: center;
+  background: rgba(255, 251, 244, 0.76);
+  border: 1px solid rgba(95, 71, 47, 0.13);
+  box-shadow: 0 24px 72px rgba(69, 48, 31, 0.08);
+  backdrop-filter: blur(22px);
+}
+
+.inventory-state h3 {
+  margin: 16px 0 8px;
+  color: #263f24;
+  font-size: 24px;
+}
+
+.inventory-state p {
+  margin: 0;
+  color: #756b5d;
+}
+
+.inventory-loader {
+  width: 42px;
+  height: 42px;
+  margin: 0 auto;
+  border-radius: 999px;
+  border: 4px solid rgba(70, 116, 61, 0.18);
+  border-top-color: #4f7d43;
+  animation: inventoryLoaderSpin 0.8s linear infinite;
+}
+
+@keyframes inventoryLoaderSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .food-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 20px;
+}
+
+.inventory-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 120;
+  display: grid;
+  place-items: center;
+  padding: 22px;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(118, 92, 53, 0.22), transparent 32%),
+    radial-gradient(circle at 85% 18%, rgba(75, 122, 67, 0.2), transparent 30%),
+    rgba(31, 41, 27, 0.58);
+  backdrop-filter: blur(14px);
+  animation: inventoryFadeIn 0.18s ease;
+}
+
+.inventory-action-modal {
+  width: min(100%, 520px);
+  overflow: hidden;
+  border-radius: 32px;
+  padding: 26px;
+  background:
+    radial-gradient(circle at 90% 5%, rgba(223, 239, 198, 0.78), transparent 34%),
+    linear-gradient(135deg, rgba(255, 253, 247, 0.98), rgba(249, 242, 230, 0.98));
+  border: 1px solid rgba(95, 71, 47, 0.16);
+  box-shadow: 0 34px 100px rgba(42, 35, 25, 0.28);
+  animation: inventoryModalUp 0.22s ease;
+}
+
+.inventory-modal-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.inventory-modal-header span {
+  display: inline-flex;
+  color: #7a4f2f;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.inventory-modal-header h3 {
+  margin: 7px 0 0;
+  color: #21351e;
+  font-size: 30px;
+  line-height: 1.05;
+  letter-spacing: -0.8px;
+}
+
+.inventory-modal-close {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  color: #9f3f2d;
+  background: rgba(170, 75, 48, 0.1);
+  font-size: 26px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+
+.inventory-modal-close:hover {
+  transform: rotate(8deg) scale(1.04);
+  background: rgba(170, 75, 48, 0.16);
+}
+
+.inventory-modal-description {
+  margin: 18px 0 0;
+  color: #756b5d;
+  line-height: 1.7;
+}
+
+.inventory-modal-food {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  margin: 20px 0;
+  padding: 14px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(95, 71, 47, 0.1);
+}
+
+.inventory-modal-food-icon {
+  width: 58px;
+  height: 58px;
+  flex: 0 0 58px;
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(74, 121, 67, 0.22), transparent 35%),
+    linear-gradient(135deg, #edf6e8, #f7f0e4);
+  font-size: 30px;
+}
+
+.inventory-modal-food-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.inventory-modal-food strong {
+  display: block;
+  color: #21351e;
+  font-size: 17px;
+}
+
+.inventory-modal-food small {
+  display: block;
+  margin-top: 4px;
+  color: #756b5d;
+  font-weight: 750;
+}
+
+.inventory-action-modal label {
+  display: block;
+  margin-bottom: 9px;
+  color: #263f24;
+  font-weight: 900;
+}
+
+.inventory-quantity-control {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 52px;
+  gap: 10px;
+}
+
+.inventory-quantity-control button {
+  min-height: 52px;
+  border: 0;
+  border-radius: 18px;
+  color: #fff8ee;
+  background: linear-gradient(135deg, #274622, #7a4f2f);
+  font-size: 24px;
+  font-weight: 950;
+  cursor: pointer;
+  box-shadow: 0 12px 28px rgba(39, 70, 34, 0.16);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.inventory-quantity-control button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgba(39, 70, 34, 0.22);
+}
+
+.inventory-quantity-control input {
+  width: 100%;
+  min-height: 52px;
+  border: 1px solid rgba(95, 71, 47, 0.14);
+  border-radius: 18px;
+  padding: 0 16px;
+  color: #263f24;
+  background: rgba(255, 255, 255, 0.82);
+  outline: none;
+  font-size: 16px;
+  font-weight: 850;
+  text-align: center;
+}
+
+.inventory-quantity-control input:focus {
+  border-color: rgba(74, 121, 67, 0.42);
+  box-shadow: 0 0 0 4px rgba(123, 153, 91, 0.16);
+  background: #fffdfa;
+}
+
+.inventory-modal-note {
+  display: block;
+  margin-top: 13px;
+  padding: 13px 14px;
+  border-radius: 18px;
+  color: #6f5c4d;
+  background: rgba(247, 240, 228, 0.86);
+  border: 1px solid rgba(95, 71, 47, 0.1);
+  line-height: 1.55;
+}
+
+.inventory-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+@keyframes inventoryFadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes inventoryModalUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 1180px) {
+  .food-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .inventory-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .inventory-actions {
+    width: 100%;
+  }
+
+  .inventory-actions .sb-btn {
+    flex: 1;
+  }
+
+  .inventory-toolbar,
+  .food-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .inventory-action-modal {
+    border-radius: 26px;
+    padding: 22px;
+  }
+
+  .inventory-modal-actions {
+    flex-direction: column-reverse;
+  }
+
+  .inventory-modal-actions .sb-btn {
+    width: 100%;
+  }
 }

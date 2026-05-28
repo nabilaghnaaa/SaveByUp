@@ -16,9 +16,20 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
   const [foods, setFoods] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("semua");
   const [priorityFilter, setPriorityFilter] = useState("semua");
+
+  const [actionModal, setActionModal] = useState({
+    open: false,
+    food: null,
+    status: "",
+    quantity: "",
+    title: "",
+    description: "",
+    buttonLabel: "",
+  });
 
   const fetchFoods = async () => {
     try {
@@ -71,10 +82,79 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
     }
   };
 
-  const handleUpdateStatus = async (food, status, successMessage) => {
+  const openActionModal = (food, status) => {
+    const isUsed = status === "digunakan";
+
+    setMessage("");
+
+    setActionModal({
+      open: true,
+      food,
+      status,
+      quantity: "",
+      title: isUsed ? "Gunakan Stok Makanan" : "Buang Stok Makanan",
+      description: isUsed
+        ? `Masukkan jumlah ${food.name} yang sudah kamu gunakan. Sistem hanya akan mengurangi stok sesuai jumlah yang diisi.`
+        : `Masukkan jumlah ${food.name} yang ingin kamu buang. Sistem hanya akan mengurangi stok sesuai jumlah yang diisi.`,
+      buttonLabel: isUsed ? "Simpan Digunakan" : "Simpan Dibuang",
+    });
+  };
+
+  const closeActionModal = () => {
+    setActionModal({
+      open: false,
+      food: null,
+      status: "",
+      quantity: "",
+      title: "",
+      description: "",
+      buttonLabel: "",
+    });
+  };
+
+  const handleActionQuantityChange = (value) => {
+    setActionModal((prev) => ({
+      ...prev,
+      quantity: value,
+    }));
+  };
+
+  const handleSubmitActionModal = async (event) => {
+    event.preventDefault();
+
+    const { food, status, quantity } = actionModal;
+
+    if (!food) return;
+
+    const parsedQuantity = Number(quantity);
+    const actionLabel = status === "digunakan" ? "digunakan" : "dibuang";
+
+    if (!quantity || parsedQuantity <= 0) {
+      showMessage(
+        `Jumlah makanan yang ${actionLabel} wajib diisi dan harus lebih dari 0.`
+      );
+      return;
+    }
+
+    if (parsedQuantity > Number(food.quantity || 0)) {
+      showMessage(
+        `Jumlah yang ${actionLabel} tidak boleh melebihi stok. Stok saat ini: ${
+          food.quantity
+        } ${food.unit || "pcs"}.`
+      );
+      return;
+    }
+
     try {
-      await updateFoodStatus(food, status);
-      showMessage(successMessage);
+      await updateFoodStatus(food, status, parsedQuantity);
+
+      showMessage(
+        status === "digunakan"
+          ? `${parsedQuantity} ${food.unit || "pcs"} ${food.name} berhasil ditandai digunakan.`
+          : `${parsedQuantity} ${food.unit || "pcs"} ${food.name} berhasil ditandai dibuang.`
+      );
+
+      closeActionModal();
       await refreshAll();
     } catch (error) {
       console.error("Gagal mengubah status makanan:", error);
@@ -218,23 +298,125 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
               food={food}
               onEdit={() => navigate(`/foods/edit/${food.id}`)}
               onDelete={() => handleDelete(food)}
-              onUsed={() =>
-                handleUpdateStatus(
-                  food,
-                  "digunakan",
-                  "Makanan ditandai sudah digunakan."
-                )
-              }
-              onDiscard={() =>
-                handleUpdateStatus(
-                  food,
-                  "dibuang",
-                  "Makanan ditandai dibuang."
-                )
-              }
+              onUsed={() => openActionModal(food, "digunakan")}
+              onDiscard={() => openActionModal(food, "dibuang")}
               onSell={() => navigate(`/marketplace/sell/${food.id}`)}
             />
           ))}
+        </div>
+      )}
+
+      {actionModal.open && actionModal.food && (
+        <div className="inventory-modal-backdrop" onClick={closeActionModal}>
+          <form
+            className="inventory-action-modal"
+            onSubmit={handleSubmitActionModal}
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="inventory-modal-header">
+              <div>
+                <span>Kelola Stok</span>
+                <h3>{actionModal.title}</h3>
+              </div>
+
+              <button
+                type="button"
+                className="inventory-modal-close"
+                onClick={closeActionModal}
+              >
+                ×
+              </button>
+            </div>
+
+            <p className="inventory-modal-description">
+              {actionModal.description}
+            </p>
+
+            <div className="inventory-modal-food">
+              <div className="inventory-modal-food-icon">
+                {actionModal.food.image_url ? (
+                  <img
+                    src={actionModal.food.image_url}
+                    alt={actionModal.food.name}
+                  />
+                ) : (
+                  <span>🍱</span>
+                )}
+              </div>
+
+              <div>
+                <strong>{actionModal.food.name}</strong>
+                <small>
+                  Stok saat ini: {actionModal.food.quantity}{" "}
+                  {actionModal.food.unit || "pcs"}
+                </small>
+              </div>
+            </div>
+
+            <label>
+              Jumlah yang{" "}
+              {actionModal.status === "digunakan" ? "digunakan" : "dibuang"}
+            </label>
+
+            <div className="inventory-quantity-control">
+              <button
+                type="button"
+                onClick={() =>
+                  handleActionQuantityChange(
+                    Math.max(Number(actionModal.quantity || 0) - 1, 1)
+                  )
+                }
+              >
+                −
+              </button>
+
+              <input
+                type="number"
+                min="1"
+                max={actionModal.food.quantity}
+                value={actionModal.quantity}
+                placeholder={`Maks. ${actionModal.food.quantity}`}
+                onChange={(event) =>
+                  handleActionQuantityChange(event.target.value)
+                }
+                autoFocus
+              />
+
+              <button
+                type="button"
+                onClick={() =>
+                  handleActionQuantityChange(
+                    Math.min(
+                      Number(actionModal.quantity || 0) + 1,
+                      Number(actionModal.food.quantity || 1)
+                    )
+                  )
+                }
+              >
+                +
+              </button>
+            </div>
+
+            <small className="inventory-modal-note">
+              Catatan: Jika sebagian stok sedang dijual di marketplace, sistem
+              hanya mengizinkan pengurangan dari stok bebas yang tidak sedang
+              ditawarkan.
+            </small>
+
+            <div className="inventory-modal-actions">
+              <button
+                type="button"
+                className="sb-btn dashboard-btn-outline"
+                onClick={closeActionModal}
+              >
+                Batal
+              </button>
+
+              <button type="submit" className="sb-btn sb-btn-primary">
+                {actionModal.buttonLabel}
+              </button>
+            </div>
+          </form>
         </div>
       )}
     </section>
