@@ -12,9 +12,10 @@
   z-index: -5;
   pointer-events: none;
   background:
-    radial-gradient(circle at 9% 8%, rgba(121, 82, 46, 0.18), transparent 28%),
-    radial-gradient(circle at 92% 12%, rgba(89, 139, 79, 0.18), transparent 26%),
-    linear-gradient(135deg, #f7f3ea 0%, #edf6e8 48%, #f3eadf 100%);
+    radial-gradient(circle at 8% 8%, rgba(112, 84, 48, 0.16), transparent 28%),
+    radial-gradient(circle at 92% 12%, rgba(77, 130, 83, 0.16), transparent 28%),
+    radial-gradient(circle at 55% 92%, rgba(184, 151, 95, 0.13), transparent 30%),
+    linear-gradient(135deg, #f8f3e9 0%, #edf7e9 46%, #f5eadf 100%);
 }
 
 .marketplace-orb {
@@ -22,26 +23,26 @@
   z-index: -3;
   border-radius: 999px;
   pointer-events: none;
-  filter: blur(5px);
-  opacity: 0.75;
+  filter: blur(6px);
+  opacity: 0.72;
   animation: marketplaceFloat 8s ease-in-out infinite;
 }
 
 .marketplace-orb-one {
-  width: 230px;
-  height: 230px;
-  top: 120px;
-  right: 90px;
-  background: rgba(74, 121, 67, 0.14);
+  width: 240px;
+  height: 240px;
+  top: 118px;
+  right: 86px;
+  background: rgba(72, 124, 73, 0.16);
 }
 
 .marketplace-orb-two {
-  width: 180px;
-  height: 180px;
-  left: 320px;
-  bottom: 90px;
-  background: rgba(122, 79, 47, 0.14);
-  animation-delay: 1.3s;
+  width: 190px;
+  height: 190px;
+  left: 310px;
+  bottom: 88px;
+  background: rgba(126, 82, 49, 0.14);
+  animation-delay: 1.25s;
 }
 
 @keyframes marketplaceFloat {
@@ -55,15 +56,68 @@
   }
 }
 
-.marketplace-btn-outline {
-  color: #2c3d26;
-  background: rgba(255, 251, 244, 0.68);
-  border: 1px solid rgba(95, 71, 47, 0.16);
-  backdrop-filter: blur(16px);
+.sb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 11px 18px;
+  border: 0;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 850;
+  line-height: 1;
+  text-decoration: none;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease,
+    opacity 0.2s ease;
 }
 
-.marketplace-btn-outline:hover:not(:disabled) {
-  background: rgba(255, 251, 244, 0.96);
+.sb-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+
+.sb-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.sb-btn-primary {
+  color: #fff8ee;
+  background: linear-gradient(135deg, #294e24 0%, #4f873f 52%, #7a4f2f 100%);
+  box-shadow: 0 16px 30px rgba(65, 94, 51, 0.2);
+}
+
+.sb-btn-primary:hover:not(:disabled) {
+  box-shadow: 0 20px 42px rgba(65, 94, 51, 0.27);
+}
+
+.marketplace-btn-outline,
+.profile-btn-outline,
+.food-btn-outline {
+  color: #2c3d26;
+  background: rgba(255, 251, 244, 0.72);
+  border: 1px solid rgba(95, 71, 47, 0.16);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 28px rgba(69, 48, 31, 0.06);
+}
+
+.marketplace-btn-outline:hover:not(:disabled),
+.profile-btn-outline:hover:not(:disabled),
+.food-btn-outline:hover:not(:disabled) {
+  background: rgba(255, 251, 244, 0.98);
+  box-shadow: 0 16px 36px rgba(69, 48, 31, 0.1);
+}
+
+.marketplace-btn-danger {
+  color: #fff8ee;
+  background: linear-gradient(135deg, #8f3f2f, #b45a3c);
+  box-shadow: 0 16px 30px rgba(143, 63, 47, 0.18);
 }
 
 .marketplace-hero {
@@ -73,13 +127,13 @@
   grid-template-columns: minmax(0, 1fr) 410px;
   gap: 24px;
   align-items: stretch;
-  padding: clamp(24px, 4vw, 40px);
+  padding: clamp(26px, 4vw, 42px);
   border-radius: 36px;
   background:
-    radial-gradient(circle at 88% 18%, rgba(190, 159, 102, 0.18), transparent 28%),
-    radial-gradient(circle at 8% 88%, rgba(90, 139, 83, 0.2), transparent 34%),
-    linear-gradient(135deg, #152713 0%, #234522 48%, #6f492c 100%);
-  box-shadow: 0 30px 90px rgba(69, 48, 31, 0.13);
+    radial-gradient(circle at 88% 18%, rgba(207, 176, 115, 0.17), transparent 28%),
+    radial-gradient(circle at 8% 88%, rgba(98, 153, 86, 0.18), transparent 34%),
+    linear-gradient(135deg, #142612 0%, #254a23 48%, #704a2e 100%);
+  box-shadow: 0 30px 90px rgba(69, 48, 31, 0.14);
 }
 
 .marketplace-hero::after {
@@ -93,7 +147,8 @@
   pointer-events: none;
 }
 
-.marketplace-hero-content {
+.marketplace-hero-content,
+.marketplace-hero-stats {
   position: relative;
   z-index: 1;
 }
@@ -120,14 +175,12 @@
 .marketplace-hero-content p {
   max-width: 720px;
   margin: 20px 0 0;
-  color: rgba(255, 248, 236, 0.78);
+  color: rgba(255, 248, 236, 0.8);
   line-height: 1.75;
   font-size: 17px;
 }
 
 .marketplace-hero-stats {
-  position: relative;
-  z-index: 1;
   display: grid;
   gap: 12px;
 }
@@ -135,7 +188,7 @@
 .marketplace-hero-stats div {
   padding: 18px;
   border-radius: 24px;
-  background: rgba(255, 248, 236, 0.1);
+  background: rgba(255, 248, 236, 0.11);
   border: 1px solid rgba(255, 248, 236, 0.16);
   backdrop-filter: blur(14px);
 }
@@ -146,6 +199,47 @@
   color: #f7e8c9;
   font-size: 34px;
   line-height: 1;
+  letter-spacing: -0.8px;
+}
+
+.marketplace-owner-filter {
+  display: flex;
+  width: fit-content;
+  gap: 8px;
+  padding: 8px;
+  border-radius: 999px;
+  background: rgba(255, 251, 244, 0.72);
+  border: 1px solid rgba(95, 71, 47, 0.13);
+  box-shadow: 0 18px 46px rgba(69, 48, 31, 0.07);
+  backdrop-filter: blur(18px);
+}
+
+.marketplace-owner-filter button {
+  min-height: 42px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  color: #5f574b;
+  background: transparent;
+  font-size: 14px;
+  font-weight: 900;
+  transition:
+    color 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.marketplace-owner-filter button:hover {
+  color: #263f24;
+  background: rgba(74, 121, 67, 0.09);
+}
+
+.marketplace-owner-filter button.active {
+  color: #fff8ee;
+  background: linear-gradient(135deg, #294e24, #5f8f4d);
+  box-shadow: 0 12px 24px rgba(74, 121, 67, 0.2);
 }
 
 .product-filter {
@@ -154,7 +248,7 @@
   gap: 12px;
   padding: 14px;
   border-radius: 28px;
-  background: rgba(255, 251, 244, 0.68);
+  background: rgba(255, 251, 244, 0.72);
   border: 1px solid rgba(95, 71, 47, 0.13);
   box-shadow: 0 20px 54px rgba(69, 48, 31, 0.07);
   backdrop-filter: blur(20px);
@@ -168,12 +262,17 @@
   border-radius: 18px;
   padding: 0 15px;
   color: #263f24;
-  background: rgba(255, 255, 255, 0.76);
+  background: rgba(255, 255, 255, 0.78);
   outline: none;
+  font-weight: 650;
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease,
     background 0.2s ease;
+}
+
+.product-filter input::placeholder {
+  color: #9a9082;
 }
 
 .product-filter input:focus,
@@ -196,7 +295,7 @@
   padding: 44px;
   border-radius: 34px;
   text-align: center;
-  background: rgba(255, 251, 244, 0.72);
+  background: rgba(255, 251, 244, 0.76);
   border: 1px solid rgba(95, 71, 47, 0.13);
   box-shadow: 0 24px 72px rgba(69, 48, 31, 0.09);
   backdrop-filter: blur(22px);
@@ -232,7 +331,7 @@
 .marketplace-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
+  gap: 22px;
 }
 
 @media (max-width: 1180px) {
@@ -258,5 +357,15 @@
 
   .marketplace-hero {
     border-radius: 28px;
+  }
+
+  .marketplace-owner-filter {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .marketplace-owner-filter button {
+    white-space: nowrap;
+    flex: 1;
   }
 }

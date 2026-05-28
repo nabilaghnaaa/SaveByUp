@@ -53,7 +53,7 @@
   padding: 44px;
   border-radius: 34px;
   text-align: center;
-  background: rgba(255, 251, 244, 0.72);
+  background: rgba(255, 251, 244, 0.76);
   border: 1px solid rgba(95, 71, 47, 0.13);
   box-shadow: 0 24px 72px rgba(69, 48, 31, 0.09);
   backdrop-filter: blur(22px);
@@ -124,10 +124,19 @@
   backdrop-filter: blur(14px);
 }
 
+.product-detail-image > .product-detail-expiry {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  z-index: 2;
+  color: #274622;
+  background: rgba(244, 232, 207, 0.9);
+}
+
 .product-detail-content {
   padding: clamp(24px, 4vw, 34px);
   border-radius: 34px;
-  background: rgba(255, 251, 244, 0.72);
+  background: rgba(255, 251, 244, 0.76);
   border: 1px solid rgba(95, 71, 47, 0.13);
   box-shadow: 0 24px 72px rgba(69, 48, 31, 0.09);
   backdrop-filter: blur(22px);
@@ -170,10 +179,13 @@
 }
 
 .product-detail-price {
-  display: block;
+  display: inline-flex;
   margin-top: 14px;
+  padding: 9px 13px;
+  border-radius: 16px;
   color: #274622;
-  font-size: 32px;
+  background: rgba(74, 121, 67, 0.1);
+  font-size: 30px;
 }
 
 .product-detail-description {
@@ -223,6 +235,7 @@
 .seller-avatar {
   width: 54px;
   height: 54px;
+  flex: 0 0 54px;
   border-radius: 18px;
   display: grid;
   place-items: center;
@@ -243,9 +256,20 @@
   margin: 4px 0;
 }
 
+.product-owner-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 22px;
+}
+
 .product-request-button {
   width: 100%;
   margin-top: 24px;
+}
+
+.product-owner-actions .product-request-button {
+  margin-top: 0;
 }
 
 .product-request-button:disabled {
@@ -255,9 +279,13 @@
 
 .product-detail-note {
   display: block;
-  margin-top: 12px;
-  color: #756b5d;
-  text-align: center;
+  margin-top: 14px;
+  padding: 13px 15px;
+  border-radius: 18px;
+  background: rgba(223, 239, 198, 0.72);
+  color: #274622;
+  line-height: 1.55;
+  font-weight: 750;
 }
 
 .negotiation-backdrop {
@@ -278,6 +306,13 @@
   background: #fffbf4;
   border: 1px solid rgba(95, 71, 47, 0.14);
   box-shadow: 0 34px 100px rgba(69, 48, 31, 0.26);
+}
+
+.product-detail-content > .negotiation-modal {
+  width: 100%;
+  margin-top: 18px;
+  background: rgba(255, 251, 244, 0.78);
+  box-shadow: none;
 }
 
 .negotiation-header {
@@ -309,6 +344,7 @@
   background: rgba(170, 75, 48, 0.1);
   color: #9f3f2d;
   font-size: 24px;
+  cursor: pointer;
 }
 
 .negotiation-modal p {
@@ -339,6 +375,12 @@
   border-color: rgba(74, 121, 67, 0.42);
   box-shadow: 0 0 0 4px rgba(123, 153, 91, 0.16);
   background: #fffdfa;
+}
+
+.negotiation-modal input:disabled,
+.negotiation-modal textarea:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
 }
 
 .negotiation-message {
@@ -374,11 +416,16 @@
 }
 
 @media (max-width: 640px) {
-  .product-detail-grid {
+  .product-detail-grid,
+  .product-owner-actions {
     grid-template-columns: 1fr;
   }
 
+  .negotiation-actions {
+    flex-direction: column-reverse;
+  }
+
   .negotiation-actions .sb-btn {
-    flex: 1;
+    width: 100%;
   }
 }
