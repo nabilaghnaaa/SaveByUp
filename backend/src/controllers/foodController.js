@@ -4,17 +4,119 @@ const getUserId = (req) => {
   return req.user?.id || req.user?.user_id || req.userId;
 };
 
-const cancelActiveMarketplaceByFood = async (foodId, userId) => {
+const TERMINAL_FOOD_STATUS = [
+  "digunakan",
+  "dibuang",
+  "terjual",
+  "kedaluwarsa",
+];
+
+const PARTIAL_ACTION_STATUS = ["digunakan", "dibuang"];
+
+const cancelActiveMarketplaceByFood = async (
+  foodId,
+  userId,
+  detachFood = false
+) => {
+  if (detachFood) {
+    await db.query(
+      `UPDATE marketplace_products
+       SET 
+        status = 'dibatalkan',
+        quantity = 0,
+        stock = 0,
+        food_id = NULL
+       WHERE food_id = ?
+       AND seller_id = ?
+       AND status IN ('tersedia', 'dalam_proses')`,
+      [foodId, userId]
+    );
+
+    return;
+  }
+
   await db.query(
     `UPDATE marketplace_products
-     SET status = 'dibatalkan',
-         quantity = 0,
-         stock = 0
+     SET 
+      status = 'dibatalkan',
+      quantity = 0,
+      stock = 0
      WHERE food_id = ?
      AND seller_id = ?
-     AND status = 'tersedia'`,
+     AND status IN ('tersedia', 'dalam_proses')`,
     [foodId, userId]
   );
+};
+
+const getFoodMarketplaceState = async (foodId, userId) => {
+  const [marketplaceRows] = await db.query(
+    `SELECT
+      COALESCE(
+        SUM(
+          CASE 
+            WHEN status IN ('tersedia', 'dalam_proses') 
+            THEN quantity 
+            ELSE 0 
+          END
+        ), 
+        0
+      ) AS active_marketplace_quantity,
+      COALESCE(
+        SUM(
+          CASE 
+            WHEN status = 'tersedia' 
+            THEN quantity 
+            ELSE 0 
+          END
+        ), 
+        0
+      ) AS available_marketplace_quantity,
+      COALESCE(
+        SUM(
+          CASE 
+            WHEN status = 'dalam_proses' 
+            THEN quantity 
+            ELSE 0 
+          END
+        ), 
+        0
+      ) AS process_marketplace_quantity
+     FROM marketplace_products
+     WHERE food_id = ?
+     AND seller_id = ?`,
+    [foodId, userId]
+  );
+
+  const [transactionRows] = await db.query(
+    `SELECT COUNT(*) AS active_transactions
+     FROM transactions t
+     JOIN marketplace_products mp ON t.product_id = mp.id
+     WHERE mp.food_id = ?
+     AND mp.seller_id = ?
+     AND t.status = 'waiting_cod'`,
+    [foodId, userId]
+  );
+
+  return {
+    activeMarketplaceQuantity: Number(
+      marketplaceRows[0]?.active_marketplace_quantity || 0
+    ),
+    availableMarketplaceQuantity: Number(
+      marketplaceRows[0]?.available_marketplace_quantity || 0
+    ),
+    processMarketplaceQuantity: Number(
+      marketplaceRows[0]?.process_marketplace_quantity || 0
+    ),
+    activeTransactions: Number(transactionRows[0]?.active_transactions || 0),
+  };
+};
+
+const mapStatusToCondition = (status) => {
+  if (status === "aman") return "layak";
+  if (status === "mendekati_kedaluwarsa") return "mendekati_kedaluwarsa";
+  if (status === "kedaluwarsa") return "kedaluwarsa";
+
+  return "layak";
 };
 
 const calculateFoodStatus = (expiryDate, manualStatus = "") => {
@@ -27,6 +129,15 @@ const calculateFoodStatus = (expiryDate, manualStatus = "") => {
           : manualStatus === "digunakan" || manualStatus === "terjual"
             ? "selesai"
             : "sedang",
+      condition_status: mapStatusToCondition(manualStatus),
+    };
+  }
+
+  if (manualStatus === "kedaluwarsa") {
+    return {
+      status: "kedaluwarsa",
+      priority: "tidak_layak",
+      condition_status: "kedaluwarsa",
     };
   }
 
@@ -89,17 +200,12 @@ const calculateFoodStatus = (expiryDate, manualStatus = "") => {
 
 const mapConditionToStatus = (conditionStatus) => {
   if (conditionStatus === "layak") return "aman";
-  if (conditionStatus === "mendekati_kedaluwarsa") return "mendekati_kedaluwarsa";
+  if (conditionStatus === "mendekati_kedaluwarsa") {
+    return "mendekati_kedaluwarsa";
+  }
   if (conditionStatus === "kedaluwarsa") return "kedaluwarsa";
+
   return "aman";
-};
-
-const mapStatusToCondition = (status) => {
-  if (status === "aman") return "layak";
-  if (status === "mendekati_kedaluwarsa") return "mendekati_kedaluwarsa";
-  if (status === "kedaluwarsa") return "kedaluwarsa";
-
-  return "layak";
 };
 
 const normalizeFood = (food = {}) => {
@@ -149,6 +255,10 @@ const buildSummaryFromFoods = (foods = []) => {
     total_digunakan: normalizedFoods.filter(
       (food) => food.status === "digunakan"
     ).length,
+    total_dijual: normalizedFoods.filter((food) => food.status === "dijual")
+      .length,
+    total_terjual: normalizedFoods.filter((food) => food.status === "terjual")
+      .length,
     total_prioritas_tinggi: normalizedFoods.filter(
       (food) => food.priority === "tinggi"
     ).length,
@@ -159,6 +269,36 @@ const buildSummaryFromFoods = (foods = []) => {
       (food) => food.priority === "rendah"
     ).length,
   };
+};
+
+const validateFoodPayload = ({ name, quantity, unit, price, expiry_date }) => {
+  if (!String(name || "").trim()) {
+    return "Nama makanan wajib diisi";
+  }
+
+  if (!quantity || Number(quantity) <= 0) {
+    return "Jumlah makanan harus lebih dari 0";
+  }
+
+  if (!String(unit || "").trim()) {
+    return "Satuan wajib diisi";
+  }
+
+  if (!price || Number(price) <= 0) {
+    return "Harga makanan wajib diisi dan harus lebih dari 0";
+  }
+
+  if (!expiry_date) {
+    return "Tanggal kedaluwarsa wajib diisi";
+  }
+
+  const parsedDate = new Date(expiry_date);
+
+  if (Number.isNaN(parsedDate.getTime())) {
+    return "Tanggal kedaluwarsa tidak valid";
+  }
+
+  return "";
 };
 
 const getFoods = async (req, res) => {
@@ -252,22 +392,17 @@ const createFood = async (req, res) => {
       });
     }
 
-    if (!name || !quantity || !unit || !expiry_date) {
-      return res.status(400).json({
-        message:
-          "Nama makanan, jumlah, satuan, dan tanggal kedaluwarsa wajib diisi",
-      });
-    }
+    const validationMessage = validateFoodPayload({
+      name,
+      quantity,
+      unit,
+      price,
+      expiry_date,
+    });
 
-    if (Number(quantity) <= 0) {
+    if (validationMessage) {
       return res.status(400).json({
-        message: "Jumlah makanan harus lebih dari 0",
-      });
-    }
-
-    if (!price || Number(price) <= 0) {
-      return res.status(400).json({
-        message: "Harga makanan wajib diisi dan harus lebih dari 0",
+        message: validationMessage,
       });
     }
 
@@ -298,10 +433,10 @@ const createFood = async (req, res) => {
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userId,
-        name,
+        String(name || "").trim(),
         category || null,
         Number(quantity),
-        unit,
+        unit || "pcs",
         Number(price),
         storage_location || null,
         purchase_date || null,
@@ -356,22 +491,17 @@ const updateFood = async (req, res) => {
       });
     }
 
-    if (!name || !quantity || !unit || !expiry_date) {
-      return res.status(400).json({
-        message:
-          "Nama makanan, jumlah, satuan, dan tanggal kedaluwarsa wajib diisi",
-      });
-    }
+    const validationMessage = validateFoodPayload({
+      name,
+      quantity,
+      unit,
+      price,
+      expiry_date,
+    });
 
-    if (Number(quantity) <= 0) {
+    if (validationMessage) {
       return res.status(400).json({
-        message: "Jumlah makanan harus lebih dari 0",
-      });
-    }
-
-    if (!price || Number(price) <= 0) {
-      return res.status(400).json({
-        message: "Harga makanan wajib diisi dan harus lebih dari 0",
+        message: validationMessage,
       });
     }
 
@@ -386,7 +516,37 @@ const updateFood = async (req, res) => {
       });
     }
 
+    const marketplaceState = await getFoodMarketplaceState(id, userId);
     const calculated = calculateFoodStatus(expiry_date, status);
+
+    if (
+      TERMINAL_FOOD_STATUS.includes(calculated.status) &&
+      marketplaceState.activeTransactions > 0
+    ) {
+      return res.status(400).json({
+        message:
+          "Makanan tidak bisa diubah menjadi digunakan/dibuang/terjual/kedaluwarsa karena masih ada transaksi COD yang berjalan.",
+      });
+    }
+
+    if (
+      marketplaceState.activeMarketplaceQuantity > 0 &&
+      Number(quantity) < marketplaceState.activeMarketplaceQuantity
+    ) {
+      return res.status(400).json({
+        message: `Jumlah stok inventaris tidak boleh lebih kecil dari stok yang sedang aktif di marketplace. Stok aktif marketplace saat ini: ${marketplaceState.activeMarketplaceQuantity}.`,
+      });
+    }
+
+    const shouldKeepSoldStatus =
+      marketplaceState.activeMarketplaceQuantity > 0 &&
+      !TERMINAL_FOOD_STATUS.includes(calculated.status);
+
+    const finalStatus = shouldKeepSoldStatus ? "dijual" : calculated.status;
+    const finalPriority = shouldKeepSoldStatus ? "sedang" : calculated.priority;
+    const finalConditionStatus =
+      calculated.condition_status || mapStatusToCondition(calculated.status);
+
     const finalNote = note || notes || "";
     const finalImage = image_url || image || "";
 
@@ -410,17 +570,17 @@ const updateFood = async (req, res) => {
         image_url = ?
       WHERE id = ? AND user_id = ?`,
       [
-        name,
+        String(name || "").trim(),
         category || null,
         Number(quantity),
-        unit,
+        unit || "pcs",
         Number(price),
         storage_location || null,
         purchase_date || null,
         expiry_date,
-        calculated.condition_status || mapStatusToCondition(calculated.status),
-        calculated.status,
-        calculated.priority,
+        finalConditionStatus,
+        finalStatus,
+        finalPriority,
         finalNote,
         finalImage,
         finalNote,
@@ -430,11 +590,7 @@ const updateFood = async (req, res) => {
       ]
     );
 
-    if (
-      ["digunakan", "dibuang", "terjual", "kedaluwarsa"].includes(
-        calculated.status
-      )
-    ) {
+    if (TERMINAL_FOOD_STATUS.includes(calculated.status)) {
       await cancelActiveMarketplaceByFood(id, userId);
     }
 
@@ -455,7 +611,7 @@ const updateFoodStatus = async (req, res) => {
   try {
     const userId = getUserId(req);
     const { id } = req.params;
-    const { status } = req.body;
+    const { status, quantity } = req.body;
 
     if (!userId) {
       return res.status(401).json({
@@ -497,6 +653,127 @@ const updateFoodStatus = async (req, res) => {
     }
 
     const currentFood = existingFood[0];
+    const marketplaceState = await getFoodMarketplaceState(id, userId);
+
+    const currentQuantity = Number(currentFood.quantity || 0);
+    const activeMarketplaceQuantity = Number(
+      marketplaceState.activeMarketplaceQuantity || 0
+    );
+
+    const freeInventoryQuantity = currentQuantity - activeMarketplaceQuantity;
+
+    if (PARTIAL_ACTION_STATUS.includes(status)) {
+      if (!quantity || Number(quantity) <= 0) {
+        return res.status(400).json({
+          message: `Jumlah makanan yang ${status} wajib diisi dan harus lebih dari 0.`,
+        });
+      }
+
+      const actionQuantity = Number(quantity);
+
+      if (freeInventoryQuantity <= 0) {
+        return res.status(400).json({
+          message:
+            "Tidak ada stok bebas yang bisa digunakan/dibuang karena semua stok sedang aktif di marketplace.",
+        });
+      }
+
+      if (actionQuantity > freeInventoryQuantity) {
+        return res.status(400).json({
+          message: `Jumlah yang ${status} melebihi stok bebas. Stok bebas yang bisa ${status}: ${freeInventoryQuantity} ${
+            currentFood.unit || "pcs"
+          }.`,
+        });
+      }
+
+      const remainingQuantity = currentQuantity - actionQuantity;
+      const remainingFreeQuantity =
+        freeInventoryQuantity - actionQuantity > 0
+          ? freeInventoryQuantity - actionQuantity
+          : 0;
+
+      let finalStatus = currentFood.status;
+      let finalPriority = currentFood.priority || "rendah";
+      let finalConditionStatus = currentFood.condition_status || "layak";
+
+      if (remainingQuantity <= 0) {
+        finalStatus = status;
+        finalPriority = status === "dibuang" ? "tidak_layak" : "selesai";
+        finalConditionStatus = mapStatusToCondition(finalStatus);
+      } else if (activeMarketplaceQuantity > 0) {
+        finalStatus = "dijual";
+        finalPriority = "sedang";
+        finalConditionStatus = mapStatusToCondition(finalStatus);
+      } else {
+        const recalculated = calculateFoodStatus(currentFood.expiry_date, "");
+        finalStatus = recalculated.status;
+        finalPriority = recalculated.priority;
+        finalConditionStatus =
+          recalculated.condition_status || mapStatusToCondition(finalStatus);
+      }
+
+      await db.query(
+        `UPDATE foods
+         SET
+          quantity = ?,
+          status = ?,
+          priority = ?,
+          condition_status = ?
+         WHERE id = ? AND user_id = ?`,
+        [
+          remainingQuantity > 0 ? remainingQuantity : 0,
+          finalStatus,
+          finalPriority,
+          finalConditionStatus,
+          id,
+          userId,
+        ]
+      );
+
+      return res.status(200).json({
+        message: `Stok makanan berhasil dikurangi karena ${status}.`,
+        data: {
+          food_id: Number(id),
+          action: status,
+          action_quantity: actionQuantity,
+          previous_quantity: currentQuantity,
+          remaining_quantity: remainingQuantity > 0 ? remainingQuantity : 0,
+          active_marketplace_quantity: activeMarketplaceQuantity,
+          free_inventory_quantity_before: freeInventoryQuantity,
+          free_inventory_quantity_after: remainingFreeQuantity,
+          final_status: finalStatus,
+        },
+      });
+    }
+
+    if (
+      TERMINAL_FOOD_STATUS.includes(status) &&
+      marketplaceState.activeTransactions > 0
+    ) {
+      return res.status(400).json({
+        message:
+          "Status makanan tidak bisa diubah karena masih ada transaksi COD yang berjalan.",
+      });
+    }
+
+    if (
+      status !== "dijual" &&
+      !TERMINAL_FOOD_STATUS.includes(status) &&
+      marketplaceState.activeMarketplaceQuantity > 0
+    ) {
+      return res.status(400).json({
+        message:
+          "Status makanan tidak bisa diubah menjadi aman/mendekati kedaluwarsa karena makanan masih aktif di marketplace. Batalkan produk marketplace terlebih dahulu.",
+      });
+    }
+
+    if (status === "dijual" && marketplaceState.activeMarketplaceQuantity <= 0) {
+      return res.status(400).json({
+        message:
+          "Status makanan tidak bisa diubah manual menjadi dijual karena belum ada produk aktif di marketplace.",
+      });
+    }
+
     const calculated = calculateFoodStatus(currentFood.expiry_date, status);
 
     await db.query(
@@ -515,11 +792,7 @@ const updateFoodStatus = async (req, res) => {
       ]
     );
 
-    if (
-      ["digunakan", "dibuang", "terjual", "kedaluwarsa"].includes(
-        calculated.status
-      )
-    ) {
+    if (TERMINAL_FOOD_STATUS.includes(calculated.status)) {
       await cancelActiveMarketplaceByFood(id, userId);
     }
 
@@ -558,7 +831,16 @@ const deleteFood = async (req, res) => {
       });
     }
 
-    await cancelActiveMarketplaceByFood(id, userId);
+    const marketplaceState = await getFoodMarketplaceState(id, userId);
+
+    if (marketplaceState.activeTransactions > 0) {
+      return res.status(400).json({
+        message:
+          "Makanan tidak bisa dihapus karena masih ada transaksi COD yang berjalan.",
+      });
+    }
+
+    await cancelActiveMarketplaceByFood(id, userId, true);
 
     await db.query("DELETE FROM foods WHERE id = ? AND user_id = ?", [
       id,

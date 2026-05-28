@@ -30,7 +30,9 @@ const getMarketplaceProducts = async (req, res) => {
         u.rating AS seller_rating
        FROM marketplace_products mp
        JOIN users u ON mp.seller_id = u.id
-       WHERE mp.status IN ('tersedia', 'dalam_proses')
+       WHERE 
+        (mp.status = 'tersedia' AND mp.quantity > 0)
+        OR mp.status = 'dalam_proses'
        ORDER BY mp.created_at DESC`
     );
 
@@ -371,15 +373,24 @@ const updateMarketplaceProduct = async (req, res) => {
 
     const product = products[0];
 
-    if (product.status === "dalam_proses") {
-      return res.status(400).json({
-        message: "Produk tidak bisa diedit karena sedang dalam proses transaksi.",
-      });
-    }
-
     if (product.status !== "tersedia") {
       return res.status(400).json({
         message: "Produk yang tidak tersedia tidak bisa diedit",
+      });
+    }
+
+    const [pendingRequests] = await db.query(
+      `SELECT id FROM purchase_requests
+       WHERE product_id = ?
+       AND status = 'pending'
+       LIMIT 1`,
+      [id]
+    );
+
+    if (pendingRequests.length > 0) {
+      return res.status(400).json({
+        message:
+          "Produk tidak bisa diedit karena masih ada pengajuan pembelian yang menunggu. Tolak atau proses pengajuan terlebih dahulu.",
       });
     }
 
@@ -395,6 +406,12 @@ const updateMarketplaceProduct = async (req, res) => {
 
     const otherQuantity = Number(otherRows[0]?.other_quantity || 0);
     const maxAllowedQuantity = Number(product.food_quantity || 0) - otherQuantity;
+
+    if (maxAllowedQuantity <= 0) {
+      return res.status(400).json({
+        message: "Tidak ada stok inventaris yang masih bisa ditawarkan.",
+      });
+    }
 
     if (Number(quantity) > maxAllowedQuantity) {
       return res.status(400).json({
@@ -458,7 +475,7 @@ const cancelMarketplaceProduct = async (req, res) => {
     if (product.status === "dalam_proses") {
       return res.status(400).json({
         message:
-          "Produk tidak bisa dibatalkan karena sedang dalam proses transaksi.",
+          "Produk tidak bisa dibatalkan karena sedang dalam proses transaksi COD.",
       });
     }
 
@@ -475,6 +492,14 @@ const cancelMarketplaceProduct = async (req, res) => {
            stock = 0
        WHERE id = ? AND seller_id = ?`,
       [id, sellerId]
+    );
+
+    await db.query(
+      `UPDATE purchase_requests
+       SET status = 'cancelled', updated_at = NOW()
+       WHERE product_id = ?
+       AND status = 'pending'`,
+      [id]
     );
 
     const [activeProducts] = await db.query(

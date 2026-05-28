@@ -93,6 +93,12 @@ const completeTransaction = async (req, res) => {
       });
     }
 
+    if (transaction.status !== "waiting_cod") {
+      return res.status(400).json({
+        message: "Transaksi belum berada pada tahap COD yang bisa diselesaikan",
+      });
+    }
+
     const [products] = await db.query(
       "SELECT * FROM marketplace_products WHERE id = ?",
       [transaction.product_id]
@@ -105,10 +111,7 @@ const completeTransaction = async (req, res) => {
     }
 
     const product = products[0];
-
-    const transactionQuantity = Number(transaction.quantity || 1);
-    const marketplaceQuantity = Number(product.quantity || 0);
-    const remainingMarketplaceQuantity = marketplaceQuantity - transactionQuantity;
+    const transactionQuantity = Number(transaction.quantity || 0);
 
     if (transactionQuantity <= 0) {
       return res.status(400).json({
@@ -116,15 +119,22 @@ const completeTransaction = async (req, res) => {
       });
     }
 
-    if (marketplaceQuantity <= 0) {
-      return res.status(400).json({
-        message: "Stok produk marketplace sudah habis",
+    const [foods] = await db.query("SELECT * FROM foods WHERE id = ?", [
+      product.food_id,
+    ]);
+
+    if (foods.length === 0) {
+      return res.status(404).json({
+        message: "Data makanan inventaris tidak ditemukan",
       });
     }
 
-    if (transactionQuantity > marketplaceQuantity) {
+    const food = foods[0];
+
+    if (Number(food.quantity) < transactionQuantity) {
       return res.status(400).json({
-        message: "Jumlah transaksi melebihi stok marketplace",
+        message:
+          "Stok inventaris tidak cukup untuk menyelesaikan transaksi ini.",
       });
     }
 
@@ -141,21 +151,8 @@ const completeTransaction = async (req, res) => {
     }
 
     await db.query(
-      `UPDATE marketplace_products 
-       SET quantity = ?, stock = ?, status = ? 
-       WHERE id = ?`,
-      [
-        remainingMarketplaceQuantity > 0 ? remainingMarketplaceQuantity : 0,
-        remainingMarketplaceQuantity > 0 ? remainingMarketplaceQuantity : 0,
-        remainingMarketplaceQuantity > 0 ? "tersedia" : "selesai",
-        transaction.product_id,
-      ]
-    );
-
-    await db.query(
-      `
-      UPDATE foods
-      SET
+      `UPDATE foods
+       SET
         quantity = GREATEST(quantity - ?, 0),
         status = CASE
           WHEN GREATEST(quantity - ?, 0) <= 0 THEN 'terjual'
@@ -165,13 +162,31 @@ const completeTransaction = async (req, res) => {
           WHEN GREATEST(quantity - ?, 0) <= 0 THEN 'selesai'
           ELSE priority
         END
-      WHERE id = ?
-      `,
+       WHERE id = ?`,
       [
         transactionQuantity,
         transactionQuantity,
         transactionQuantity,
         product.food_id,
+      ]
+    );
+
+    const [updatedProducts] = await db.query(
+      "SELECT quantity FROM marketplace_products WHERE id = ?",
+      [transaction.product_id]
+    );
+
+    const currentMarketplaceQuantity = Number(
+      updatedProducts[0]?.quantity || 0
+    );
+
+    await db.query(
+      `UPDATE marketplace_products
+       SET status = ?
+       WHERE id = ?`,
+      [
+        currentMarketplaceQuantity > 0 ? "tersedia" : "selesai",
+        transaction.product_id,
       ]
     );
 
@@ -193,8 +208,6 @@ const completeTransaction = async (req, res) => {
         transaction_id: Number(id),
         product_id: transaction.product_id,
         quantity_sold: transactionQuantity,
-        remaining_marketplace_quantity:
-          remainingMarketplaceQuantity > 0 ? remainingMarketplaceQuantity : 0,
       },
     });
   } catch (error) {
@@ -241,6 +254,12 @@ const rateTransaction = async (req, res) => {
     if (transaction.status !== "completed") {
       return res.status(400).json({
         message: "Rating hanya bisa diberikan setelah transaksi selesai",
+      });
+    }
+
+    if (transaction.rating) {
+      return res.status(400).json({
+        message: "Transaksi ini sudah pernah diberi rating",
       });
     }
 

@@ -15,6 +15,20 @@ const createNotification = async (userId, title, message, type = "system") => {
   }
 };
 
+const getProfileCompleteness = (user = {}) => {
+  const missingFields = [];
+
+  if (!String(user.name || "").trim()) missingFields.push("name");
+  if (!String(user.email || "").trim()) missingFields.push("email");
+  if (!String(user.whatsapp || "").trim()) missingFields.push("whatsapp");
+  if (!String(user.address || "").trim()) missingFields.push("address");
+
+  return {
+    isProfileComplete: missingFields.length === 0,
+    missingFields,
+  };
+};
+
 const createPurchaseRequest = async (req, res) => {
   try {
     const buyerId = getUserId(req);
@@ -24,6 +38,28 @@ const createPurchaseRequest = async (req, res) => {
     if (!buyerId) {
       return res.status(401).json({
         message: "User tidak terautentikasi.",
+      });
+    }
+
+    const [buyers] = await db.query(
+      "SELECT id, name, email, whatsapp, address FROM users WHERE id = ?",
+      [buyerId]
+    );
+
+    if (buyers.length === 0) {
+      return res.status(404).json({
+        message: "Data pembeli tidak ditemukan.",
+      });
+    }
+
+    const profileCheck = getProfileCompleteness(buyers[0]);
+
+    if (!profileCheck.isProfileComplete) {
+      return res.status(400).json({
+        message:
+          "Lengkapi profil terlebih dahulu sebelum mengajukan pembelian. Nama, email, WhatsApp, dan alamat wajib diisi.",
+        code: "PROFILE_INCOMPLETE",
+        missing_fields: profileCheck.missingFields,
       });
     }
 
@@ -91,13 +127,15 @@ const createPurchaseRequest = async (req, res) => {
       `SELECT id FROM purchase_requests 
        WHERE product_id = ? 
        AND buyer_id = ? 
-       AND status = 'pending'`,
+       AND status IN ('pending', 'accepted')
+       LIMIT 1`,
       [productId, buyerId]
     );
 
     if (existingRequests.length > 0) {
       return res.status(409).json({
-        message: "Kamu sudah mengajukan pembelian untuk produk ini",
+        message:
+          "Kamu sudah memiliki pengajuan aktif untuk produk ini. Tunggu penjual memproses pengajuan sebelumnya.",
       });
     }
 
@@ -163,6 +201,8 @@ const getIncomingRequests = async (req, res) => {
         pr.*,
         mp.name AS product_name,
         mp.image_url AS product_image,
+        mp.quantity AS product_available_quantity,
+        mp.status AS product_status,
         u.name AS buyer_name,
         u.email AS buyer_email,
         u.whatsapp AS buyer_whatsapp
@@ -203,6 +243,8 @@ const getMyRequests = async (req, res) => {
         pr.*,
         mp.name AS product_name,
         mp.image_url AS product_image,
+        mp.quantity AS product_available_quantity,
+        mp.status AS product_status,
         u.name AS seller_name,
         u.whatsapp AS seller_whatsapp
        FROM purchase_requests pr
@@ -271,15 +313,25 @@ const approveRequest = async (req, res) => {
       });
     }
 
-    if (Number(request.quantity) > Number(request.marketplace_quantity)) {
+    const requestQuantity = Number(request.quantity);
+    const currentMarketplaceQuantity = Number(request.marketplace_quantity || 0);
+
+    if (requestQuantity <= 0) {
+      return res.status(400).json({
+        message: "Jumlah pengajuan tidak valid",
+      });
+    }
+
+    if (requestQuantity > currentMarketplaceQuantity) {
       return res.status(400).json({
         message: "Jumlah pengajuan melebihi stok marketplace saat ini",
       });
     }
 
     const finalPrice = Number(request.offer_price);
-    const quantity = Number(request.quantity);
-    const totalPrice = finalPrice * quantity;
+    const totalPrice = finalPrice * requestQuantity;
+    const remainingMarketplaceQuantity =
+      currentMarketplaceQuantity - requestQuantity;
 
     await db.query(
       "UPDATE purchase_requests SET status = 'accepted', updated_at = NOW() WHERE id = ?",
@@ -287,8 +339,15 @@ const approveRequest = async (req, res) => {
     );
 
     await db.query(
-      "UPDATE marketplace_products SET status = 'dalam_proses' WHERE id = ?",
-      [request.product_id]
+      `UPDATE marketplace_products
+       SET quantity = ?, stock = ?, status = ?
+       WHERE id = ?`,
+      [
+        remainingMarketplaceQuantity > 0 ? remainingMarketplaceQuantity : 0,
+        remainingMarketplaceQuantity > 0 ? remainingMarketplaceQuantity : 0,
+        remainingMarketplaceQuantity > 0 ? "tersedia" : "dalam_proses",
+        request.product_id,
+      ]
     );
 
     await db.query(
@@ -296,8 +355,9 @@ const approveRequest = async (req, res) => {
        SET status = 'rejected', updated_at = NOW()
        WHERE product_id = ?
        AND id <> ?
-       AND status = 'pending'`,
-      [request.product_id, id]
+       AND status = 'pending'
+       AND quantity > ?`,
+      [request.product_id, id, remainingMarketplaceQuantity]
     );
 
     await db.query(
@@ -321,7 +381,7 @@ const approveRequest = async (req, res) => {
         request.buyer_id,
         request.seller_id,
         finalPrice,
-        quantity,
+        requestQuantity,
         totalPrice,
         request.cod_location || null,
         request.cod_time || null,
@@ -338,6 +398,13 @@ const approveRequest = async (req, res) => {
 
     return res.status(200).json({
       message: "Pengajuan berhasil disetujui",
+      data: {
+        request_id: Number(id),
+        product_id: request.product_id,
+        quantity_approved: requestQuantity,
+        remaining_marketplace_quantity:
+          remainingMarketplaceQuantity > 0 ? remainingMarketplaceQuantity : 0,
+      },
     });
   } catch (error) {
     console.error("Approve request error:", error);
