@@ -1,5 +1,9 @@
 const db = require("../config/db");
 
+const getUserId = (req) => {
+  return req.user?.id || req.user?.user_id || req.userId;
+};
+
 const getMarketplaceProducts = async (req, res) => {
   try {
     const [products] = await db.query(
@@ -22,8 +26,10 @@ const getMarketplaceProducts = async (req, res) => {
     });
   } catch (error) {
     console.error("Get marketplace products error:", error);
+
     return res.status(500).json({
       message: "Terjadi kesalahan pada server",
+      error: error.message,
     });
   }
 };
@@ -58,17 +64,31 @@ const getMarketplaceProductById = async (req, res) => {
     });
   } catch (error) {
     console.error("Get marketplace detail error:", error);
+
     return res.status(500).json({
       message: "Terjadi kesalahan pada server",
+      error: error.message,
     });
   }
 };
 
 const sellFoodToMarketplace = async (req, res) => {
   try {
-    const sellerId = req.user.id;
+    const sellerId = getUserId(req);
     const { foodId } = req.params;
     const { quantity, price, description } = req.body;
+
+    if (!sellerId) {
+      return res.status(401).json({
+        message: "User tidak terautentikasi.",
+      });
+    }
+
+    if (!foodId) {
+      return res.status(400).json({
+        message: "ID makanan tidak ditemukan.",
+      });
+    }
 
     if (!quantity || Number(quantity) <= 0) {
       return res.status(400).json({
@@ -81,6 +101,9 @@ const sellFoodToMarketplace = async (req, res) => {
         message: "Harga produk wajib diisi dan harus lebih dari 0",
       });
     }
+
+    const sellQuantity = Number(quantity);
+    const sellPrice = Number(price);
 
     const [foods] = await db.query(
       "SELECT * FROM foods WHERE id = ? AND user_id = ?",
@@ -101,7 +124,7 @@ const sellFoodToMarketplace = async (req, res) => {
       });
     }
 
-    if (Number(quantity) > Number(food.quantity)) {
+    if (sellQuantity > Number(food.quantity)) {
       return res.status(400).json({
         message: "Jumlah yang dijual tidak boleh melebihi stok inventaris",
       });
@@ -125,20 +148,41 @@ const sellFoodToMarketplace = async (req, res) => {
     }
 
     await db.query(
-      `INSERT INTO marketplace_products
-      (food_id, seller_id, name, category, description, quantity, unit, price, expiry_date, image_url, status)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'tersedia')`,
+      `
+      INSERT INTO marketplace_products
+      (
+        food_id,
+        seller_id,
+        name,
+        category,
+        description,
+        quantity,
+        price,
+        stock,
+        unit,
+        expiry_date,
+        image_url,
+        image,
+        location,
+        status
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
       [
         food.id,
         sellerId,
         food.name,
-        food.category,
+        food.category || null,
         description || food.note || food.notes || null,
-        Number(quantity),
-        food.unit,
-        Number(price),
+        sellQuantity,
+        sellPrice,
+        sellQuantity,
+        food.unit || "pcs",
         food.expiry_date,
         food.image_url || food.image || null,
+        food.image || food.image_url || null,
+        food.storage_location || null,
+        "tersedia",
       ]
     );
 
@@ -152,16 +196,24 @@ const sellFoodToMarketplace = async (req, res) => {
     });
   } catch (error) {
     console.error("Sell food marketplace error:", error);
+
     return res.status(500).json({
       message: "Terjadi kesalahan pada server",
+      error: error.message,
     });
   }
 };
 
 const deleteMarketplaceProduct = async (req, res) => {
   try {
-    const sellerId = req.user.id;
+    const sellerId = getUserId(req);
     const { id } = req.params;
+
+    if (!sellerId) {
+      return res.status(401).json({
+        message: "User tidak terautentikasi.",
+      });
+    }
 
     const [products] = await db.query(
       "SELECT * FROM marketplace_products WHERE id = ? AND seller_id = ?",
@@ -198,8 +250,10 @@ const deleteMarketplaceProduct = async (req, res) => {
     });
   } catch (error) {
     console.error("Delete marketplace product error:", error);
+
     return res.status(500).json({
       message: "Terjadi kesalahan pada server",
+      error: error.message,
     });
   }
 };
