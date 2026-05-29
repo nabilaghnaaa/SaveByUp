@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import EmptyState from "../../../components/ui/EmptyState";
 import FoodCard from "../../Foods/components/FoodCard";
+import "../styles/dashboard-action-modal.css";
 
 import {
   deleteFood,
@@ -20,6 +21,11 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("semua");
   const [priorityFilter, setPriorityFilter] = useState("semua");
+
+  const [menuModal, setMenuModal] = useState({
+    open: false,
+    food: null,
+  });
 
   const [actionModal, setActionModal] = useState({
     open: false,
@@ -50,7 +56,7 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
 
     setTimeout(() => {
       setMessage("");
-    }, 2800);
+    }, 3200);
   };
 
   const refreshAll = async () => {
@@ -65,7 +71,24 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
     fetchFoods();
   }, [refreshKey]);
 
+  const openMenuModal = (food) => {
+    setMessage("");
+    setMenuModal({
+      open: true,
+      food,
+    });
+  };
+
+  const closeMenuModal = () => {
+    setMenuModal({
+      open: false,
+      food: null,
+    });
+  };
+
   const handleDelete = async (food) => {
+    closeMenuModal();
+
     const ok = window.confirm(`Hapus data makanan "${food.name}"?`);
 
     if (!ok) return;
@@ -84,7 +107,9 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
 
   const openActionModal = (food, status) => {
     const isUsed = status === "digunakan";
+    const freeQuantity = Number(food.free_quantity ?? food.quantity ?? 0);
 
+    closeMenuModal();
     setMessage("");
 
     setActionModal({
@@ -94,9 +119,10 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
       quantity: "",
       title: isUsed ? "Gunakan Stok Makanan" : "Buang Stok Makanan",
       description: isUsed
-        ? `Masukkan jumlah ${food.name} yang sudah kamu gunakan. Sistem hanya akan mengurangi stok sesuai jumlah yang diisi.`
-        : `Masukkan jumlah ${food.name} yang ingin kamu buang. Sistem hanya akan mengurangi stok sesuai jumlah yang diisi.`,
+        ? `Masukkan jumlah ${food.name} yang sudah kamu gunakan. Sistem hanya mengurangi stok bebas, bukan stok yang sedang dijual.`
+        : `Masukkan jumlah ${food.name} yang ingin kamu buang. Sistem hanya mengurangi stok bebas, bukan stok yang sedang dijual.`,
       buttonLabel: isUsed ? "Simpan Digunakan" : "Simpan Dibuang",
+      maxQuantity: freeQuantity,
     });
   };
 
@@ -109,6 +135,7 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
       title: "",
       description: "",
       buttonLabel: "",
+      maxQuantity: 0,
     });
   };
 
@@ -128,6 +155,7 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
 
     const parsedQuantity = Number(quantity);
     const actionLabel = status === "digunakan" ? "digunakan" : "dibuang";
+    const freeQuantity = Number(food.free_quantity ?? food.quantity ?? 0);
 
     if (!quantity || parsedQuantity <= 0) {
       showMessage(
@@ -136,11 +164,11 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
       return;
     }
 
-    if (parsedQuantity > Number(food.quantity || 0)) {
+    if (parsedQuantity > freeQuantity) {
       showMessage(
-        `Jumlah yang ${actionLabel} tidak boleh melebihi stok. Stok saat ini: ${
-          food.quantity
-        } ${food.unit || "pcs"}.`
+        `Jumlah yang ${actionLabel} tidak boleh melebihi stok bebas. Stok bebas saat ini: ${freeQuantity} ${
+          food.unit || "pcs"
+        }.`
       );
       return;
     }
@@ -191,9 +219,8 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
           <span>Inventaris Makanan</span>
           <h2>Stok makanan yang kamu simpan</h2>
           <p>
-            Kelola makanan berdasarkan nama, jumlah, tanggal kedaluwarsa, dan
-            status pemanfaatannya. Makanan yang masih layak bisa langsung kamu
-            tawarkan ke marketplace.
+            Kelola makanan berdasarkan stok total, stok bebas, stok marketplace,
+            tanggal kedaluwarsa, dan status pemanfaatannya.
           </p>
         </div>
 
@@ -296,13 +323,115 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
             <FoodCard
               key={food.id}
               food={food}
-              onEdit={() => navigate(`/foods/edit/${food.id}`)}
-              onDelete={() => handleDelete(food)}
-              onUsed={() => openActionModal(food, "digunakan")}
-              onDiscard={() => openActionModal(food, "dibuang")}
-              onSell={() => navigate(`/marketplace/sell/${food.id}`)}
+              onAction={() => openMenuModal(food)}
             />
           ))}
+        </div>
+      )}
+
+      {menuModal.open && menuModal.food && (
+        <div className="inventory-modal-backdrop" onClick={closeMenuModal}>
+          <div
+            className="inventory-action-menu"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="inventory-modal-header">
+              <div>
+                <span>Aksi Makanan</span>
+                <h3>{menuModal.food.name}</h3>
+              </div>
+
+              <button
+                type="button"
+                className="inventory-modal-close"
+                onClick={closeMenuModal}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="inventory-modal-food">
+              <div className="inventory-modal-food-icon">
+                {menuModal.food.image_url ? (
+                  <img src={menuModal.food.image_url} alt={menuModal.food.name} />
+                ) : (
+                  <span>🍱</span>
+                )}
+              </div>
+
+              <div>
+                <strong>{menuModal.food.name}</strong>
+                <small>
+                  Total: {menuModal.food.quantity} {menuModal.food.unit || "pcs"}{" "}
+                  • Bebas: {menuModal.food.free_quantity}{" "}
+                  {menuModal.food.unit || "pcs"} • Dijual:{" "}
+                  {menuModal.food.active_marketplace_quantity}{" "}
+                  {menuModal.food.unit || "pcs"}
+                </small>
+              </div>
+            </div>
+
+            <div className="inventory-menu-grid">
+              <button
+                type="button"
+                onClick={() => {
+                  closeMenuModal();
+                  navigate(`/foods/edit/${menuModal.food.id}`);
+                }}
+              >
+                <span>✏️</span>
+                <strong>Edit Data</strong>
+                <small>Ubah detail makanan.</small>
+              </button>
+
+              <button
+                type="button"
+                disabled={
+                  ["kedaluwarsa", "dibuang", "terjual", "digunakan"].includes(
+                    menuModal.food.status
+                  ) || Number(menuModal.food.free_quantity || 0) <= 0
+                }
+                onClick={() => {
+                  closeMenuModal();
+                  navigate(`/marketplace/sell/${menuModal.food.id}`);
+                }}
+              >
+                <span>🛒</span>
+                <strong>Jual</strong>
+                <small>Tawarkan stok bebas ke marketplace.</small>
+              </button>
+
+              <button
+                type="button"
+                disabled={Number(menuModal.food.free_quantity || 0) <= 0}
+                onClick={() => openActionModal(menuModal.food, "digunakan")}
+              >
+                <span>🍽️</span>
+                <strong>Digunakan</strong>
+                <small>Kurangi stok yang dipakai.</small>
+              </button>
+
+              <button
+                type="button"
+                disabled={Number(menuModal.food.free_quantity || 0) <= 0}
+                onClick={() => openActionModal(menuModal.food, "dibuang")}
+              >
+                <span>🗑️</span>
+                <strong>Dibuang</strong>
+                <small>Kurangi stok yang terbuang.</small>
+              </button>
+
+              <button
+                type="button"
+                className="danger"
+                onClick={() => handleDelete(menuModal.food)}
+              >
+                <span>🚫</span>
+                <strong>Hapus</strong>
+                <small>Hapus data dari inventaris.</small>
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
@@ -347,8 +476,9 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
               <div>
                 <strong>{actionModal.food.name}</strong>
                 <small>
-                  Stok saat ini: {actionModal.food.quantity}{" "}
-                  {actionModal.food.unit || "pcs"}
+                  Stok bebas: {actionModal.food.free_quantity}{" "}
+                  {actionModal.food.unit || "pcs"} dari total{" "}
+                  {actionModal.food.quantity} {actionModal.food.unit || "pcs"}
                 </small>
               </div>
             </div>
@@ -373,9 +503,9 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
               <input
                 type="number"
                 min="1"
-                max={actionModal.food.quantity}
+                max={actionModal.food.free_quantity}
                 value={actionModal.quantity}
-                placeholder={`Maks. ${actionModal.food.quantity}`}
+                placeholder={`Maks. ${actionModal.food.free_quantity}`}
                 onChange={(event) =>
                   handleActionQuantityChange(event.target.value)
                 }
@@ -388,7 +518,7 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
                   handleActionQuantityChange(
                     Math.min(
                       Number(actionModal.quantity || 0) + 1,
-                      Number(actionModal.food.quantity || 1)
+                      Number(actionModal.food.free_quantity || 1)
                     )
                   )
                 }
@@ -398,9 +528,8 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
             </div>
 
             <small className="inventory-modal-note">
-              Catatan: Jika sebagian stok sedang dijual di marketplace, sistem
-              hanya mengizinkan pengurangan dari stok bebas yang tidak sedang
-              ditawarkan.
+              Stok yang sedang dijual di marketplace tidak ikut digunakan atau
+              dibuang. Yang dikurangi hanya stok bebas.
             </small>
 
             <div className="inventory-modal-actions">

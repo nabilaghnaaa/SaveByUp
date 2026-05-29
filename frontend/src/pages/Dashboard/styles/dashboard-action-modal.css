@@ -1,0 +1,432 @@
+.inventory-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(103, 78, 45, 0.22), transparent 34%),
+    radial-gradient(circle at 82% 16%, rgba(72, 120, 66, 0.22), transparent 32%),
+    rgba(21, 31, 22, 0.62);
+  backdrop-filter: blur(18px);
+  animation: actionBackdropFade 0.18s ease both;
+}
+
+.inventory-action-modal {
+  width: min(100%, 760px);
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  padding: 0;
+  border: 1px solid rgba(255, 251, 244, 0.42);
+  border-radius: 34px;
+  background:
+    radial-gradient(circle at 96% 0%, rgba(223, 239, 198, 0.86), transparent 28%),
+    radial-gradient(circle at 0% 100%, rgba(184, 123, 54, 0.12), transparent 30%),
+    linear-gradient(135deg, rgba(255, 253, 247, 0.98), rgba(244, 239, 228, 0.98));
+  box-shadow:
+    0 38px 110px rgba(22, 31, 20, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.78);
+  animation: actionModalUp 0.22s ease both;
+}
+
+.inventory-modal-header {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  padding: 28px 30px 18px;
+}
+
+.inventory-modal-header::after {
+  content: "";
+  position: absolute;
+  left: 30px;
+  right: 30px;
+  bottom: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(95, 71, 47, 0.18),
+    transparent
+  );
+}
+
+.inventory-modal-header span {
+  display: inline-flex;
+  margin-bottom: 8px;
+  color: #9a6138;
+  font-size: 12px;
+  font-weight: 950;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+}
+
+.inventory-modal-header h3 {
+  margin: 0;
+  color: #183a1d;
+  font-size: clamp(26px, 3vw, 36px);
+  line-height: 1.05;
+  letter-spacing: -1px;
+}
+
+.inventory-modal-close {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 999px;
+  color: #a94732;
+  background: rgba(169, 71, 50, 0.1);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.inventory-modal-close:hover {
+  transform: rotate(8deg) scale(1.05);
+  background: rgba(169, 71, 50, 0.16);
+  box-shadow: 0 10px 26px rgba(169, 71, 50, 0.12);
+}
+
+.inventory-modal-description {
+  margin: 0;
+  padding: 18px 30px 0;
+  color: #756b5d;
+  line-height: 1.7;
+}
+
+.inventory-modal-food {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin: 22px 30px 18px;
+  padding: 16px;
+  border-radius: 24px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.82), rgba(247, 240, 228, 0.72));
+  border: 1px solid rgba(95, 71, 47, 0.11);
+  box-shadow: 0 16px 42px rgba(69, 48, 31, 0.06);
+}
+
+.inventory-modal-food-icon {
+  width: 62px;
+  height: 62px;
+  flex: 0 0 62px;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  border-radius: 20px;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(74, 121, 67, 0.2), transparent 34%),
+    linear-gradient(135deg, #edf6e8, #f7f0e4);
+  font-size: 30px;
+}
+
+.inventory-modal-food-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.inventory-modal-food strong {
+  display: block;
+  color: #183a1d;
+  font-size: 18px;
+  line-height: 1.25;
+}
+
+.inventory-modal-food small {
+  display: block;
+  margin-top: 5px;
+  color: #756b5d;
+  font-weight: 800;
+}
+
+/* BAGIAN MENU AKSI */
+.inventory-action-list,
+.inventory-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding: 6px 30px 28px;
+}
+
+/* Ini sengaja dibuat luas supaya button default di modal ikut rapi */
+.inventory-action-modal .inventory-action-list button,
+.inventory-action-modal .inventory-action-grid button,
+.inventory-action-modal > button,
+.inventory-action-modal .action-button {
+  position: relative;
+  overflow: hidden;
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  text-align: left;
+  border: 1px solid rgba(95, 71, 47, 0.12);
+  border-radius: 24px;
+  padding: 16px 18px;
+  color: #244322;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(248, 243, 232, 0.78));
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 16px 38px rgba(69, 48, 31, 0.06);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease,
+    opacity 0.2s ease;
+}
+
+.inventory-action-modal .inventory-action-list button::before,
+.inventory-action-modal .inventory-action-grid button::before,
+.inventory-action-modal > button::before,
+.inventory-action-modal .action-button::before {
+  content: "";
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: rgba(74, 121, 67, 0.11);
+}
+
+.inventory-action-modal .inventory-action-list button:hover:not(:disabled),
+.inventory-action-modal .inventory-action-grid button:hover:not(:disabled),
+.inventory-action-modal > button:hover:not(:disabled),
+.inventory-action-modal .action-button:hover:not(:disabled) {
+  transform: translateY(-3px);
+  border-color: rgba(74, 121, 67, 0.28);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(237, 246, 232, 0.86));
+  box-shadow: 0 22px 54px rgba(69, 48, 31, 0.1);
+}
+
+.inventory-action-modal button:disabled {
+  opacity: 0.48;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Ikon berdasarkan urutan tombol: Edit, Jual, Digunakan, Dibuang, Hapus */
+.inventory-action-list button:nth-child(1)::before,
+.inventory-action-grid button:nth-child(1)::before {
+  content: "✏️";
+}
+
+.inventory-action-list button:nth-child(2)::before,
+.inventory-action-grid button:nth-child(2)::before {
+  content: "🛒";
+}
+
+.inventory-action-list button:nth-child(3)::before,
+.inventory-action-grid button:nth-child(3)::before {
+  content: "✅";
+}
+
+.inventory-action-list button:nth-child(4)::before,
+.inventory-action-grid button:nth-child(4)::before {
+  content: "🗑️";
+}
+
+.inventory-action-list button:nth-child(5)::before,
+.inventory-action-grid button:nth-child(5)::before {
+  content: "⛔";
+  background: rgba(169, 71, 50, 0.11);
+}
+
+/* Tombol bahaya */
+.inventory-action-modal .danger,
+.inventory-action-modal button.danger,
+.inventory-action-modal .action-danger {
+  color: #a94732 !important;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 236, 230, 0.8)) !important;
+  border-color: rgba(169, 71, 50, 0.15) !important;
+}
+
+.inventory-action-modal .danger:hover:not(:disabled),
+.inventory-action-modal button.danger:hover:not(:disabled),
+.inventory-action-modal .action-danger:hover:not(:disabled) {
+  border-color: rgba(169, 71, 50, 0.28) !important;
+  box-shadow: 0 22px 54px rgba(169, 71, 50, 0.12) !important;
+}
+
+/* FORM JUMLAH DIGUNAKAN / DIBUANG */
+.inventory-action-modal label {
+  display: block;
+  margin: 20px 30px 10px;
+  color: #263f24;
+  font-weight: 950;
+}
+
+.inventory-quantity-control {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr) 52px;
+  gap: 10px;
+  margin: 0 30px;
+}
+
+.inventory-quantity-control button {
+  min-height: 54px;
+  border: 0;
+  border-radius: 18px;
+  color: #fff8ee;
+  background: linear-gradient(135deg, #274622, #7a4f2f);
+  font-size: 24px;
+  font-weight: 950;
+  cursor: pointer;
+  box-shadow: 0 14px 30px rgba(39, 70, 34, 0.16);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.inventory-quantity-control button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 38px rgba(39, 70, 34, 0.22);
+}
+
+.inventory-quantity-control input {
+  width: 100%;
+  min-height: 54px;
+  border: 1px solid rgba(95, 71, 47, 0.14);
+  border-radius: 18px;
+  padding: 0 16px;
+  color: #263f24;
+  background: rgba(255, 255, 255, 0.86);
+  outline: none;
+  font-size: 16px;
+  font-weight: 900;
+  text-align: center;
+}
+
+.inventory-quantity-control input:focus {
+  border-color: rgba(74, 121, 67, 0.42);
+  box-shadow: 0 0 0 4px rgba(123, 153, 91, 0.16);
+  background: #fffdfa;
+}
+
+.inventory-modal-note {
+  display: block;
+  margin: 14px 30px 0;
+  padding: 13px 14px;
+  border-radius: 18px;
+  color: #6f5c4d;
+  background: rgba(247, 240, 228, 0.88);
+  border: 1px solid rgba(95, 71, 47, 0.1);
+  line-height: 1.55;
+}
+
+.inventory-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 24px 30px 30px;
+}
+
+.inventory-modal-actions .sb-btn {
+  min-height: 46px;
+  border-radius: 999px;
+  padding-inline: 20px;
+}
+
+@keyframes actionBackdropFade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes actionModalUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 760px) {
+  .inventory-action-modal {
+    border-radius: 28px;
+  }
+
+  .inventory-modal-header,
+  .inventory-modal-description,
+  .inventory-modal-food,
+  .inventory-action-list,
+  .inventory-action-grid,
+  .inventory-modal-note,
+  .inventory-modal-actions {
+    margin-left: 0;
+    margin-right: 0;
+  }
+
+  .inventory-modal-header {
+    padding: 24px 22px 18px;
+  }
+
+  .inventory-modal-header::after {
+    left: 22px;
+    right: 22px;
+  }
+
+  .inventory-modal-description {
+    padding: 18px 22px 0;
+  }
+
+  .inventory-modal-food {
+    margin: 20px 22px 16px;
+  }
+
+  .inventory-action-list,
+  .inventory-action-grid {
+    grid-template-columns: 1fr;
+    padding: 6px 22px 24px;
+  }
+
+  .inventory-action-modal label {
+    margin-left: 22px;
+    margin-right: 22px;
+  }
+
+  .inventory-quantity-control {
+    margin-left: 22px;
+    margin-right: 22px;
+  }
+
+  .inventory-modal-note {
+    margin-left: 22px;
+    margin-right: 22px;
+  }
+
+  .inventory-modal-actions {
+    flex-direction: column-reverse;
+    padding: 22px;
+  }
+
+  .inventory-modal-actions .sb-btn {
+    width: 100%;
+  }
+}

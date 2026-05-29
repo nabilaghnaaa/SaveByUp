@@ -1,304 +1,27 @@
 const db = require("../config/db");
 
+const {
+  TERMINAL_FOOD_STATUS,
+  PARTIAL_ACTION_STATUS,
+  ALLOWED_FOOD_STATUS,
+  mapStatusToCondition,
+  calculateFoodStatus,
+  normalizeFood,
+  validateFoodPayload,
+} = require("../utils/foodStatus.util");
+
+const {
+  cancelActiveMarketplaceByFood,
+  getFoodMarketplaceState,
+  enrichFoodWithMarketplaceState,
+  enrichFoodsWithMarketplaceState,
+} = require("../services/foodMarketplace.service");
+
+const { createStockLog } = require("../services/foodStockLog.service");
+const { buildSummaryFromFoods } = require("../services/foodSummary.service");
+
 const getUserId = (req) => {
   return req.user?.id || req.user?.user_id || req.userId;
-};
-
-const TERMINAL_FOOD_STATUS = [
-  "digunakan",
-  "dibuang",
-  "terjual",
-  "kedaluwarsa",
-];
-
-const PARTIAL_ACTION_STATUS = ["digunakan", "dibuang"];
-
-const cancelActiveMarketplaceByFood = async (
-  foodId,
-  userId,
-  detachFood = false
-) => {
-  if (detachFood) {
-    await db.query(
-      `UPDATE marketplace_products
-       SET 
-        status = 'dibatalkan',
-        quantity = 0,
-        stock = 0,
-        food_id = NULL
-       WHERE food_id = ?
-       AND seller_id = ?
-       AND status IN ('tersedia', 'dalam_proses')`,
-      [foodId, userId]
-    );
-
-    return;
-  }
-
-  await db.query(
-    `UPDATE marketplace_products
-     SET 
-      status = 'dibatalkan',
-      quantity = 0,
-      stock = 0
-     WHERE food_id = ?
-     AND seller_id = ?
-     AND status IN ('tersedia', 'dalam_proses')`,
-    [foodId, userId]
-  );
-};
-
-const getFoodMarketplaceState = async (foodId, userId) => {
-  const [marketplaceRows] = await db.query(
-    `SELECT
-      COALESCE(
-        SUM(
-          CASE 
-            WHEN status IN ('tersedia', 'dalam_proses') 
-            THEN quantity 
-            ELSE 0 
-          END
-        ), 
-        0
-      ) AS active_marketplace_quantity,
-      COALESCE(
-        SUM(
-          CASE 
-            WHEN status = 'tersedia' 
-            THEN quantity 
-            ELSE 0 
-          END
-        ), 
-        0
-      ) AS available_marketplace_quantity,
-      COALESCE(
-        SUM(
-          CASE 
-            WHEN status = 'dalam_proses' 
-            THEN quantity 
-            ELSE 0 
-          END
-        ), 
-        0
-      ) AS process_marketplace_quantity
-     FROM marketplace_products
-     WHERE food_id = ?
-     AND seller_id = ?`,
-    [foodId, userId]
-  );
-
-  const [transactionRows] = await db.query(
-    `SELECT COUNT(*) AS active_transactions
-     FROM transactions t
-     JOIN marketplace_products mp ON t.product_id = mp.id
-     WHERE mp.food_id = ?
-     AND mp.seller_id = ?
-     AND t.status = 'waiting_cod'`,
-    [foodId, userId]
-  );
-
-  return {
-    activeMarketplaceQuantity: Number(
-      marketplaceRows[0]?.active_marketplace_quantity || 0
-    ),
-    availableMarketplaceQuantity: Number(
-      marketplaceRows[0]?.available_marketplace_quantity || 0
-    ),
-    processMarketplaceQuantity: Number(
-      marketplaceRows[0]?.process_marketplace_quantity || 0
-    ),
-    activeTransactions: Number(transactionRows[0]?.active_transactions || 0),
-  };
-};
-
-const mapStatusToCondition = (status) => {
-  if (status === "aman") return "layak";
-  if (status === "mendekati_kedaluwarsa") return "mendekati_kedaluwarsa";
-  if (status === "kedaluwarsa") return "kedaluwarsa";
-
-  return "layak";
-};
-
-const calculateFoodStatus = (expiryDate, manualStatus = "") => {
-  if (["dijual", "terjual", "digunakan", "dibuang"].includes(manualStatus)) {
-    return {
-      status: manualStatus,
-      priority:
-        manualStatus === "dibuang"
-          ? "tidak_layak"
-          : manualStatus === "digunakan" || manualStatus === "terjual"
-            ? "selesai"
-            : "sedang",
-      condition_status: mapStatusToCondition(manualStatus),
-    };
-  }
-
-  if (manualStatus === "kedaluwarsa") {
-    return {
-      status: "kedaluwarsa",
-      priority: "tidak_layak",
-      condition_status: "kedaluwarsa",
-    };
-  }
-
-  if (!expiryDate) {
-    return {
-      status: "aman",
-      priority: "rendah",
-      condition_status: "layak",
-    };
-  }
-
-  const today = new Date();
-  const expiry = new Date(expiryDate);
-
-  today.setHours(0, 0, 0, 0);
-  expiry.setHours(0, 0, 0, 0);
-
-  const diffDays = Math.ceil(
-    (expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-  );
-
-  if (Number.isNaN(diffDays)) {
-    return {
-      status: "aman",
-      priority: "rendah",
-      condition_status: "layak",
-    };
-  }
-
-  if (diffDays < 0) {
-    return {
-      status: "kedaluwarsa",
-      priority: "tidak_layak",
-      condition_status: "kedaluwarsa",
-    };
-  }
-
-  if (diffDays <= 3) {
-    return {
-      status: "mendekati_kedaluwarsa",
-      priority: "tinggi",
-      condition_status: "mendekati_kedaluwarsa",
-    };
-  }
-
-  if (diffDays <= 7) {
-    return {
-      status: "mendekati_kedaluwarsa",
-      priority: "sedang",
-      condition_status: "mendekati_kedaluwarsa",
-    };
-  }
-
-  return {
-    status: "aman",
-    priority: "rendah",
-    condition_status: "layak",
-  };
-};
-
-const mapConditionToStatus = (conditionStatus) => {
-  if (conditionStatus === "layak") return "aman";
-  if (conditionStatus === "mendekati_kedaluwarsa") {
-    return "mendekati_kedaluwarsa";
-  }
-  if (conditionStatus === "kedaluwarsa") return "kedaluwarsa";
-
-  return "aman";
-};
-
-const normalizeFood = (food = {}) => {
-  const fallbackStatus =
-    food.status || mapConditionToStatus(food.condition_status);
-
-  const calculated = calculateFoodStatus(food.expiry_date, fallbackStatus);
-
-  return {
-    id: food.id,
-    user_id: food.user_id,
-    name: food.name || "",
-    category: food.category || "",
-    quantity: Number(food.quantity || 0),
-    unit: food.unit || "pcs",
-    price: Number(food.price || 0),
-    storage_location: food.storage_location || "",
-    purchase_date: food.purchase_date,
-    expiry_date: food.expiry_date,
-    condition_status:
-      food.condition_status || mapStatusToCondition(calculated.status),
-    status: food.status || calculated.status,
-    priority: food.priority || calculated.priority,
-    note: food.note || food.notes || "",
-    notes: food.notes || food.note || "",
-    image_url: food.image_url || food.image || "",
-    image: food.image || food.image_url || "",
-    created_at: food.created_at,
-    updated_at: food.updated_at,
-  };
-};
-
-const buildSummaryFromFoods = (foods = []) => {
-  const normalizedFoods = foods.map(normalizeFood);
-
-  return {
-    total_foods: normalizedFoods.length,
-    total_aman: normalizedFoods.filter((food) => food.status === "aman").length,
-    total_mendekati: normalizedFoods.filter(
-      (food) => food.status === "mendekati_kedaluwarsa"
-    ).length,
-    total_kedaluwarsa: normalizedFoods.filter(
-      (food) => food.status === "kedaluwarsa"
-    ).length,
-    total_dibuang: normalizedFoods.filter((food) => food.status === "dibuang")
-      .length,
-    total_digunakan: normalizedFoods.filter(
-      (food) => food.status === "digunakan"
-    ).length,
-    total_dijual: normalizedFoods.filter((food) => food.status === "dijual")
-      .length,
-    total_terjual: normalizedFoods.filter((food) => food.status === "terjual")
-      .length,
-    total_prioritas_tinggi: normalizedFoods.filter(
-      (food) => food.priority === "tinggi"
-    ).length,
-    total_prioritas_sedang: normalizedFoods.filter(
-      (food) => food.priority === "sedang"
-    ).length,
-    total_prioritas_rendah: normalizedFoods.filter(
-      (food) => food.priority === "rendah"
-    ).length,
-  };
-};
-
-const validateFoodPayload = ({ name, quantity, unit, price, expiry_date }) => {
-  if (!String(name || "").trim()) {
-    return "Nama makanan wajib diisi";
-  }
-
-  if (!quantity || Number(quantity) <= 0) {
-    return "Jumlah makanan harus lebih dari 0";
-  }
-
-  if (!String(unit || "").trim()) {
-    return "Satuan wajib diisi";
-  }
-
-  if (!price || Number(price) <= 0) {
-    return "Harga makanan wajib diisi dan harus lebih dari 0";
-  }
-
-  if (!expiry_date) {
-    return "Tanggal kedaluwarsa wajib diisi";
-  }
-
-  const parsedDate = new Date(expiry_date);
-
-  if (Number.isNaN(parsedDate.getTime())) {
-    return "Tanggal kedaluwarsa tidak valid";
-  }
-
-  return "";
 };
 
 const getFoods = async (req, res) => {
@@ -316,9 +39,11 @@ const getFoods = async (req, res) => {
       [userId]
     );
 
+    const enrichedFoods = await enrichFoodsWithMarketplaceState(foods, userId);
+
     return res.status(200).json({
       message: "Data makanan berhasil diambil",
-      data: foods.map(normalizeFood),
+      data: enrichedFoods.map(normalizeFood),
     });
   } catch (error) {
     console.error("Get foods error:", error);
@@ -352,9 +77,11 @@ const getFoodById = async (req, res) => {
       });
     }
 
+    const enrichedFood = await enrichFoodWithMarketplaceState(foods[0], userId);
+
     return res.status(200).json({
       message: "Detail makanan berhasil diambil",
-      data: normalizeFood(foods[0]),
+      data: normalizeFood(enrichedFood),
     });
   } catch (error) {
     console.error("Get food by id error:", error);
@@ -625,17 +352,7 @@ const updateFoodStatus = async (req, res) => {
       });
     }
 
-    const allowedStatus = [
-      "aman",
-      "mendekati_kedaluwarsa",
-      "kedaluwarsa",
-      "dijual",
-      "terjual",
-      "digunakan",
-      "dibuang",
-    ];
-
-    if (!allowedStatus.includes(status)) {
+    if (!ALLOWED_FOOD_STATUS.includes(status)) {
       return res.status(400).json({
         message: "Status makanan tidak valid.",
       });
@@ -660,7 +377,10 @@ const updateFoodStatus = async (req, res) => {
       marketplaceState.activeMarketplaceQuantity || 0
     );
 
-    const freeInventoryQuantity = currentQuantity - activeMarketplaceQuantity;
+    const freeInventoryQuantity = Math.max(
+      currentQuantity - activeMarketplaceQuantity,
+      0
+    );
 
     if (PARTIAL_ACTION_STATUS.includes(status)) {
       if (!quantity || Number(quantity) <= 0) {
@@ -686,11 +406,11 @@ const updateFoodStatus = async (req, res) => {
         });
       }
 
-      const remainingQuantity = currentQuantity - actionQuantity;
-      const remainingFreeQuantity =
-        freeInventoryQuantity - actionQuantity > 0
-          ? freeInventoryQuantity - actionQuantity
-          : 0;
+      const remainingQuantity = Math.max(currentQuantity - actionQuantity, 0);
+      const remainingFreeQuantity = Math.max(
+        freeInventoryQuantity - actionQuantity,
+        0
+      );
 
       let finalStatus = currentFood.status;
       let finalPriority = currentFood.priority || "rendah";
@@ -721,7 +441,7 @@ const updateFoodStatus = async (req, res) => {
           condition_status = ?
          WHERE id = ? AND user_id = ?`,
         [
-          remainingQuantity > 0 ? remainingQuantity : 0,
+          remainingQuantity,
           finalStatus,
           finalPriority,
           finalConditionStatus,
@@ -730,6 +450,14 @@ const updateFoodStatus = async (req, res) => {
         ]
       );
 
+      await createStockLog({
+        foodId: id,
+        userId,
+        action: status,
+        quantity: actionQuantity,
+        note: `${actionQuantity} ${currentFood.unit || "pcs"} ${currentFood.name} ${status}`,
+      });
+
       return res.status(200).json({
         message: `Stok makanan berhasil dikurangi karena ${status}.`,
         data: {
@@ -737,7 +465,7 @@ const updateFoodStatus = async (req, res) => {
           action: status,
           action_quantity: actionQuantity,
           previous_quantity: currentQuantity,
-          remaining_quantity: remainingQuantity > 0 ? remainingQuantity : 0,
+          remaining_quantity: remainingQuantity,
           active_marketplace_quantity: activeMarketplaceQuantity,
           free_inventory_quantity_before: freeInventoryQuantity,
           free_inventory_quantity_after: remainingFreeQuantity,
@@ -875,7 +603,7 @@ const getFoodSummary = async (req, res) => {
       [userId]
     );
 
-    const summary = buildSummaryFromFoods(foods);
+    const summary = await buildSummaryFromFoods(foods, userId);
 
     return res.status(200).json({
       message: "Ringkasan makanan berhasil diambil",

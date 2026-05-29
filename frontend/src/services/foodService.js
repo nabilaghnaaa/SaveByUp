@@ -13,9 +13,23 @@ const normalizeFood = (food = {}) => ({
     ? String(food.purchase_date).slice(0, 10)
     : "",
   expiry_date: food.expiry_date ? String(food.expiry_date).slice(0, 10) : "",
+
   condition_status: food.condition_status || "",
+  condition_label_status: food.condition_label_status || "",
+  condition_priority: food.condition_priority || "",
+
   status: food.status || "aman",
   priority: food.priority || "rendah",
+
+  active_marketplace_quantity: Number(food.active_marketplace_quantity || 0),
+  available_marketplace_quantity: Number(
+    food.available_marketplace_quantity || 0
+  ),
+  process_marketplace_quantity: Number(food.process_marketplace_quantity || 0),
+  free_quantity: Number(
+    food.free_quantity ?? food.quantity - (food.active_marketplace_quantity || 0)
+  ),
+
   note: food.note || food.notes || "",
   notes: food.notes || food.note || "",
   image_url: food.image_url || food.image || "",
@@ -25,14 +39,24 @@ const normalizeFood = (food = {}) => ({
 });
 
 const normalizeSummary = (data = {}) => ({
+  total_items: Number(data.total_items || 0),
+
   total_foods: Number(data.total_foods || 0),
+  total_stok: Number(data.total_stok || data.total_foods || 0),
+
   total_aman: Number(data.total_aman || 0),
   total_mendekati: Number(data.total_mendekati || 0),
   total_kedaluwarsa: Number(data.total_kedaluwarsa || 0),
+
+  total_dijual: Number(data.total_dijual || 0),
+  total_dijual_tersedia: Number(data.total_dijual_tersedia || 0),
+  total_dalam_proses: Number(data.total_dalam_proses || 0),
+
   total_dibuang: Number(data.total_dibuang || 0),
   total_digunakan: Number(data.total_digunakan || 0),
-  total_dijual: Number(data.total_dijual || 0),
   total_terjual: Number(data.total_terjual || 0),
+  total_selesai_waste: Number(data.total_selesai_waste || 0),
+
   total_prioritas_tinggi: Number(data.total_prioritas_tinggi || 0),
   total_prioritas_sedang: Number(data.total_prioritas_sedang || 0),
   total_prioritas_rendah: Number(data.total_prioritas_rendah || 0),

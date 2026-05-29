@@ -8,46 +8,61 @@ const getPercent = (value, total) => {
 };
 
 export default function SummaryGrid({ summary, loading }) {
-  const totalFoods = Number(summary.total_foods || 0);
+  const totalStok = Number(summary.total_stok || summary.total_foods || 0);
+  const totalItems = Number(summary.total_items || 0);
+
   const totalAman = Number(summary.total_aman || 0);
   const totalMendekati = Number(summary.total_mendekati || 0);
   const totalKedaluwarsa = Number(summary.total_kedaluwarsa || 0);
-  const totalDibuang = Number(summary.total_dibuang || 0);
-  const totalDigunakan = Number(summary.total_digunakan || 0);
 
-  const selesaiWaste = totalKedaluwarsa + totalDibuang + totalDigunakan;
+  const totalDijual = Number(summary.total_dijual || 0);
+  const totalDigunakan = Number(summary.total_digunakan || 0);
+  const totalDibuang = Number(summary.total_dibuang || 0);
+  const totalTerjual = Number(summary.total_terjual || 0);
+
+  const selesaiWaste =
+    Number(summary.total_selesai_waste || 0) ||
+    totalKedaluwarsa + totalDibuang + totalDigunakan + totalTerjual;
 
   const cards = [
     {
-      title: "Total Makanan",
-      value: totalFoods,
-      desc: "Semua makanan yang sudah tercatat dalam inventaris pribadi.",
+      title: "Total Stok",
+      value: totalStok,
+      desc: `${totalItems} jenis makanan tercatat. Angka utama dihitung berdasarkan jumlah stok, bukan jumlah kartu makanan.`,
       tone: "earth",
-      percent: totalFoods > 0 ? 100 : 0,
+      percent: totalStok > 0 ? 100 : 0,
       icon: "🍱",
     },
     {
       title: "Aman Dikonsumsi",
       value: totalAman,
-      desc: "Makanan yang masih aman dan belum mendekati tanggal kedaluwarsa.",
+      desc: "Stok yang masih aman berdasarkan tanggal kedaluwarsa, termasuk stok yang sedang dijual jika kondisinya masih aman.",
       tone: "green",
-      percent: getPercent(totalAman, totalFoods),
+      percent: getPercent(totalAman, totalStok),
       icon: "🌿",
     },
     {
       title: "Mendekati Kedaluwarsa",
       value: totalMendekati,
-      desc: "Makanan yang perlu diprioritaskan agar tidak terbuang.",
+      desc: "Stok yang perlu diprioritaskan karena tanggal kedaluwarsanya sudah dekat.",
       tone: "warm",
-      percent: getPercent(totalMendekati, totalFoods),
+      percent: getPercent(totalMendekati, totalStok),
       icon: "⏰",
+    },
+    {
+      title: "Aktif Dijual",
+      value: totalDijual,
+      desc: "Jumlah stok yang sedang aktif ditawarkan di marketplace.",
+      tone: "blue",
+      percent: getPercent(totalDijual, totalStok),
+      icon: "🛒",
     },
     {
       title: "Selesai / Waste",
       value: selesaiWaste,
-      desc: "Makanan yang sudah digunakan, dibuang, atau melewati kedaluwarsa.",
+      desc: "Akumulasi stok yang sudah digunakan, dibuang, terjual, atau melewati kedaluwarsa.",
       tone: "brown",
-      percent: getPercent(selesaiWaste, totalFoods),
+      percent: getPercent(selesaiWaste, totalStok + selesaiWaste),
       icon: "♻️",
     },
   ];
@@ -58,9 +73,9 @@ export default function SummaryGrid({ summary, loading }) {
         <span>Ringkasan Inventaris</span>
         <h2>Status stok makanan kamu</h2>
         <p>
-          Ringkasan ini membantu kamu melihat kondisi makanan secara cepat,
-          sehingga keputusan untuk menggunakan, menjual, atau membuang makanan
-          bisa lebih terarah.
+          Ringkasan ini memisahkan kondisi makanan dan aktivitas stok. Jadi stok
+          yang dijual tetap bisa masuk kategori aman atau mendekati kedaluwarsa
+          jika tanggalnya memang masih sesuai.
         </p>
       </div>
 
@@ -83,7 +98,7 @@ export default function SummaryGrid({ summary, loading }) {
               <div style={{ width: `${card.percent}%` }} />
             </div>
 
-            <small>{card.percent}% dari total data</small>
+            <small>{card.percent}% dari acuan stok</small>
           </article>
         ))}
       </div>
