@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 import AppShell from "../../components/layout/AppShell";
 import PageHeader from "../../components/ui/PageHeader";
+import AppIcon from "../../components/ui/AppIcon";
 
 import { getFoodById } from "../../services/foodService";
 import { createMarketplaceProduct } from "../../services/marketplaceService";
@@ -16,6 +17,27 @@ import { formatDate, getDaysLeftLabel } from "../../utils/formatDate";
 import { canSellFood } from "../../utils/foodStatus";
 
 import "./styles/sellProduct.css";
+
+const FINISHED_STATUS = ["kedaluwarsa", "dibuang", "digunakan", "terjual"];
+
+function getStatusLabel(status) {
+  const labels = {
+    aman: "Aman",
+    mendekati_kedaluwarsa: "Mendekati Kedaluwarsa",
+    kedaluwarsa: "Kedaluwarsa",
+    dijual: "Sedang Dijual",
+    terjual: "Terjual",
+    digunakan: "Digunakan",
+    dibuang: "Dibuang",
+  };
+
+  return labels[status] || "Aman";
+}
+
+function getSafeNumber(value, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
 
 export default function SellProduct() {
   const { foodId } = useParams();
@@ -36,6 +58,44 @@ export default function SellProduct() {
   const [message, setMessage] = useState("");
   const [profileWarning, setProfileWarning] = useState("");
 
+  const unit = food?.unit || "pcs";
+
+  const totalQuantity = getSafeNumber(food?.quantity, 0);
+
+  const freeQuantity = getSafeNumber(
+    food?.free_quantity ?? food?.available_quantity ?? food?.quantity,
+    0
+  );
+
+  const marketplaceQuantity = getSafeNumber(
+    food?.active_marketplace_quantity ?? food?.marketplace_quantity,
+    Math.max(totalQuantity - freeQuantity, 0)
+  );
+
+  const quantityNumber = getSafeNumber(form.quantity, 0);
+  const priceNumber = getSafeNumber(form.price, 0);
+  const totalPrice = quantityNumber * priceNumber;
+
+  const profileIsComplete = profile ? isProfileComplete(profile) : false;
+  const foodIsFinished = food ? FINISHED_STATUS.includes(food.status) : false;
+
+  const productCanBeSold = Boolean(
+    food &&
+      profileIsComplete &&
+      canSellFood(food) &&
+      !foodIsFinished &&
+      freeQuantity > 0
+  );
+
+  const marketplacePercent = useMemo(() => {
+    if (!totalQuantity) return 0;
+
+    return Math.min(
+      100,
+      Math.round((marketplaceQuantity / totalQuantity) * 100)
+    );
+  }, [marketplaceQuantity, totalQuantity]);
+
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -47,11 +107,18 @@ export default function SellProduct() {
         getProfile(),
       ]);
 
+      const initialFreeQuantity = getSafeNumber(
+        foodData.free_quantity ??
+          foodData.available_quantity ??
+          foodData.quantity,
+        0
+      );
+
       setFood(foodData);
       setProfile(profileData);
 
       setForm({
-        quantity: 1,
+        quantity: initialFreeQuantity > 0 ? 1 : 0,
         price: foodData.price || "",
         description: foodData.note || foodData.notes || "",
       });
@@ -67,6 +134,7 @@ export default function SellProduct() {
       }
     } catch (error) {
       console.error("Gagal mengambil data jual makanan:", error);
+
       setMessage(
         error.response?.data?.message ||
           "Gagal mengambil data makanan atau profil pengguna."
@@ -80,10 +148,17 @@ export default function SellProduct() {
     fetchData();
   }, [foodId]);
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const updateForm = (name, value) => {
+    setForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
 
-    if (!food) return;
+  const validateForm = () => {
+    if (!food) {
+      return "Data makanan tidak ditemukan.";
+    }
 
     if (!profile || !isProfileComplete(profile)) {
       const missingFields = getMissingProfileFields(profile || {});
@@ -93,28 +168,48 @@ export default function SellProduct() {
           ", "
         )}.`
       );
-      return;
+
+      return "";
     }
 
-    if (!canSellFood(food)) {
-      setMessage(
-        "Makanan ini tidak memenuhi kriteria untuk ditawarkan ke marketplace."
-      );
-      return;
+    if (!canSellFood(food) || foodIsFinished) {
+      return "Makanan ini tidak memenuhi kriteria untuk ditawarkan ke marketplace.";
     }
 
-    if (!form.quantity || Number(form.quantity) <= 0) {
-      setMessage("Jumlah yang dijual wajib diisi dan harus lebih dari 0.");
-      return;
+    if (freeQuantity <= 0) {
+      return "Tidak ada stok bebas yang bisa ditawarkan. Semua stok sudah digunakan, habis, atau sedang aktif di marketplace.";
     }
 
-    if (Number(form.quantity) > Number(food.quantity)) {
-      setMessage("Jumlah yang dijual tidak boleh melebihi stok inventaris.");
-      return;
+    if (!form.quantity || quantityNumber <= 0) {
+      return "Jumlah yang dijual wajib diisi dan harus lebih dari 0.";
     }
 
-    if (!form.price || Number(form.price) <= 0) {
-      setMessage("Harga awal wajib diisi dan harus lebih dari 0.");
+    if (quantityNumber > freeQuantity) {
+      return `Jumlah yang dijual tidak boleh melebihi stok bebas. Stok bebas saat ini: ${freeQuantity} ${unit}.`;
+    }
+
+    if (!form.price || priceNumber <= 0) {
+      return "Harga jual wajib diisi dan harus lebih dari 0.";
+    }
+
+    if (priceNumber < 500) {
+      return "Harga jual terlalu kecil. Minimal isi harga Rp500 agar data harga tetap masuk akal.";
+    }
+
+    if (String(form.description || "").length > 500) {
+      return "Deskripsi produk maksimal 500 karakter.";
+    }
+
+    return "";
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+
+    const errorMessage = validateForm();
+
+    if (errorMessage) {
+      setMessage(errorMessage);
       return;
     }
 
@@ -124,25 +219,27 @@ export default function SellProduct() {
       setProfileWarning("");
 
       const response = await createMarketplaceProduct(food.id, {
-        quantity: Number(form.quantity),
-        price: Number(form.price),
-        description: form.description,
+        quantity: quantityNumber,
+        price: priceNumber,
+        description: String(form.description || "").trim(),
       });
 
       const responseData = response.data || {};
 
       const successMessage =
         responseData.remaining_available_to_sell !== undefined
-          ? `${response.message} Sisa stok yang masih bisa ditawarkan: ${responseData.remaining_available_to_sell} ${
-              food.unit || "pcs"
-            }.`
+          ? `${
+              response.message || "Produk berhasil ditambahkan ke marketplace."
+            } Sisa stok yang masih bisa ditawarkan: ${
+              responseData.remaining_available_to_sell
+            } ${unit}.`
           : response.message || "Produk berhasil ditambahkan ke marketplace.";
 
       setMessage(successMessage);
 
       setTimeout(() => {
         navigate("/marketplace");
-      }, 1000);
+      }, 900);
     } catch (error) {
       console.error("Gagal menambahkan produk marketplace:", error);
 
@@ -162,8 +259,6 @@ export default function SellProduct() {
     }
   };
 
-  const profileIsComplete = profile ? isProfileComplete(profile) : false;
-
   return (
     <AppShell>
       <main className="sell-product-wrapper">
@@ -173,7 +268,7 @@ export default function SellProduct() {
         <PageHeader
           label="Jual Makanan"
           title="Tawarkan Makanan ke Marketplace"
-          description="Pastikan makanan masih layak konsumsi, belum melewati kedaluwarsa, dan informasi produk ditulis jelas sebelum ditawarkan."
+          description="Atur stok bebas, harga jual, dan deskripsi produk agar makanan layak konsumsi bisa dimanfaatkan kembali."
           action={
             <button
               type="button"
@@ -186,13 +281,18 @@ export default function SellProduct() {
         />
 
         {loading ? (
-          <div className="sell-product-state">
-            <div className="marketplace-loader" />
-            <h3>Memuat makanan...</h3>
-            <p>Sedang mengambil data makanan dan profil pengguna.</p>
-          </div>
+          <section className="sell-product-state">
+            <div className="sell-loader-icon">
+              <AppIcon name="marketplace" size={30} />
+            </div>
+            <h3>Memuat data jual makanan...</h3>
+            <p>Sedang mengambil data makanan dan kelengkapan profil pengguna.</p>
+          </section>
         ) : message && !food ? (
-          <div className="sell-product-state">
+          <section className="sell-product-state">
+            <div className="sell-loader-icon sell-loader-danger">
+              <AppIcon name="warning" size={30} />
+            </div>
             <h3>Data makanan tidak dapat ditampilkan</h3>
             <p>{message}</p>
             <button
@@ -202,49 +302,135 @@ export default function SellProduct() {
             >
               Kembali ke Dashboard
             </button>
-          </div>
+          </section>
         ) : (
           food && (
             <section className="sell-product-page">
-              <div className="sell-product-preview">
-                <div className="sell-product-image">
-                  {food.image_url ? (
-                    <img src={food.image_url} alt={food.name} />
-                  ) : (
-                    <span>🍱</span>
-                  )}
+              <aside className="sell-product-left">
+                <article className="sell-preview-card">
+                  <div className="sell-preview-image">
+                    {food.image_url || food.image ? (
+                      <img
+                        src={food.image_url || food.image}
+                        alt={food.name || "Foto makanan"}
+                      />
+                    ) : (
+                      <div className="sell-preview-placeholder">
+                        <AppIcon name="food" size={62} />
+                      </div>
+                    )}
 
-                  <div className="sell-product-image-overlay" />
+                    <div className="sell-preview-overlay" />
+
+                    <span className="sell-pill sell-pill-status">
+                      {getStatusLabel(food.status)}
+                    </span>
+
+                    <span className="sell-pill sell-pill-expiry">
+                      {getDaysLeftLabel(food.expiry_date)}
+                    </span>
+                  </div>
+
+                  <div className="sell-preview-body">
+                    <span className="sell-eyebrow">
+                      {food.category || "Tanpa Kategori"}
+                    </span>
+
+                    <h2>{food.name || "Tanpa nama"}</h2>
+
+                    <p>
+                      {food.note ||
+                        food.notes ||
+                        "Belum ada catatan kondisi makanan."}
+                    </p>
+
+                    <div className="sell-market-progress">
+                      <div className="sell-market-progress-head">
+                        <span>Stok aktif marketplace</span>
+                        <strong>{marketplacePercent}%</strong>
+                      </div>
+
+                      <div className="sell-market-progress-bar">
+                        <span style={{ width: `${marketplacePercent}%` }} />
+                      </div>
+                    </div>
+                  </div>
+                </article>
+
+                <article className="sell-profile-mini">
+                  <div className="sell-profile-mini-icon">
+                    <AppIcon name="user" size={25} />
+                  </div>
+
+                  <div>
+                    <span>Profil Penjual</span>
+                    <strong>{profile?.name || "Pengguna SaveByUp"}</strong>
+                    <p>
+                      {profileIsComplete
+                        ? "Profil sudah lengkap dan siap transaksi."
+                        : "Profil belum lengkap untuk mulai menjual."}
+                    </p>
+                  </div>
+                </article>
+              </aside>
+
+              <section className="sell-product-right">
+                <div className="sell-hero-box">
+                  <div>
+                    <span>Marketplace Setup</span>
+                    <h3>Jual stok bebas tanpa merusak data inventaris.</h3>
+                    <p>
+                      Produk yang ditawarkan tidak langsung mengurangi stok
+                      inventaris. Stok baru berkurang setelah transaksi selesai.
+                    </p>
+                  </div>
+
+                  <div className="sell-hero-badge">
+                    <AppIcon name="shield" size={24} />
+                    <span>Validasi aktif</span>
+                  </div>
                 </div>
 
-                <div className="sell-product-info">
-                  <span>{food.category || "Tanpa Kategori"}</span>
-                  <h2>{food.name}</h2>
+                <div className="sell-stat-grid">
+                  <div>
+                    <AppIcon name="total" size={22} />
+                    <span>Total Stok</span>
+                    <strong>
+                      {totalQuantity} {unit}
+                    </strong>
+                  </div>
 
-                  <p>
-                    Stok inventaris: {food.quantity} {food.unit}
-                  </p>
+                  <div>
+                    <AppIcon name="stock" size={22} />
+                    <span>Stok Bebas</span>
+                    <strong>
+                      {freeQuantity} {unit}
+                    </strong>
+                  </div>
 
-                  <p>
-                    Harga inventaris: Rp
-                    {Number(food.price || 0).toLocaleString("id-ID")}
-                  </p>
+                  <div>
+                    <AppIcon name="marketplace" size={22} />
+                    <span>Aktif Dijual</span>
+                    <strong>
+                      {marketplaceQuantity} {unit}
+                    </strong>
+                  </div>
 
-                  <p>Kedaluwarsa: {formatDate(food.expiry_date)}</p>
+                  <div>
+                    <AppIcon name="calendar" size={22} />
+                    <span>Kedaluwarsa</span>
+                    <strong>{formatDate(food.expiry_date)}</strong>
+                  </div>
+                </div>
 
-                  <strong>{getDaysLeftLabel(food.expiry_date)}</strong>
+                {profileWarning && (
+                  <div className="sell-alert sell-alert-warning">
+                    <AppIcon name="warning" size={24} />
 
-                  {!canSellFood(food) && (
-                    <div className="sell-warning">
-                      Makanan ini tidak dapat dijual karena status atau tanggal
-                      kedaluwarsanya tidak memenuhi syarat.
-                    </div>
-                  )}
+                    <div>
+                      <strong>Profil belum lengkap</strong>
+                      <p>{profileWarning}</p>
 
-                  {profileWarning && (
-                    <div className="sell-warning">
-                      {profileWarning}
-                      <br />
                       <button
                         type="button"
                         className="sb-btn marketplace-btn-outline"
@@ -253,101 +439,144 @@ export default function SellProduct() {
                         Lengkapi Profil
                       </button>
                     </div>
-                  )}
-                </div>
-              </div>
+                  </div>
+                )}
 
-              <form className="sell-product-form" onSubmit={handleSubmit}>
-                <div className="sell-form-heading">
-                  <span>Marketplace Form</span>
-                  <h3>Atur jumlah, harga, dan deskripsi</h3>
-                  <p>
-                    Kalau produk yang sama sudah ada di marketplace, jumlah yang
-                    kamu input akan ditambahkan ke stok marketplace, bukan
-                    membuat data baru.
-                  </p>
-                </div>
+                {!productCanBeSold && !profileWarning && (
+                  <div className="sell-alert sell-alert-warning">
+                    <AppIcon name="warning" size={24} />
+
+                    <div>
+                      <strong>Produk belum bisa dijual</strong>
+                      <p>
+                        Pastikan makanan belum kedaluwarsa, belum berstatus
+                        selesai, dan masih memiliki stok bebas.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {message && <div className="sell-message">{message}</div>}
 
-                <label>Jumlah yang Dijual</label>
-                <input
-                  type="number"
-                  min="1"
-                  max={food.quantity}
-                  value={form.quantity}
-                  placeholder="Contoh: 2"
-                  disabled={!profileIsComplete || saving}
-                  onChange={(event) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      quantity: event.target.value,
-                    }))
-                  }
-                />
+                <form className="sell-product-form" onSubmit={handleSubmit}>
+                  <div className="sell-form-grid">
+                    <div className="sell-form-group">
+                      <label>Jumlah yang Dijual</label>
 
-                <small>
-                  Stok inventaris: {food.quantity} {food.unit}. Kalau sebagian
-                  sudah ada di marketplace, backend otomatis menghitung sisa stok
-                  yang masih boleh ditawarkan.
-                </small>
+                      <div className="sell-input-with-icon">
+                        <AppIcon name="stock" size={20} />
+                        <input
+                          type="number"
+                          min="1"
+                          max={freeQuantity}
+                          value={form.quantity}
+                          placeholder="Contoh: 2"
+                          disabled={!profileIsComplete || saving || !canSellFood(food)}
+                          onChange={(event) =>
+                            updateForm("quantity", event.target.value)
+                          }
+                        />
+                      </div>
 
-                <label>Harga Jual per {food.unit || "pcs"}</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={form.price}
-                  placeholder="Contoh: 8000"
-                  disabled={!profileIsComplete || saving}
-                  onChange={(event) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      price: event.target.value,
-                    }))
-                  }
-                />
+                      <small>
+                        Maksimal stok bebas yang bisa ditawarkan: {freeQuantity}{" "}
+                        {unit}.
+                      </small>
+                    </div>
 
-                <label>Deskripsi Produk</label>
-                <textarea
-                  rows="5"
-                  value={form.description}
-                  disabled={!profileIsComplete || saving}
-                  placeholder="Jelaskan kondisi makanan, masih tersegel/tidak, lokasi COD, dan informasi penting lainnya."
-                  onChange={(event) =>
-                    setForm((prev) => ({
-                      ...prev,
-                      description: event.target.value,
-                    }))
-                  }
-                />
+                    <div className="sell-form-group">
+                      <label>Harga Jual per {unit}</label>
 
-                <div className="sell-rules">
-                  <strong>Kriteria marketplace:</strong>
-                  <ul>
-                    <li>Profil penjual wajib lengkap.</li>
-                    <li>Makanan belum melewati tanggal kedaluwarsa.</li>
-                    <li>Makanan masih layak konsumsi.</li>
-                    <li>Data makanan berasal dari inventaris pengguna.</li>
-                    <li>Jumlah yang dijual tidak boleh melebihi stok inventaris.</li>
-                    <li>
-                      Kalau makanan yang sama sudah tersedia di marketplace,
-                      stok marketplace akan ditambahkan.
-                    </li>
-                    <li>
-                      Stok inventaris baru berkurang ketika transaksi selesai,
-                      bukan saat produk ditawarkan.
-                    </li>
-                  </ul>
-                </div>
+                      <div className="sell-input-with-icon">
+                        <AppIcon name="wallet" size={20} />
+                        <input
+                          type="number"
+                          min="500"
+                          value={form.price}
+                          placeholder="Contoh: 8000"
+                          disabled={!profileIsComplete || saving || !canSellFood(food)}
+                          onChange={(event) =>
+                            updateForm("price", event.target.value)
+                          }
+                        />
+                      </div>
 
-                <button
-                  type="submit"
-                  className="sb-btn sb-btn-primary"
-                  disabled={saving || !canSellFood(food) || !profileIsComplete}
-                >
-                  {saving ? "Menyimpan..." : "Tawarkan ke Marketplace"}
-                </button>
-              </form>
+                      <small>
+                        Estimasi total: Rp
+                        {totalPrice.toLocaleString("id-ID")}
+                      </small>
+                    </div>
+
+                    <div className="sell-form-group sell-form-full">
+                      <label>Deskripsi Produk</label>
+
+                      <textarea
+                        rows="5"
+                        value={form.description}
+                        maxLength="500"
+                        disabled={!profileIsComplete || saving || !canSellFood(food)}
+                        placeholder="Contoh: Masih tersegel, disimpan di rak atas, COD sekitar kampus UMY."
+                        onChange={(event) =>
+                          updateForm("description", event.target.value)
+                        }
+                      />
+
+                      <small>
+                        {String(form.description || "").length}/500 karakter.
+                        Tulis kondisi makanan secara jujur.
+                      </small>
+                    </div>
+                  </div>
+
+                  <div className="sell-rules-panel">
+                    <div>
+                      <AppIcon name="check" size={21} />
+                      <span>Profil penjual wajib lengkap.</span>
+                    </div>
+
+                    <div>
+                      <AppIcon name="check" size={21} />
+                      <span>Jumlah jual hanya mengambil stok bebas.</span>
+                    </div>
+
+                    <div>
+                      <AppIcon name="check" size={21} />
+                      <span>Produk yang sama akan ditambahkan stoknya.</span>
+                    </div>
+
+                    <div>
+                      <AppIcon name="check" size={21} />
+                      <span>Stok inventaris berkurang setelah transaksi selesai.</span>
+                    </div>
+                  </div>
+
+                  <div className="sell-submit-row">
+                    <button
+                      type="button"
+                      className="sb-btn marketplace-btn-outline"
+                      disabled={saving}
+                      onClick={() => navigate("/dashboard")}
+                    >
+                      Batal
+                    </button>
+
+                    <button
+                      type="submit"
+                      className="sb-btn sb-btn-primary sell-submit-button"
+                      disabled={saving || !profileIsComplete || !canSellFood(food)}
+                    >
+                      {saving ? (
+                        "Menyimpan..."
+                      ) : (
+                        <>
+                          <AppIcon name="marketplace" size={20} />
+                          Tawarkan ke Marketplace
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              </section>
             </section>
           )
         )}
