@@ -1,9 +1,11 @@
 import {
   HiOutlineArchiveBox,
+  HiOutlineArrowLeft,
   HiOutlineBellAlert,
   HiOutlineCalendarDays,
   HiOutlineCheckCircle,
   HiOutlineClock,
+  HiOutlineCurrencyDollar,
   HiOutlineExclamationTriangle,
   HiOutlineHome,
   HiOutlinePencilSquare,
@@ -19,6 +21,7 @@ import {
   PiBowlFoodBold,
   PiCookingPotBold,
   PiLeafBold,
+  PiMapPinAreaBold,
   PiRecycleBold,
   PiStorefrontBold,
 } from "react-icons/pi";
@@ -27,6 +30,7 @@ import {
   TbBasket,
   TbClipboardList,
   TbMessageCircle,
+  TbPackage,
   TbReceipt,
   TbRefresh,
   TbShieldCheck,
@@ -36,9 +40,11 @@ import {
 const iconMap = {
   dashboard: HiOutlineHome,
   add: HiOutlinePlusCircle,
+  back: HiOutlineArrowLeft,
 
   food: PiBowlFoodBold,
   stock: HiOutlineArchiveBox,
+  package: TbPackage,
   total: TbBasket,
   safe: PiLeafBold,
   warning: HiOutlineExclamationTriangle,
@@ -59,9 +65,11 @@ const iconMap = {
   clock: HiOutlineClock,
   calendar: HiOutlineCalendarDays,
   refresh: TbRefresh,
+  price: HiOutlineCurrencyDollar,
 
   user: HiOutlineUserCircle,
   profile: HiOutlineUserCircle,
+  location: PiMapPinAreaBold,
 
   request: TbClipboardList,
   message: TbMessageCircle,

@@ -1,0 +1,135 @@
+.product-edit-panel {
+  background:
+    radial-gradient(circle at 8% 0%, rgba(122, 79, 47, 0.08), transparent 35%),
+    rgba(255, 251, 244, 0.84);
+}
+
+.product-edit-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+}
+
+.product-edit-header button {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border: 0;
+  border-radius: 999px;
+  color: #9f3f2d;
+  background: rgba(170, 75, 48, 0.1);
+  font-size: 25px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.product-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.product-edit-full {
+  grid-column: 1 / -1;
+}
+
+.product-edit-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: #263f24;
+  font-weight: 950;
+}
+
+.product-input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.product-input-with-icon span {
+  position: absolute;
+  left: 15px;
+  top: 50%;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  transform: translateY(-50%);
+  border-radius: 11px;
+  color: #7a4f2f;
+  background: rgba(122, 79, 47, 0.08);
+  pointer-events: none;
+}
+
+.product-input-with-icon input {
+  padding-left: 58px !important;
+}
+
+.product-edit-group input,
+.product-edit-group textarea {
+  width: 100%;
+  border: 1px solid rgba(95, 71, 47, 0.14);
+  border-radius: 19px;
+  padding: 15px 16px;
+  color: #263f24;
+  background: rgba(255, 255, 255, 0.86);
+  outline: none;
+  font-weight: 760;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.product-edit-group input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.product-edit-group input[type="number"]::-webkit-outer-spin-button,
+.product-edit-group input[type="number"]::-webkit-inner-spin-button {
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.product-edit-group textarea {
+  resize: vertical;
+  min-height: 116px;
+  line-height: 1.6;
+}
+
+.product-edit-group input:focus,
+.product-edit-group textarea:focus {
+  border-color: rgba(74, 121, 67, 0.42);
+  box-shadow: 0 0 0 4px rgba(123, 153, 91, 0.16);
+  background: #fffdfa;
+}
+
+.product-edit-group input:disabled,
+.product-edit-group textarea:disabled {
+  opacity: 0.62;
+  cursor: not-allowed;
+}
+
+.product-edit-group small {
+  display: block;
+  margin-top: 8px;
+  color: #7d7468;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.product-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.product-edit-actions .sb-btn {
+  min-height: 47px;
+}

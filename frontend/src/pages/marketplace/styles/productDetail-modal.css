@@ -1,0 +1,102 @@
+.negotiation-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(34, 41, 27, 0.62);
+  backdrop-filter: blur(12px);
+}
+
+.negotiation-modal {
+  width: min(100%, 560px);
+  padding: 26px;
+  border-radius: 32px;
+  background: #fffbf4;
+  border: 1px solid rgba(95, 71, 47, 0.14);
+  box-shadow: 0 34px 100px rgba(69, 48, 31, 0.26);
+}
+
+.negotiation-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.negotiation-header span {
+  color: #7a4f2f;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.negotiation-header h3 {
+  margin: 5px 0 0;
+  color: #21351e;
+  font-size: 28px;
+  letter-spacing: -0.8px;
+}
+
+.negotiation-header button {
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(170, 75, 48, 0.1);
+  color: #9f3f2d;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.negotiation-modal p {
+  color: #756b5d;
+  line-height: 1.65;
+}
+
+.negotiation-modal label {
+  display: block;
+  margin: 15px 0 8px;
+  color: #263f24;
+  font-weight: 900;
+}
+
+.negotiation-modal input,
+.negotiation-modal textarea {
+  width: 100%;
+  border: 1px solid rgba(95, 71, 47, 0.14);
+  border-radius: 18px;
+  padding: 14px 15px;
+  outline: none;
+  color: #263f24;
+  background: rgba(255, 255, 255, 0.76);
+}
+
+.negotiation-modal input:focus,
+.negotiation-modal textarea:focus {
+  border-color: rgba(74, 121, 67, 0.42);
+  box-shadow: 0 0 0 4px rgba(123, 153, 91, 0.16);
+  background: #fffdfa;
+}
+
+.negotiation-modal input:disabled,
+.negotiation-modal textarea:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+.negotiation-message {
+  padding: 13px 15px;
+  border-radius: 18px;
+  background: rgba(223, 239, 198, 0.78);
+  color: #274622;
+  font-weight: 850;
+}
+
+.negotiation-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
