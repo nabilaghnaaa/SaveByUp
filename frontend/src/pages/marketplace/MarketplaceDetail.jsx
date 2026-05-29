@@ -9,6 +9,7 @@ import {
   canBuyProduct,
   cancelMarketplaceProduct,
   getMarketplaceProductById,
+  getProductPrice,
   isOwnProduct,
   updateMarketplaceProduct,
 } from "../../services/marketplaceService";
@@ -57,12 +58,14 @@ export default function MarketplaceDetail() {
         getProfile(),
       ]);
 
+      const price = getProductPrice(productData);
+
       setProduct(productData);
       setProfile(profileData);
 
       setEditForm({
         quantity: productData.quantity || 1,
-        price: productData.price || "",
+        price: price || "",
         description: productData.description || "",
       });
     } catch (error) {
@@ -85,7 +88,7 @@ export default function MarketplaceDetail() {
   const productCanBeBought = product ? canBuyProduct(product, currentUserId) : false;
 
   const productQuantity = toNumber(product?.quantity);
-  const productPrice = toNumber(product?.price);
+  const productPrice = product ? getProductPrice(product) : 0;
   const editQuantity = toNumber(editForm.quantity);
   const editPrice = toNumber(editForm.price);
   const editTotal = editQuantity * editPrice;
@@ -148,7 +151,7 @@ export default function MarketplaceDetail() {
       "Yakin ingin membatalkan produk ini dari marketplace?"
     );
 
-    if (!confirmCancel) return;
+    if (!confirmCancel || !product) return;
 
     try {
       setMessage("");

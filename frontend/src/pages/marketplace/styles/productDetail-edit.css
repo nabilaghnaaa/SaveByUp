@@ -123,6 +123,29 @@
   line-height: 1.5;
 }
 
+.product-edit-total {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-top: 16px;
+  padding: 15px;
+  border-radius: 20px;
+  background: rgba(74, 121, 67, 0.08);
+  border: 1px solid rgba(74, 121, 67, 0.1);
+}
+
+.product-edit-total span {
+  color: #756b5d;
+  font-size: 13px;
+  font-weight: 850;
+}
+
+.product-edit-total strong {
+  color: #274622;
+  font-size: 19px;
+}
+
 .product-edit-actions {
   display: flex;
   justify-content: flex-end;
@@ -132,4 +155,19 @@
 
 .product-edit-actions .sb-btn {
   min-height: 47px;
+}
+
+@media (max-width: 720px) {
+  .product-edit-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .product-edit-full {
+    grid-column: auto;
+  }
+
+  .product-edit-total {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }

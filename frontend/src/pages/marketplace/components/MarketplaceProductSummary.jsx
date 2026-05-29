@@ -1,83 +1,86 @@
 import AppIcon from "../../../components/ui/AppIcon";
 
+import { formatCurrency } from "../../../utils/formatCurrency";
 import { formatDate, getDaysLeftLabel } from "../../../utils/formatDate";
 
 import {
   getDistanceLabel,
+  getDistanceTone,
   getProductStatusLabel,
 } from "../utils/marketplaceDetailUtils";
 
-export default function MarketplaceProductAside({ product, productIsMine }) {
+export default function MarketplaceProductSummary({
+  product,
+  productIsMine,
+  productPrice,
+  statusProgress,
+}) {
+  const distanceTone = getDistanceTone(product.distance_km);
+
   return (
-    <aside className="product-detail-left">
-      <article className="product-image-card">
-        <div className="product-detail-image">
-          {product.image_url ? (
-            <img src={product.image_url} alt={product.name} />
-          ) : (
-            <div className="product-detail-placeholder">
-              <AppIcon name="food" size={72} />
-            </div>
-          )}
+    <>
+      <div className="product-detail-hero">
+        <div>
+          <span>{productIsMine ? "Product Management" : "Marketplace Item"}</span>
 
-          <div className="product-detail-image-overlay" />
+          <h2>{product.name || "Produk Marketplace"}</h2>
 
-          <span className={`product-detail-status status-${product.status}`}>
-            {getProductStatusLabel(product.status)}
-          </span>
-
-          {productIsMine && (
-            <span className="product-owner-badge">Produk Kamu</span>
-          )}
+          <p>
+            {product.description ||
+              "Produk belum memiliki deskripsi tambahan dari penjual."}
+          </p>
         </div>
 
-        <div className="product-image-info">
-          <div>
-            <span>{product.category || "Tanpa Kategori"}</span>
-            <strong>{getDaysLeftLabel(product.expiry_date)}</strong>
-          </div>
+        <strong>{formatCurrency(productPrice)}</strong>
+      </div>
 
-          <p>Kedaluwarsa pada {formatDate(product.expiry_date)}.</p>
+      <div className="product-status-strip">
+        <div className="product-status-strip-head">
+          <span>Status Produk</span>
+          <strong>{getProductStatusLabel(product.status)}</strong>
         </div>
-      </article>
 
-      <article className="seller-panel">
-        <div className="seller-avatar">
-          <AppIcon name="user" size={26} />
+        <div className="product-status-progress">
+          <span style={{ width: `${statusProgress}%` }} />
+        </div>
+      </div>
+
+      <div className="product-detail-grid">
+        <div>
+          <AppIcon name="stock" />
+          <span>Stok Tersedia</span>
+          <strong>
+            {product.quantity} {product.unit}
+          </strong>
         </div>
 
         <div>
-          <span>Penjual</span>
-          <strong>
-            {product.seller_name || "Penjual SaveByUp"}
-            {productIsMine ? " (Kamu)" : ""}
-          </strong>
-
-          <small>
-            Rating {product.seller_rating || 0}/5 •{" "}
-            {product.seller_address ||
-              product.seller_location_label ||
-              "Area kos UMY"}
-          </small>
+          <AppIcon name="clock" />
+          <span>Sisa Waktu</span>
+          <strong>{getDaysLeftLabel(product.expiry_date)}</strong>
         </div>
-      </article>
 
-      {!productIsMine && (
-        <article className="seller-panel product-location-safe-card">
-          <div className="seller-avatar">
-            <AppIcon name="location" size={25} />
-          </div>
+        <div>
+          <AppIcon name="calendar" />
+          <span>Tanggal Kedaluwarsa</span>
+          <strong>{formatDate(product.expiry_date)}</strong>
+        </div>
 
-          <div>
-            <span>Jarak Perkiraan</span>
+        <div>
+          <AppIcon name="price" />
+          <span>Harga Satuan</span>
+          <strong>{formatCurrency(productPrice)}</strong>
+        </div>
+
+        {!productIsMine && (
+          <div className={`product-distance-summary distance-${distanceTone}`}>
+            <AppIcon name="location" />
+            <span>Jarak Penjual</span>
             <strong>{getDistanceLabel(product.distance_km)}</strong>
-            <small>
-              Titik GPS detail baru dibuka setelah pengajuan disetujui dan kamu
-              mengonfirmasi transaksi.
-            </small>
+            <small>GPS detail disembunyikan sampai transaksi disetujui.</small>
           </div>
-        </article>
-      )}
-    </aside>
+        )}
+      </div>
+    </>
   );
 }

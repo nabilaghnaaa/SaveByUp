@@ -1,63 +1,39 @@
 import AppIcon from "../../../components/ui/AppIcon";
 
-export default function MarketplaceOwnerPanel({
+export default function MarketplaceBuyerPanel({
   product,
-  editMode,
-  onToggleEdit,
-  onCancelSell,
+  productQuantity,
+  productCanBeBought,
+  disabledReason,
+  onOpenNegotiation,
 }) {
   return (
-    <section className="product-owner-panel">
-      <div className="product-owner-panel-head">
-        <div>
-          <span>Kelola Produk Kamu</span>
-          <h3>Atur penjualan tanpa pindah halaman.</h3>
-        </div>
-
-        <div className="product-owner-panel-icon">
-          <AppIcon name="shield" size={26} />
-        </div>
+    <section className="buyer-panel">
+      <div>
+        <span>Ajukan Pembelian</span>
+        <h3>Minat dengan produk ini?</h3>
+        <p>
+          Kamu bisa mengajukan pembelian atau menawar harga. Titik lokasi detail
+          baru dibuka setelah pengajuan disetujui dan transaksi dikonfirmasi.
+        </p>
       </div>
 
-      <div className="product-owner-actions">
-        <button
-          type="button"
-          className="product-action-card primary"
-          disabled={product.status !== "tersedia"}
-          onClick={onToggleEdit}
-        >
-          <span>
-            <AppIcon name="edit" />
-          </span>
+      <button
+        type="button"
+        className="sb-btn sb-btn-primary product-request-button"
+        disabled={!productCanBeBought}
+        onClick={onOpenNegotiation}
+      >
+        <AppIcon name="request" />
+        {product.status !== "tersedia"
+          ? "Produk Tidak Tersedia"
+          : productQuantity <= 0
+            ? "Stok Habis"
+            : "Ajukan Pembelian / Negosiasi"}
+      </button>
 
-          <div>
-            <strong>{editMode ? "Tutup Edit Produk" : "Edit Produk Jual"}</strong>
-            <small>Ubah jumlah, harga, dan deskripsi produk.</small>
-          </div>
-        </button>
-
-        <button
-          type="button"
-          className="product-action-card danger"
-          disabled={product.status !== "tersedia"}
-          onClick={onCancelSell}
-        >
-          <span>
-            <AppIcon name="delete" />
-          </span>
-
-          <div>
-            <strong>Batal Jual</strong>
-            <small>Hapus produk dari daftar marketplace aktif.</small>
-          </div>
-        </button>
-      </div>
-
-      {product.status !== "tersedia" && (
-        <small className="product-detail-note">
-          Produk tidak bisa diedit atau dibatalkan karena statusnya bukan
-          tersedia.
-        </small>
+      {disabledReason && (
+        <small className="product-detail-note">{disabledReason}</small>
       )}
     </section>
   );

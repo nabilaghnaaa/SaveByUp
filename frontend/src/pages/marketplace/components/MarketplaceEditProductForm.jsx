@@ -1,41 +1,96 @@
 import AppIcon from "../../../components/ui/AppIcon";
 
-export default function MarketplaceBuyerPanel({
+import { formatCurrency } from "../../../utils/formatCurrency";
+
+export default function MarketplaceEditProductForm({
   product,
-  productQuantity,
-  productCanBeBought,
-  disabledReason,
-  onOpenNegotiation,
+  editForm,
+  editTotal,
+  savingEdit,
+  onChange,
+  onClose,
+  onSubmit,
 }) {
   return (
-    <section className="buyer-panel">
-      <div>
-        <span>Ajukan Pembelian</span>
-        <h3>Minat dengan produk ini?</h3>
-        <p>
-          Kamu bisa mengajukan pembelian atau menawar harga sesuai kesepakatan
-          dengan penjual. Titik lokasi detail baru dibuka setelah pengajuan
-          disetujui dan kamu mengonfirmasi transaksi.
-        </p>
+    <form className="product-edit-form" onSubmit={onSubmit}>
+      <div className="product-edit-header">
+        <div>
+          <span>Edit Produk Jual</span>
+          <h3>{product.name}</h3>
+          <p>
+            Perubahan hanya berlaku untuk produk yang sedang aktif di
+            marketplace.
+          </p>
+        </div>
+
+        <button type="button" onClick={onClose} disabled={savingEdit}>
+          ×
+        </button>
       </div>
 
-      <button
-        type="button"
-        className="sb-btn sb-btn-primary product-request-button"
-        disabled={!productCanBeBought}
-        onClick={onOpenNegotiation}
-      >
-        <AppIcon name="request" />
-        {product.status !== "tersedia"
-          ? "Produk Tidak Tersedia"
-          : productQuantity <= 0
-            ? "Stok Habis"
-            : "Ajukan Pembelian / Negosiasi"}
-      </button>
+      <div className="product-edit-grid">
+        <label>
+          <span>Jumlah Dijual</span>
 
-      {disabledReason && (
-        <small className="product-detail-note">{disabledReason}</small>
-      )}
-    </section>
+          <div className="product-edit-input">
+            <AppIcon name="stock" />
+            <input
+              type="number"
+              min="1"
+              value={editForm.quantity}
+              disabled={savingEdit}
+              onChange={(event) => onChange("quantity", event.target.value)}
+            />
+          </div>
+        </label>
+
+        <label>
+          <span>Harga Jual per {product.unit || "pcs"}</span>
+
+          <div className="product-edit-input">
+            <AppIcon name="price" />
+            <input
+              type="number"
+              min="1"
+              value={editForm.price}
+              disabled={savingEdit}
+              onChange={(event) => onChange("price", event.target.value)}
+            />
+          </div>
+        </label>
+      </div>
+
+      <label>
+        <span>Deskripsi Produk</span>
+        <textarea
+          rows="4"
+          maxLength="500"
+          value={editForm.description}
+          disabled={savingEdit}
+          placeholder="Contoh: masih tersegel, COD sekitar kos/kampus, kondisi aman dikonsumsi."
+          onChange={(event) => onChange("description", event.target.value)}
+        />
+      </label>
+
+      <div className="product-edit-total">
+        <span>Estimasi total jika semua stok terjual</span>
+        <strong>{formatCurrency(editTotal)}</strong>
+      </div>
+
+      <div className="product-edit-actions">
+        <button
+          type="button"
+          className="sb-btn marketplace-btn-outline"
+          disabled={savingEdit}
+          onClick={onClose}
+        >
+          Batal
+        </button>
+
+        <button type="submit" className="sb-btn sb-btn-primary" disabled={savingEdit}>
+          {savingEdit ? "Menyimpan..." : "Simpan Perubahan"}
+        </button>
+      </div>
+    </form>
   );
 }

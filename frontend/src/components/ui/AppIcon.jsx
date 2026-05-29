@@ -66,10 +66,12 @@ const iconMap = {
   calendar: HiOutlineCalendarDays,
   refresh: TbRefresh,
   price: HiOutlineCurrencyDollar,
+  money: HiOutlineCurrencyDollar,
 
   user: HiOutlineUserCircle,
   profile: HiOutlineUserCircle,
   location: PiMapPinAreaBold,
+  pin: PiMapPinAreaBold,
 
   request: TbClipboardList,
   message: TbMessageCircle,

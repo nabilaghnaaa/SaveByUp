@@ -4,19 +4,23 @@ import { formatDate, getDaysLeftLabel } from "../../../utils/formatDate";
 
 import {
   getDistanceLabel,
+  getDistanceTone,
   getProductStatusLabel,
 } from "../utils/marketplaceDetailUtils";
 
 export default function MarketplaceProductAside({ product, productIsMine }) {
+  const imageSource = product.image_url || product.image || "";
+  const distanceTone = getDistanceTone(product.distance_km);
+
   return (
     <aside className="product-detail-left">
       <article className="product-image-card">
         <div className="product-detail-image">
-          {product.image_url ? (
-            <img src={product.image_url} alt={product.name} />
+          {imageSource ? (
+            <img src={imageSource} alt={product.name || "Produk marketplace"} />
           ) : (
             <div className="product-detail-placeholder">
-              <AppIcon name="food" size={72} />
+              <AppIcon name="food" size={78} />
             </div>
           )}
 
@@ -43,7 +47,7 @@ export default function MarketplaceProductAside({ product, productIsMine }) {
 
       <article className="seller-panel">
         <div className="seller-avatar">
-          <AppIcon name="user" size={26} />
+          <AppIcon name="user" size={25} />
         </div>
 
         <div>
@@ -55,25 +59,27 @@ export default function MarketplaceProductAside({ product, productIsMine }) {
 
           <small>
             Rating {product.seller_rating || 0}/5 •{" "}
-            {product.seller_address ||
-              product.seller_location_label ||
-              "Area kos UMY"}
+            {product.seller_location_label ||
+              product.seller_address ||
+              "Area COD belum diisi"}
           </small>
         </div>
       </article>
 
       {!productIsMine && (
-        <article className="seller-panel product-location-safe-card">
+        <article
+          className={`seller-panel product-location-safe-card distance-${distanceTone}`}
+        >
           <div className="seller-avatar">
-            <AppIcon name="location" size={25} />
+            <AppIcon name="location" size={24} />
           </div>
 
           <div>
             <span>Jarak Perkiraan</span>
             <strong>{getDistanceLabel(product.distance_km)}</strong>
             <small>
-              Titik GPS detail baru dibuka setelah pengajuan disetujui dan kamu
-              mengonfirmasi transaksi.
+              Titik GPS detail baru dibuka setelah pengajuan disetujui dan
+              transaksi dikonfirmasi.
             </small>
           </div>
         </article>

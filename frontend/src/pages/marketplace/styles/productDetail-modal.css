@@ -5,15 +5,20 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(34, 41, 27, 0.62);
-  backdrop-filter: blur(12px);
+  background:
+    radial-gradient(circle at 20% 18%, rgba(122, 79, 47, 0.22), transparent 32%),
+    radial-gradient(circle at 82% 16%, rgba(74, 121, 67, 0.2), transparent 34%),
+    rgba(34, 41, 27, 0.62);
+  backdrop-filter: blur(13px);
 }
 
 .negotiation-modal {
   width: min(100%, 560px);
   padding: 26px;
   border-radius: 32px;
-  background: #fffbf4;
+  background:
+    radial-gradient(circle at 90% 0%, rgba(223, 239, 198, 0.58), transparent 35%),
+    #fffbf4;
   border: 1px solid rgba(95, 71, 47, 0.14);
   box-shadow: 0 34px 100px rgba(69, 48, 31, 0.26);
 }
@@ -99,4 +104,14 @@
   justify-content: flex-end;
   gap: 10px;
   margin-top: 20px;
+}
+
+@media (max-width: 720px) {
+  .negotiation-actions {
+    flex-direction: column-reverse;
+  }
+
+  .negotiation-actions .sb-btn {
+    width: 100%;
+  }
 }

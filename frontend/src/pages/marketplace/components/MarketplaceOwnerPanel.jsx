@@ -1,82 +1,70 @@
 import AppIcon from "../../../components/ui/AppIcon";
 
-import { formatCurrency } from "../../../utils/formatCurrency";
-import { formatDate, getDaysLeftLabel } from "../../../utils/formatDate";
-
-import {
-  getDistanceLabel,
-  getProductStatusLabel,
-} from "../utils/marketplaceDetailUtils";
-
-export default function MarketplaceProductSummary({
+export default function MarketplaceOwnerPanel({
   product,
-  productIsMine,
-  productPrice,
-  statusProgress,
+  editMode,
+  onToggleEdit,
+  onCancelSell,
 }) {
+  const disabled = product.status !== "tersedia";
+
   return (
-    <>
-      <div className="product-detail-hero">
+    <section className="product-owner-panel">
+      <div className="product-owner-panel-head">
         <div>
-          <span>{productIsMine ? "Product Management" : "Marketplace Item"}</span>
-
-          <h2>{product.name}</h2>
-
+          <span>Kelola Produk Kamu</span>
+          <h3>Atur penjualan tanpa pindah halaman.</h3>
           <p>
-            {product.description ||
-              "Produk belum memiliki deskripsi tambahan dari penjual."}
+            Ubah jumlah, harga, deskripsi, atau batalkan produk dari marketplace
+            selama belum masuk proses transaksi.
           </p>
         </div>
 
-        <strong>{formatCurrency(productPrice)}</strong>
-      </div>
-
-      <div className="product-status-strip">
-        <div className="product-status-strip-head">
-          <span>Status Produk</span>
-          <strong>{getProductStatusLabel(product.status)}</strong>
-        </div>
-
-        <div className="product-status-progress">
-          <span style={{ width: `${statusProgress}%` }} />
+        <div className="product-owner-panel-icon">
+          <AppIcon name="shield" size={26} />
         </div>
       </div>
 
-      <div className="product-detail-grid">
-        <div>
-          <AppIcon name="stock" />
-          <span>Stok Tersedia</span>
-          <strong>
-            {product.quantity} {product.unit}
-          </strong>
-        </div>
+      <div className="product-owner-actions">
+        <button
+          type="button"
+          className="product-action-card primary"
+          disabled={disabled}
+          onClick={onToggleEdit}
+        >
+          <span>
+            <AppIcon name="edit" />
+          </span>
 
-        <div>
-          <AppIcon name="clock" />
-          <span>Sisa Waktu</span>
-          <strong>{getDaysLeftLabel(product.expiry_date)}</strong>
-        </div>
-
-        <div>
-          <AppIcon name="calendar" />
-          <span>Tanggal Kedaluwarsa</span>
-          <strong>{formatDate(product.expiry_date)}</strong>
-        </div>
-
-        <div>
-          <AppIcon name="wallet" />
-          <span>Harga Satuan</span>
-          <strong>{formatCurrency(productPrice)}</strong>
-        </div>
-
-        {!productIsMine && (
           <div>
-            <AppIcon name="location" />
-            <span>Jarak Penjual</span>
-            <strong>{getDistanceLabel(product.distance_km)}</strong>
+            <strong>{editMode ? "Tutup Edit Produk" : "Edit Produk Jual"}</strong>
+            <small>Ubah jumlah, harga, dan deskripsi produk.</small>
           </div>
-        )}
+        </button>
+
+        <button
+          type="button"
+          className="product-action-card danger"
+          disabled={disabled}
+          onClick={onCancelSell}
+        >
+          <span>
+            <AppIcon name="delete" />
+          </span>
+
+          <div>
+            <strong>Batal Jual</strong>
+            <small>Hapus produk dari daftar marketplace aktif.</small>
+          </div>
+        </button>
       </div>
-    </>
+
+      {disabled && (
+        <small className="product-detail-note">
+          Produk tidak bisa diedit atau dibatalkan karena statusnya bukan
+          tersedia.
+        </small>
+      )}
+    </section>
   );
 }

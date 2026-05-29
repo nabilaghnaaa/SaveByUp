@@ -1,42 +1,70 @@
 import API from "./api";
 
+const toNumberSafe = (value, fallback = 0) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
 const normalizeDistance = (value) => {
   if (value === null || value === undefined || value === "") return null;
 
   const parsed = Number(value);
-
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-const normalizeProduct = (product = {}) => ({
-  id: product.id,
-  food_id: product.food_id,
-  seller_id: product.seller_id,
+export const getProductPrice = (product = {}) => {
+  return toNumberSafe(
+    product.price ??
+      product.sell_price ??
+      product.selling_price ??
+      product.marketplace_price ??
+      product.unit_price,
+    0
+  );
+};
 
-  seller_name: product.seller_name || "Penjual SaveByUp",
-  seller_email: product.seller_email || "",
-  seller_whatsapp: product.seller_whatsapp || "",
-  seller_address: product.seller_address || "Area kos UMY",
-  seller_location_label: product.seller_location_label || "",
-  seller_rating: Number(product.seller_rating || 0),
+const normalizeProduct = (product = {}) => {
+  const sellerLocationLabel =
+    product.seller_location_label ||
+    product.location_label ||
+    product.seller_address ||
+    product.location ||
+    "Area COD belum diisi";
 
-  distance_km: normalizeDistance(product.distance_km),
+  return {
+    id: product.id,
+    food_id: product.food_id,
+    seller_id: product.seller_id,
 
-  name: product.name || "",
-  category: product.category || "",
-  description: product.description || "",
-  quantity: Number(product.quantity || product.stock || 0),
-  stock: Number(product.stock || product.quantity || 0),
-  unit: product.unit || "pcs",
-  price: Number(product.price || 0),
-  expiry_date: product.expiry_date ? String(product.expiry_date).slice(0, 10) : "",
-  image_url: product.image_url || product.image || "",
-  image: product.image || product.image_url || "",
-  location: product.location || "",
-  status: product.status || "tersedia",
-  created_at: product.created_at,
-  updated_at: product.updated_at,
-});
+    seller_name: product.seller_name || "Penjual SaveByUp",
+    seller_email: product.seller_email || "",
+    seller_whatsapp: product.seller_whatsapp || "",
+    seller_address: sellerLocationLabel,
+    seller_location_label: sellerLocationLabel,
+    seller_rating: toNumberSafe(product.seller_rating, 0),
+
+    distance_km: normalizeDistance(product.distance_km),
+
+    name: product.name || "",
+    category: product.category || "",
+    description: product.description || "",
+    quantity: toNumberSafe(product.quantity ?? product.stock, 0),
+    stock: toNumberSafe(product.stock ?? product.quantity, 0),
+    unit: product.unit || "pcs",
+    price: getProductPrice(product),
+
+    expiry_date: product.expiry_date
+      ? String(product.expiry_date).slice(0, 10)
+      : "",
+
+    image_url: product.image_url || product.image || "",
+    image: product.image || product.image_url || "",
+    location: product.location || "",
+    status: product.status || "tersedia",
+    created_at: product.created_at,
+    updated_at: product.updated_at,
+  };
+};
 
 const normalizeRequestStatus = (status) => {
   const statusMap = {
@@ -71,9 +99,9 @@ const normalizeRequest = (request = {}) => ({
   seller_name: request.seller_name || "",
   seller_whatsapp: request.seller_whatsapp || "",
 
-  quantity: Number(request.quantity || 0),
-  original_price: Number(request.original_price || 0),
-  offer_price: Number(request.offer_price || 0),
+  quantity: toNumberSafe(request.quantity, 0),
+  original_price: toNumberSafe(request.original_price, 0),
+  offer_price: toNumberSafe(request.offer_price, 0),
   is_negotiated: Boolean(request.is_negotiated),
 
   cod_location: request.cod_location || "",
@@ -100,14 +128,13 @@ export const getMarketplaceProducts = async () => {
 
 export const getMarketplaceProductById = async (id) => {
   const response = await API.get(`/marketplace/${id}`);
-
   return normalizeProduct(response.data.data || response.data);
 };
 
 export const createMarketplaceProduct = async (foodId, payload) => {
   const response = await API.post(`/marketplace/sell/${foodId}`, {
-    quantity: Number(payload.quantity || 1),
-    price: Number(payload.price || 0),
+    quantity: toNumberSafe(payload.quantity, 1),
+    price: toNumberSafe(payload.price, 0),
     description: payload.description || "",
   });
 
@@ -116,8 +143,8 @@ export const createMarketplaceProduct = async (foodId, payload) => {
 
 export const updateMarketplaceProduct = async (id, payload) => {
   const response = await API.put(`/marketplace/${id}`, {
-    quantity: Number(payload.quantity || 1),
-    price: Number(payload.price || 0),
+    quantity: toNumberSafe(payload.quantity, 1),
+    price: toNumberSafe(payload.price, 0),
     description: payload.description || "",
   });
 
@@ -126,13 +153,11 @@ export const updateMarketplaceProduct = async (id, payload) => {
 
 export const cancelMarketplaceProduct = async (id) => {
   const response = await API.patch(`/marketplace/${id}/cancel`);
-
   return response.data;
 };
 
 export const deleteMarketplaceProduct = async (id) => {
   const response = await API.delete(`/marketplace/${id}`);
-
   return response.data;
 };
 
@@ -143,8 +168,8 @@ export const createPurchaseRequest = async ({
   note,
 }) => {
   const response = await API.post(`/requests/${productId}`, {
-    quantity: Number(quantity || 1),
-    offer_price: Number(offerPrice || 0),
+    quantity: toNumberSafe(quantity, 1),
+    offer_price: toNumberSafe(offerPrice, 0),
     note: note || "",
   });
 
@@ -177,13 +202,11 @@ export const getMyRequests = async () => {
 
 export const approveRequest = async (id) => {
   const response = await API.patch(`/requests/${id}/approve`);
-
   return response.data;
 };
 
 export const rejectRequest = async (id) => {
   const response = await API.patch(`/requests/${id}/reject`);
-
   return response.data;
 };
 
@@ -217,8 +240,9 @@ export const buildWhatsappUrl = ({
   }
 
   const message = encodeURIComponent(
-    `Halo, saya ingin melanjutkan komunikasi terkait produk "${productName}" di SaveByUp. Pengajuan dari ${buyerName} dengan harga penawaran Rp${Number(
-      offerPrice || 0
+    `Halo, saya ingin melanjutkan komunikasi terkait produk "${productName}" di SaveByUp. Pengajuan dari ${buyerName} dengan harga penawaran Rp${toNumberSafe(
+      offerPrice,
+      0
     ).toLocaleString("id-ID")} sudah disetujui.`
   );
 
