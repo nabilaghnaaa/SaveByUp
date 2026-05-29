@@ -283,18 +283,21 @@ export default function SellProduct() {
         {loading ? (
           <section className="sell-product-state">
             <div className="sell-loader-icon">
-              <AppIcon name="marketplace" size={30} />
+              <AppIcon name="market" />
             </div>
+
             <h3>Memuat data jual makanan...</h3>
             <p>Sedang mengambil data makanan dan kelengkapan profil pengguna.</p>
           </section>
         ) : message && !food ? (
           <section className="sell-product-state">
             <div className="sell-loader-icon sell-loader-danger">
-              <AppIcon name="warning" size={30} />
+              <AppIcon name="warning" />
             </div>
+
             <h3>Data makanan tidak dapat ditampilkan</h3>
             <p>{message}</p>
+
             <button
               type="button"
               className="sb-btn sb-btn-primary"
@@ -316,7 +319,7 @@ export default function SellProduct() {
                       />
                     ) : (
                       <div className="sell-preview-placeholder">
-                        <AppIcon name="food" size={62} />
+                        <AppIcon name="food" />
                       </div>
                     )}
 
@@ -359,7 +362,7 @@ export default function SellProduct() {
 
                 <article className="sell-profile-mini">
                   <div className="sell-profile-mini-icon">
-                    <AppIcon name="user" size={25} />
+                    <AppIcon name="user" />
                   </div>
 
                   <div>
@@ -386,14 +389,14 @@ export default function SellProduct() {
                   </div>
 
                   <div className="sell-hero-badge">
-                    <AppIcon name="shield" size={24} />
+                    <AppIcon name="check" />
                     <span>Validasi aktif</span>
                   </div>
                 </div>
 
                 <div className="sell-stat-grid">
                   <div>
-                    <AppIcon name="total" size={22} />
+                    <AppIcon name="total" />
                     <span>Total Stok</span>
                     <strong>
                       {totalQuantity} {unit}
@@ -401,7 +404,7 @@ export default function SellProduct() {
                   </div>
 
                   <div>
-                    <AppIcon name="stock" size={22} />
+                    <AppIcon name="stock" />
                     <span>Stok Bebas</span>
                     <strong>
                       {freeQuantity} {unit}
@@ -409,7 +412,7 @@ export default function SellProduct() {
                   </div>
 
                   <div>
-                    <AppIcon name="marketplace" size={22} />
+                    <AppIcon name="market" />
                     <span>Aktif Dijual</span>
                     <strong>
                       {marketplaceQuantity} {unit}
@@ -417,7 +420,7 @@ export default function SellProduct() {
                   </div>
 
                   <div>
-                    <AppIcon name="calendar" size={22} />
+                    <AppIcon name="calendar" />
                     <span>Kedaluwarsa</span>
                     <strong>{formatDate(food.expiry_date)}</strong>
                   </div>
@@ -425,7 +428,7 @@ export default function SellProduct() {
 
                 {profileWarning && (
                   <div className="sell-alert sell-alert-warning">
-                    <AppIcon name="warning" size={24} />
+                    <AppIcon name="warning" />
 
                     <div>
                       <strong>Profil belum lengkap</strong>
@@ -444,7 +447,7 @@ export default function SellProduct() {
 
                 {!productCanBeSold && !profileWarning && (
                   <div className="sell-alert sell-alert-warning">
-                    <AppIcon name="warning" size={24} />
+                    <AppIcon name="warning" />
 
                     <div>
                       <strong>Produk belum bisa dijual</strong>
@@ -464,14 +467,22 @@ export default function SellProduct() {
                       <label>Jumlah yang Dijual</label>
 
                       <div className="sell-input-with-icon">
-                        <AppIcon name="stock" size={20} />
+                        <span className="sell-input-icon">
+                          <AppIcon name="stock" />
+                        </span>
+
                         <input
                           type="number"
                           min="1"
                           max={freeQuantity}
                           value={form.quantity}
                           placeholder="Contoh: 2"
-                          disabled={!profileIsComplete || saving || !canSellFood(food)}
+                          disabled={
+                            !profileIsComplete ||
+                            saving ||
+                            !canSellFood(food) ||
+                            freeQuantity <= 0
+                          }
                           onChange={(event) =>
                             updateForm("quantity", event.target.value)
                           }
@@ -488,13 +499,21 @@ export default function SellProduct() {
                       <label>Harga Jual per {unit}</label>
 
                       <div className="sell-input-with-icon">
-                        <AppIcon name="wallet" size={20} />
+                        <span className="sell-input-icon">
+                          <AppIcon name="market" />
+                        </span>
+
                         <input
                           type="number"
                           min="500"
                           value={form.price}
                           placeholder="Contoh: 8000"
-                          disabled={!profileIsComplete || saving || !canSellFood(food)}
+                          disabled={
+                            !profileIsComplete ||
+                            saving ||
+                            !canSellFood(food) ||
+                            freeQuantity <= 0
+                          }
                           onChange={(event) =>
                             updateForm("price", event.target.value)
                           }
@@ -514,7 +533,12 @@ export default function SellProduct() {
                         rows="5"
                         value={form.description}
                         maxLength="500"
-                        disabled={!profileIsComplete || saving || !canSellFood(food)}
+                        disabled={
+                          !profileIsComplete ||
+                          saving ||
+                          !canSellFood(food) ||
+                          freeQuantity <= 0
+                        }
                         placeholder="Contoh: Masih tersegel, disimpan di rak atas, COD sekitar kampus UMY."
                         onChange={(event) =>
                           updateForm("description", event.target.value)
@@ -530,23 +554,25 @@ export default function SellProduct() {
 
                   <div className="sell-rules-panel">
                     <div>
-                      <AppIcon name="check" size={21} />
+                      <AppIcon name="check" />
                       <span>Profil penjual wajib lengkap.</span>
                     </div>
 
                     <div>
-                      <AppIcon name="check" size={21} />
+                      <AppIcon name="check" />
                       <span>Jumlah jual hanya mengambil stok bebas.</span>
                     </div>
 
                     <div>
-                      <AppIcon name="check" size={21} />
+                      <AppIcon name="check" />
                       <span>Produk yang sama akan ditambahkan stoknya.</span>
                     </div>
 
                     <div>
-                      <AppIcon name="check" size={21} />
-                      <span>Stok inventaris berkurang setelah transaksi selesai.</span>
+                      <AppIcon name="check" />
+                      <span>
+                        Stok inventaris berkurang setelah transaksi selesai.
+                      </span>
                     </div>
                   </div>
 
@@ -563,13 +589,13 @@ export default function SellProduct() {
                     <button
                       type="submit"
                       className="sb-btn sb-btn-primary sell-submit-button"
-                      disabled={saving || !profileIsComplete || !canSellFood(food)}
+                      disabled={saving || !productCanBeSold}
                     >
                       {saving ? (
                         "Menyimpan..."
                       ) : (
                         <>
-                          <AppIcon name="marketplace" size={20} />
+                          <AppIcon name="market" />
                           Tawarkan ke Marketplace
                         </>
                       )}
