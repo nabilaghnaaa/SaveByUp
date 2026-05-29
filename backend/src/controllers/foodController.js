@@ -24,6 +24,51 @@ const getUserId = (req) => {
   return req.user?.id || req.user?.user_id || req.userId;
 };
 
+const getFoodByOwner = async (foodId, userId) => {
+  const [foods] = await db.query(
+    "SELECT * FROM foods WHERE id = ? AND user_id = ?",
+    [foodId, userId]
+  );
+
+  return foods[0] || null;
+};
+
+const getRecalculatedAvailableStatus = (food) => {
+  const recalculated = calculateFoodStatus(food.expiry_date, "");
+
+  return {
+    status: recalculated.status,
+    priority: recalculated.priority,
+    condition_status:
+      recalculated.condition_status || mapStatusToCondition(recalculated.status),
+  };
+};
+
+const getFinalStatusAfterStockReduction = ({
+  currentFood,
+  remainingQuantity,
+  activeMarketplaceQuantity,
+  actionStatus,
+}) => {
+  if (remainingQuantity <= 0) {
+    return {
+      status: actionStatus,
+      priority: actionStatus === "dibuang" ? "tidak_layak" : "selesai",
+      condition_status: mapStatusToCondition(actionStatus),
+    };
+  }
+
+  if (activeMarketplaceQuantity > 0) {
+    return {
+      status: "dijual",
+      priority: "sedang",
+      condition_status: mapStatusToCondition("dijual"),
+    };
+  }
+
+  return getRecalculatedAvailableStatus(currentFood);
+};
+
 const getFoods = async (req, res) => {
   try {
     const userId = getUserId(req);
@@ -66,18 +111,15 @@ const getFoodById = async (req, res) => {
       });
     }
 
-    const [foods] = await db.query(
-      "SELECT * FROM foods WHERE id = ? AND user_id = ?",
-      [id, userId]
-    );
+    const food = await getFoodByOwner(id, userId);
 
-    if (foods.length === 0) {
+    if (!food) {
       return res.status(404).json({
         message: "Data makanan tidak ditemukan",
       });
     }
 
-    const enrichedFood = await enrichFoodWithMarketplaceState(foods[0], userId);
+    const enrichedFood = await enrichFoodWithMarketplaceState(food, userId);
 
     return res.status(200).json({
       message: "Detail makanan berhasil diambil",
@@ -137,7 +179,7 @@ const createFood = async (req, res) => {
     const finalNote = note || notes || "";
     const finalImage = image_url || image || "";
 
-    await db.query(
+    const [insertResult] = await db.query(
       `INSERT INTO foods
       (
         user_id,
@@ -180,6 +222,9 @@ const createFood = async (req, res) => {
 
     return res.status(201).json({
       message: "Data makanan berhasil ditambahkan",
+      data: {
+        id: insertResult.insertId,
+      },
     });
   } catch (error) {
     console.error("Create food error:", error);
@@ -232,12 +277,9 @@ const updateFood = async (req, res) => {
       });
     }
 
-    const [existingFood] = await db.query(
-      "SELECT * FROM foods WHERE id = ? AND user_id = ?",
-      [id, userId]
-    );
+    const existingFood = await getFoodByOwner(id, userId);
 
-    if (existingFood.length === 0) {
+    if (!existingFood) {
       return res.status(404).json({
         message: "Data makanan tidak ditemukan",
       });
@@ -246,9 +288,15 @@ const updateFood = async (req, res) => {
     const marketplaceState = await getFoodMarketplaceState(id, userId);
     const calculated = calculateFoodStatus(expiry_date, status);
 
+    const activeMarketplaceQuantity = Number(
+      marketplaceState.activeMarketplaceQuantity || 0
+    );
+
+    const activeTransactions = Number(marketplaceState.activeTransactions || 0);
+
     if (
       TERMINAL_FOOD_STATUS.includes(calculated.status) &&
-      marketplaceState.activeTransactions > 0
+      activeTransactions > 0
     ) {
       return res.status(400).json({
         message:
@@ -256,17 +304,14 @@ const updateFood = async (req, res) => {
       });
     }
 
-    if (
-      marketplaceState.activeMarketplaceQuantity > 0 &&
-      Number(quantity) < marketplaceState.activeMarketplaceQuantity
-    ) {
+    if (activeMarketplaceQuantity > 0 && Number(quantity) < activeMarketplaceQuantity) {
       return res.status(400).json({
-        message: `Jumlah stok inventaris tidak boleh lebih kecil dari stok yang sedang aktif di marketplace. Stok aktif marketplace saat ini: ${marketplaceState.activeMarketplaceQuantity}.`,
+        message: `Jumlah stok inventaris tidak boleh lebih kecil dari stok yang sedang aktif di marketplace. Stok aktif marketplace saat ini: ${activeMarketplaceQuantity}.`,
       });
     }
 
     const shouldKeepSoldStatus =
-      marketplaceState.activeMarketplaceQuantity > 0 &&
+      activeMarketplaceQuantity > 0 &&
       !TERMINAL_FOOD_STATUS.includes(calculated.status);
 
     const finalStatus = shouldKeepSoldStatus ? "dijual" : calculated.status;
@@ -279,7 +324,7 @@ const updateFood = async (req, res) => {
 
     await db.query(
       `UPDATE foods
-      SET
+       SET
         name = ?,
         category = ?,
         quantity = ?,
@@ -295,7 +340,7 @@ const updateFood = async (req, res) => {
         image = ?,
         note = ?,
         image_url = ?
-      WHERE id = ? AND user_id = ?`,
+       WHERE id = ? AND user_id = ?`,
       [
         String(name || "").trim(),
         category || null,
@@ -321,8 +366,12 @@ const updateFood = async (req, res) => {
       await cancelActiveMarketplaceByFood(id, userId);
     }
 
+    const updatedFood = await getFoodByOwner(id, userId);
+    const enrichedFood = await enrichFoodWithMarketplaceState(updatedFood, userId);
+
     return res.status(200).json({
       message: "Data makanan berhasil diperbarui",
+      data: normalizeFood(enrichedFood),
     });
   } catch (error) {
     console.error("Update food error:", error);
@@ -358,24 +407,21 @@ const updateFoodStatus = async (req, res) => {
       });
     }
 
-    const [existingFood] = await db.query(
-      "SELECT * FROM foods WHERE id = ? AND user_id = ?",
-      [id, userId]
-    );
+    const currentFood = await getFoodByOwner(id, userId);
 
-    if (existingFood.length === 0) {
+    if (!currentFood) {
       return res.status(404).json({
         message: "Data makanan tidak ditemukan",
       });
     }
 
-    const currentFood = existingFood[0];
     const marketplaceState = await getFoodMarketplaceState(id, userId);
 
     const currentQuantity = Number(currentFood.quantity || 0);
     const activeMarketplaceQuantity = Number(
       marketplaceState.activeMarketplaceQuantity || 0
     );
+    const activeTransactions = Number(marketplaceState.activeTransactions || 0);
 
     const freeInventoryQuantity = Math.max(
       currentQuantity - activeMarketplaceQuantity,
@@ -412,25 +458,12 @@ const updateFoodStatus = async (req, res) => {
         0
       );
 
-      let finalStatus = currentFood.status;
-      let finalPriority = currentFood.priority || "rendah";
-      let finalConditionStatus = currentFood.condition_status || "layak";
-
-      if (remainingQuantity <= 0) {
-        finalStatus = status;
-        finalPriority = status === "dibuang" ? "tidak_layak" : "selesai";
-        finalConditionStatus = mapStatusToCondition(finalStatus);
-      } else if (activeMarketplaceQuantity > 0) {
-        finalStatus = "dijual";
-        finalPriority = "sedang";
-        finalConditionStatus = mapStatusToCondition(finalStatus);
-      } else {
-        const recalculated = calculateFoodStatus(currentFood.expiry_date, "");
-        finalStatus = recalculated.status;
-        finalPriority = recalculated.priority;
-        finalConditionStatus =
-          recalculated.condition_status || mapStatusToCondition(finalStatus);
-      }
+      const finalState = getFinalStatusAfterStockReduction({
+        currentFood,
+        remainingQuantity,
+        activeMarketplaceQuantity,
+        actionStatus: status,
+      });
 
       await db.query(
         `UPDATE foods
@@ -442,9 +475,9 @@ const updateFoodStatus = async (req, res) => {
          WHERE id = ? AND user_id = ?`,
         [
           remainingQuantity,
-          finalStatus,
-          finalPriority,
-          finalConditionStatus,
+          finalState.status,
+          finalState.priority,
+          finalState.condition_status,
           id,
           userId,
         ]
@@ -455,12 +488,21 @@ const updateFoodStatus = async (req, res) => {
         userId,
         action: status,
         quantity: actionQuantity,
-        note: `${actionQuantity} ${currentFood.unit || "pcs"} ${currentFood.name} ${status}`,
+        note: `${actionQuantity} ${currentFood.unit || "pcs"} ${
+          currentFood.name
+        } ${status}`,
       });
+
+      const updatedFood = await getFoodByOwner(id, userId);
+      const enrichedFood = await enrichFoodWithMarketplaceState(
+        updatedFood,
+        userId
+      );
 
       return res.status(200).json({
         message: `Stok makanan berhasil dikurangi karena ${status}.`,
         data: {
+          food: normalizeFood(enrichedFood),
           food_id: Number(id),
           action: status,
           action_quantity: actionQuantity,
@@ -469,15 +511,12 @@ const updateFoodStatus = async (req, res) => {
           active_marketplace_quantity: activeMarketplaceQuantity,
           free_inventory_quantity_before: freeInventoryQuantity,
           free_inventory_quantity_after: remainingFreeQuantity,
-          final_status: finalStatus,
+          final_status: finalState.status,
         },
       });
     }
 
-    if (
-      TERMINAL_FOOD_STATUS.includes(status) &&
-      marketplaceState.activeTransactions > 0
-    ) {
+    if (TERMINAL_FOOD_STATUS.includes(status) && activeTransactions > 0) {
       return res.status(400).json({
         message:
           "Status makanan tidak bisa diubah karena masih ada transaksi COD yang berjalan.",
@@ -487,7 +526,7 @@ const updateFoodStatus = async (req, res) => {
     if (
       status !== "dijual" &&
       !TERMINAL_FOOD_STATUS.includes(status) &&
-      marketplaceState.activeMarketplaceQuantity > 0
+      activeMarketplaceQuantity > 0
     ) {
       return res.status(400).json({
         message:
@@ -495,7 +534,7 @@ const updateFoodStatus = async (req, res) => {
       });
     }
 
-    if (status === "dijual" && marketplaceState.activeMarketplaceQuantity <= 0) {
+    if (status === "dijual" && activeMarketplaceQuantity <= 0) {
       return res.status(400).json({
         message:
           "Status makanan tidak bisa diubah manual menjadi dijual karena belum ada produk aktif di marketplace.",
@@ -506,11 +545,11 @@ const updateFoodStatus = async (req, res) => {
 
     await db.query(
       `UPDATE foods
-      SET
+       SET
         status = ?,
         priority = ?,
         condition_status = ?
-      WHERE id = ? AND user_id = ?`,
+       WHERE id = ? AND user_id = ?`,
       [
         calculated.status,
         calculated.priority,
@@ -524,8 +563,12 @@ const updateFoodStatus = async (req, res) => {
       await cancelActiveMarketplaceByFood(id, userId);
     }
 
+    const updatedFood = await getFoodByOwner(id, userId);
+    const enrichedFood = await enrichFoodWithMarketplaceState(updatedFood, userId);
+
     return res.status(200).json({
       message: "Status makanan berhasil diperbarui",
+      data: normalizeFood(enrichedFood),
     });
   } catch (error) {
     console.error("Update food status error:", error);
@@ -548,12 +591,9 @@ const deleteFood = async (req, res) => {
       });
     }
 
-    const [existingFood] = await db.query(
-      "SELECT * FROM foods WHERE id = ? AND user_id = ?",
-      [id, userId]
-    );
+    const existingFood = await getFoodByOwner(id, userId);
 
-    if (existingFood.length === 0) {
+    if (!existingFood) {
       return res.status(404).json({
         message: "Data makanan tidak ditemukan",
       });
@@ -561,7 +601,7 @@ const deleteFood = async (req, res) => {
 
     const marketplaceState = await getFoodMarketplaceState(id, userId);
 
-    if (marketplaceState.activeTransactions > 0) {
+    if (Number(marketplaceState.activeTransactions || 0) > 0) {
       return res.status(400).json({
         message:
           "Makanan tidak bisa dihapus karena masih ada transaksi COD yang berjalan.",
@@ -603,7 +643,8 @@ const getFoodSummary = async (req, res) => {
       [userId]
     );
 
-    const summary = await buildSummaryFromFoods(foods, userId);
+    const enrichedFoods = await enrichFoodsWithMarketplaceState(foods, userId);
+    const summary = await buildSummaryFromFoods(enrichedFoods, userId);
 
     return res.status(200).json({
       message: "Ringkasan makanan berhasil diambil",
