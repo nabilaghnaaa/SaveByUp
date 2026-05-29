@@ -1,37 +1,41 @@
 .inventory-modal-backdrop {
   position: fixed;
   inset: 0;
-  z-index: 220;
+  z-index: 240;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
   background:
-    radial-gradient(circle at 18% 16%, rgba(232, 237, 189, 0.12), transparent 32%),
-    radial-gradient(circle at 82% 12%, rgba(83, 130, 76, 0.16), transparent 30%),
-    rgba(18, 32, 20, 0.66);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+    radial-gradient(circle at 16% 14%, rgba(232, 237, 189, 0.16), transparent 32%),
+    radial-gradient(circle at 84% 12%, rgba(83, 130, 76, 0.18), transparent 30%),
+    rgba(13, 27, 16, 0.68);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   animation: inventoryBackdropIn 0.18s ease both;
 }
 
-/* WRAPPER MODAL UTAMA */
 .inventory-action-menu,
 .inventory-action-modal {
   position: relative;
-  width: min(100%, 560px);
+  width: min(100%, 620px);
   max-height: calc(100vh - 48px);
   overflow-y: auto;
-  padding: 24px;
-  border-radius: 30px;
+  padding: 28px;
+  border-radius: 34px;
   background:
-    radial-gradient(circle at 100% 0%, rgba(223, 239, 198, 0.72), transparent 34%),
+    radial-gradient(circle at 100% 0%, rgba(223, 239, 198, 0.72), transparent 32%),
+    radial-gradient(circle at 0% 100%, rgba(184, 123, 54, 0.13), transparent 30%),
     linear-gradient(135deg, #fffdf7 0%, #f7f0e4 100%);
-  border: 1px solid rgba(95, 71, 47, 0.14);
+  border: 1px solid rgba(95, 71, 47, 0.15);
   box-shadow:
-    0 34px 100px rgba(18, 32, 20, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.75);
+    0 38px 110px rgba(18, 32, 20, 0.36),
+    inset 0 1px 0 rgba(255, 255, 255, 0.76);
   animation: inventoryModalIn 0.22s ease both;
+}
+
+.inventory-action-modal {
+  width: min(100%, 540px);
 }
 
 .inventory-action-menu::-webkit-scrollbar,
@@ -42,48 +46,23 @@
 .inventory-action-menu::-webkit-scrollbar-thumb,
 .inventory-action-modal::-webkit-scrollbar-thumb {
   border-radius: 999px;
-  background: rgba(95, 71, 47, 0.18);
-}
-
-/* HEADER */
-.inventory-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  margin-bottom: 18px;
-}
-
-.inventory-modal-header span {
-  display: inline-flex;
-  margin-bottom: 7px;
-  color: #8d5734;
-  font-size: 11px;
-  font-weight: 950;
-  letter-spacing: 1.1px;
-  text-transform: uppercase;
-}
-
-.inventory-modal-header h3 {
-  margin: 0;
-  color: #18301d;
-  font-size: clamp(24px, 4vw, 32px);
-  line-height: 1.08;
-  letter-spacing: -0.9px;
+  background: rgba(95, 71, 47, 0.2);
 }
 
 .inventory-modal-close {
+  position: absolute;
+  top: 22px;
+  right: 22px;
   width: 42px;
   height: 42px;
-  flex: 0 0 42px;
-  display: grid;
-  place-items: center;
   border: 0;
   border-radius: 999px;
+  display: grid;
+  place-items: center;
   color: #a94732;
   background: rgba(169, 71, 50, 0.1);
-  font-size: 25px;
-  font-weight: 800;
+  font-size: 26px;
+  font-weight: 900;
   line-height: 1;
   cursor: pointer;
   transition:
@@ -98,95 +77,165 @@
   box-shadow: 0 10px 24px rgba(169, 71, 50, 0.14);
 }
 
-/* DESKRIPSI MODAL JUMLAH */
-.inventory-modal-description {
-  margin: 0 0 18px;
-  color: #756b5d;
-  line-height: 1.68;
-  font-size: 14px;
+.inventory-action-heading {
+  padding-right: 54px;
+  margin-bottom: 20px;
 }
 
-/* PREVIEW FOOD */
-.inventory-modal-food {
-  display: flex;
+.inventory-action-heading span {
+  display: inline-flex;
+  margin-bottom: 8px;
+  color: #8d5734;
+  font-size: 11px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 1.1px;
+}
+
+.inventory-action-heading h3 {
+  margin: 0;
+  color: #18301d;
+  font-size: clamp(30px, 4vw, 42px);
+  line-height: 1.04;
+  letter-spacing: -1.2px;
+}
+
+.inventory-action-heading p {
+  max-width: 520px;
+  margin: 12px 0 0;
+  color: #756b5d;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.inventory-action-food-card {
+  display: grid;
+  grid-template-columns: 66px minmax(0, 1fr);
   gap: 14px;
   align-items: center;
-  margin: 0 0 18px;
   padding: 14px;
-  border-radius: 22px;
-  background: rgba(255, 255, 255, 0.7);
+  margin-bottom: 14px;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.74);
   border: 1px solid rgba(95, 71, 47, 0.1);
-  box-shadow: 0 14px 34px rgba(69, 48, 31, 0.06);
+  box-shadow: 0 16px 36px rgba(69, 48, 31, 0.06);
 }
 
-.inventory-modal-food-icon {
-  width: 58px;
-  height: 58px;
-  flex: 0 0 58px;
+.inventory-action-food-image {
+  width: 66px;
+  height: 66px;
   overflow: hidden;
   display: grid;
   place-items: center;
-  border-radius: 18px;
+  border-radius: 20px;
   color: #274622;
   background:
-    radial-gradient(circle at 25% 18%, rgba(74, 121, 67, 0.2), transparent 36%),
+    radial-gradient(circle at 24% 18%, rgba(74, 121, 67, 0.23), transparent 34%),
     linear-gradient(135deg, #edf6e8, #f7f0e4);
-  font-size: 28px;
 }
 
-.inventory-modal-food-icon img {
+.inventory-action-food-image img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.inventory-modal-food-icon svg {
-  width: 25px;
-  height: 25px;
+.inventory-action-food-image svg {
+  width: 28px;
+  height: 28px;
 }
 
-.inventory-modal-food strong {
+.inventory-action-food-content {
+  min-width: 0;
+}
+
+.inventory-action-food-content strong {
   display: block;
   color: #18301d;
-  font-size: 17px;
+  font-size: 18px;
   line-height: 1.25;
 }
 
-.inventory-modal-food small {
+.inventory-action-food-content small {
   display: block;
   margin-top: 4px;
   color: #756b5d;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 800;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
-/* GRID AKSI MAKANAN */
-.inventory-menu-grid,
-.inventory-action-grid,
-.inventory-action-list {
+.inventory-action-status-pill {
+  width: fit-content;
+  margin-top: 9px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  color: #274622;
+  background: rgba(74, 121, 67, 0.12);
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.inventory-stock-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.inventory-stock-strip div {
+  padding: 13px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.62);
+  border: 1px solid rgba(95, 71, 47, 0.1);
+}
+
+.inventory-stock-strip span {
+  display: block;
+  color: #756b5d;
+  font-size: 11px;
+  font-weight: 850;
+}
+
+.inventory-stock-strip strong {
+  display: block;
+  margin-top: 5px;
+  color: #18301d;
+  font-size: 15px;
+}
+
+.inventory-action-alert {
+  margin-bottom: 16px;
+  padding: 13px 14px;
+  border-radius: 18px;
+  color: #8b4a2e;
+  background: rgba(255, 238, 218, 0.88);
+  border: 1px solid rgba(184, 123, 54, 0.16);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.inventory-menu-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
-/* BUTTON AKSI */
-.inventory-menu-grid button,
-.inventory-action-grid button,
-.inventory-action-list button {
+.inventory-menu-grid button {
   width: 100%;
-  min-height: 96px;
+  min-height: 110px;
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr);
+  grid-template-columns: 48px minmax(0, 1fr);
   align-items: center;
-  gap: 12px;
+  gap: 13px;
   text-align: left;
   border: 1px solid rgba(95, 71, 47, 0.12);
-  border-radius: 22px;
-  padding: 14px;
+  border-radius: 24px;
+  padding: 16px;
   color: #263f24;
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(248, 243, 232, 0.78));
+    linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(248, 243, 232, 0.78));
   cursor: pointer;
   box-shadow: 0 14px 32px rgba(69, 48, 31, 0.055);
   transition:
@@ -197,149 +246,74 @@
     opacity 0.18s ease;
 }
 
-.inventory-menu-grid button:hover:not(:disabled),
-.inventory-action-grid button:hover:not(:disabled),
-.inventory-action-list button:hover:not(:disabled) {
-  transform: translateY(-3px);
+.inventory-menu-grid button:hover:not(:disabled) {
+  transform: translateY(-4px);
   border-color: rgba(74, 121, 67, 0.28);
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(237, 246, 232, 0.9));
-  box-shadow: 0 20px 46px rgba(69, 48, 31, 0.1);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(237, 246, 232, 0.92));
+  box-shadow: 0 22px 52px rgba(69, 48, 31, 0.11);
 }
 
-.inventory-menu-grid button:disabled,
-.inventory-action-grid button:disabled,
-.inventory-action-list button:disabled {
-  opacity: 0.5;
+.inventory-menu-grid button:disabled {
+  opacity: 0.48;
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
 }
 
-/* Kalau isi button pakai span/icon */
-.inventory-menu-grid button > span,
-.inventory-action-grid button > span,
-.inventory-action-list button > span {
-  width: 42px;
-  height: 42px;
+.inventory-menu-grid button > span {
+  width: 48px;
+  height: 48px;
   display: grid;
   place-items: center;
-  border-radius: 16px;
+  border-radius: 17px;
   color: #fffaf0;
   background: linear-gradient(135deg, #274622, #6f8f4e);
   box-shadow: 0 12px 24px rgba(39, 70, 34, 0.18);
 }
 
-.inventory-menu-grid button > span svg,
-.inventory-action-grid button > span svg,
-.inventory-action-list button > span svg {
+.inventory-menu-grid button > span svg {
   width: 21px;
   height: 21px;
 }
 
-/* Kalau button belum punya span, tetap kasih icon fallback */
-.inventory-menu-grid button:not(:has(span))::before,
-.inventory-action-grid button:not(:has(span))::before,
-.inventory-action-list button:not(:has(span))::before {
-  width: 42px;
-  height: 42px;
-  display: grid;
-  place-items: center;
-  border-radius: 16px;
-  color: #fffaf0;
-  background: linear-gradient(135deg, #274622, #6f8f4e);
-  box-shadow: 0 12px 24px rgba(39, 70, 34, 0.18);
-  font-size: 18px;
-}
-
-/* Fallback ikon berdasarkan urutan tombol */
-.inventory-menu-grid button:nth-child(1):not(:has(span))::before,
-.inventory-action-grid button:nth-child(1):not(:has(span))::before,
-.inventory-action-list button:nth-child(1):not(:has(span))::before {
-  content: "✎";
-}
-
-.inventory-menu-grid button:nth-child(2):not(:has(span))::before,
-.inventory-action-grid button:nth-child(2):not(:has(span))::before,
-.inventory-action-list button:nth-child(2):not(:has(span))::before {
-  content: "🛒";
-}
-
-.inventory-menu-grid button:nth-child(3):not(:has(span))::before,
-.inventory-action-grid button:nth-child(3):not(:has(span))::before,
-.inventory-action-list button:nth-child(3):not(:has(span))::before {
-  content: "✓";
-}
-
-.inventory-menu-grid button:nth-child(4):not(:has(span))::before,
-.inventory-action-grid button:nth-child(4):not(:has(span))::before,
-.inventory-action-list button:nth-child(4):not(:has(span))::before {
-  content: "⌫";
-}
-
-.inventory-menu-grid button:nth-child(5):not(:has(span))::before,
-.inventory-action-grid button:nth-child(5):not(:has(span))::before,
-.inventory-action-list button:nth-child(5):not(:has(span))::before {
-  content: "!";
-  background: linear-gradient(135deg, #a94732, #d16b4d);
-}
-
-.inventory-menu-grid button strong,
-.inventory-action-grid button strong,
-.inventory-action-list button strong {
+.inventory-menu-grid button strong {
   display: block;
   color: #18301d;
   font-size: 14px;
   line-height: 1.25;
 }
 
-.inventory-menu-grid button small,
-.inventory-action-grid button small,
-.inventory-action-list button small {
+.inventory-menu-grid button small {
   display: block;
-  margin-top: 5px;
+  margin-top: 6px;
   color: #756b5d;
-  font-size: 11.5px;
-  font-weight: 700;
-  line-height: 1.42;
+  font-size: 11.8px;
+  font-weight: 720;
+  line-height: 1.45;
 }
 
-/* DANGER BUTTON */
-.inventory-menu-grid button.danger,
-.inventory-action-grid button.danger,
-.inventory-action-list button.danger,
-.inventory-menu-grid .action-danger,
-.inventory-action-grid .action-danger,
-.inventory-action-list .action-danger {
-  color: #a94732;
+.inventory-menu-grid button.danger {
+  grid-column: 1 / -1;
+  min-height: 92px;
   border-color: rgba(169, 71, 50, 0.16);
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.92), rgba(255, 238, 232, 0.82));
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(255, 238, 232, 0.84));
 }
 
-.inventory-menu-grid button.danger > span,
-.inventory-action-grid button.danger > span,
-.inventory-action-list button.danger > span,
-.inventory-menu-grid .action-danger > span,
-.inventory-action-grid .action-danger > span,
-.inventory-action-list .action-danger > span {
+.inventory-menu-grid button.danger > span {
   background: linear-gradient(135deg, #a94732, #d16b4d);
+  box-shadow: 0 12px 24px rgba(169, 71, 50, 0.2);
 }
 
-.inventory-menu-grid button.danger:hover:not(:disabled),
-.inventory-action-grid button.danger:hover:not(:disabled),
-.inventory-action-list button.danger:hover:not(:disabled),
-.inventory-menu-grid .action-danger:hover:not(:disabled),
-.inventory-action-grid .action-danger:hover:not(:disabled),
-.inventory-action-list .action-danger:hover:not(:disabled) {
+.inventory-menu-grid button.danger:hover:not(:disabled) {
   border-color: rgba(169, 71, 50, 0.3);
   background:
-    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 232, 224, 0.92));
-  box-shadow: 0 20px 46px rgba(169, 71, 50, 0.12);
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 232, 224, 0.94));
+  box-shadow: 0 22px 52px rgba(169, 71, 50, 0.12);
 }
 
-/* FORM JUMLAH DIGUNAKAN / DIBUANG */
-.inventory-action-modal label {
+.inventory-stock-label {
   display: block;
   margin: 18px 0 9px;
   color: #263f24;
@@ -348,17 +322,17 @@
 
 .inventory-quantity-control {
   display: grid;
-  grid-template-columns: 52px minmax(0, 1fr) 52px;
+  grid-template-columns: 54px minmax(0, 1fr) 54px;
   gap: 10px;
 }
 
 .inventory-quantity-control button {
-  min-height: 52px;
+  min-height: 54px;
   border: 0;
-  border-radius: 17px;
+  border-radius: 18px;
   color: #fff8ee;
   background: linear-gradient(135deg, #274622, #7a4f2f);
-  font-size: 23px;
+  font-size: 24px;
   font-weight: 950;
   cursor: pointer;
   box-shadow: 0 12px 28px rgba(39, 70, 34, 0.16);
@@ -374,9 +348,9 @@
 
 .inventory-quantity-control input {
   width: 100%;
-  min-height: 52px;
+  min-height: 54px;
   border: 1px solid rgba(95, 71, 47, 0.14);
-  border-radius: 17px;
+  border-radius: 18px;
   padding: 0 16px;
   color: #263f24;
   background: rgba(255, 255, 255, 0.86);
@@ -396,9 +370,9 @@
   display: block;
   margin-top: 13px;
   padding: 13px 14px;
-  border-radius: 17px;
+  border-radius: 18px;
   color: #6f5c4d;
-  background: rgba(247, 240, 228, 0.88);
+  background: rgba(247, 240, 228, 0.9);
   border: 1px solid rgba(95, 71, 47, 0.1);
   font-size: 12.5px;
   line-height: 1.55;
@@ -430,7 +404,7 @@
 @keyframes inventoryModalIn {
   from {
     opacity: 0;
-    transform: translateY(16px) scale(0.98);
+    transform: translateY(18px) scale(0.97);
   }
 
   to {
@@ -439,7 +413,7 @@
   }
 }
 
-@media (max-width: 680px) {
+@media (max-width: 720px) {
   .inventory-modal-backdrop {
     align-items: flex-end;
     padding: 14px;
@@ -449,20 +423,27 @@
   .inventory-action-modal {
     width: 100%;
     max-height: 88vh;
-    border-radius: 26px;
-    padding: 20px;
+    padding: 22px;
+    border-radius: 28px;
+  }
+
+  .inventory-action-heading {
+    padding-right: 46px;
+  }
+
+  .inventory-action-heading h3 {
+    font-size: 32px;
   }
 
   .inventory-menu-grid,
-  .inventory-action-grid,
-  .inventory-action-list {
+  .inventory-stock-strip {
     grid-template-columns: 1fr;
   }
 
   .inventory-menu-grid button,
-  .inventory-action-grid button,
-  .inventory-action-list button {
-    min-height: 86px;
+  .inventory-menu-grid button.danger {
+    grid-column: auto;
+    min-height: 96px;
   }
 
   .inventory-modal-actions {

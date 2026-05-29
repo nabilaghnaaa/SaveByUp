@@ -6,22 +6,24 @@ export default function InventoryStockModal({
   onQuantityChange,
   onSubmit,
 }) {
-  if (!modal.open || !modal.food) return null;
+  const food = modal.food;
 
-  const { food, status, quantity, title, description, buttonLabel } = modal;
+  if (!food) return null;
 
-  const imageSource = food.image_url || food.image;
+  const unit = food.unit || "pcs";
+  const imageSource = food.image_url || food.image || "";
   const freeQuantity = Number(food.free_quantity ?? food.quantity ?? 0);
-  const actionLabel = status === "digunakan" ? "digunakan" : "dibuang";
+
+  const actionText = modal.status === "digunakan" ? "digunakan" : "dibuang";
 
   const decreaseQuantity = () => {
-    const nextValue = Math.max(Number(quantity || 0) - 1, 1);
-    onQuantityChange(nextValue);
+    const current = Number(modal.quantity || 0);
+    onQuantityChange(Math.max(current - 1, 1));
   };
 
   const increaseQuantity = () => {
-    const nextValue = Math.min(Number(quantity || 0) + 1, freeQuantity || 1);
-    onQuantityChange(nextValue);
+    const current = Number(modal.quantity || 0);
+    onQuantityChange(Math.min(current + 1, freeQuantity || 1));
   };
 
   return (
@@ -31,42 +33,42 @@ export default function InventoryStockModal({
         onSubmit={onSubmit}
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="inventory-modal-header">
-          <div>
-            <span>Kelola Stok</span>
-            <h3>{title}</h3>
-          </div>
+        <button
+          type="button"
+          className="inventory-modal-close"
+          onClick={onClose}
+          aria-label="Tutup popup"
+        >
+          ×
+        </button>
 
-          <button
-            type="button"
-            className="inventory-modal-close"
-            onClick={onClose}
-          >
-            ×
-          </button>
+        <div className="inventory-action-heading">
+          <span>Kelola Stok</span>
+          <h3>{modal.title}</h3>
+          <p>{modal.description}</p>
         </div>
 
-        <p className="inventory-modal-description">{description}</p>
-
-        <div className="inventory-modal-food">
-          <div className="inventory-modal-food-icon">
+        <div className="inventory-action-food-card">
+          <div className="inventory-action-food-image">
             {imageSource ? (
               <img src={imageSource} alt={food.name || "Foto makanan"} />
             ) : (
-              <AppIcon name="food" />
+              <AppIcon name="food" size={28} />
             )}
           </div>
 
-          <div>
+          <div className="inventory-action-food-content">
             <strong>{food.name || "Tanpa nama"}</strong>
             <small>
-              Stok bebas: {freeQuantity} {food.unit || "pcs"} dari total{" "}
-              {food.quantity} {food.unit || "pcs"}
+              Stok bebas: {freeQuantity} {unit} dari total {food.quantity}{" "}
+              {unit}
             </small>
           </div>
         </div>
 
-        <label>Jumlah yang {actionLabel}</label>
+        <label className="inventory-stock-label">
+          Jumlah yang {actionText}
+        </label>
 
         <div className="inventory-quantity-control">
           <button type="button" onClick={decreaseQuantity}>
@@ -77,7 +79,7 @@ export default function InventoryStockModal({
             type="number"
             min="1"
             max={freeQuantity}
-            value={quantity}
+            value={modal.quantity}
             placeholder={`Maks. ${freeQuantity}`}
             onChange={(event) => onQuantityChange(event.target.value)}
             autoFocus
@@ -89,8 +91,8 @@ export default function InventoryStockModal({
         </div>
 
         <small className="inventory-modal-note">
-          Stok yang sedang dijual di marketplace tidak ikut digunakan atau
-          dibuang. Yang dikurangi hanya stok bebas.
+          Sistem hanya mengurangi stok bebas. Stok yang sedang aktif di
+          marketplace tidak ikut berubah dari aksi ini.
         </small>
 
         <div className="inventory-modal-actions">
@@ -103,7 +105,7 @@ export default function InventoryStockModal({
           </button>
 
           <button type="submit" className="sb-btn sb-btn-primary">
-            {buttonLabel}
+            {modal.buttonLabel}
           </button>
         </div>
       </form>

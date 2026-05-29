@@ -84,6 +84,8 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
 
   const openMenuModal = (food) => {
     setMessage("");
+    setActionModal(emptyActionModal);
+
     setMenuModal({
       open: true,
       food,
@@ -330,7 +332,7 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
         </div>
       )}
 
-      {menuModal.open && (
+      {menuModal.open && menuModal.food && (
         <InventoryActionMenu
           food={menuModal.food}
           onClose={closeMenuModal}
@@ -339,7 +341,7 @@ export default function DashboardInventory({ refreshKey, onInventoryChange }) {
         />
       )}
 
-      {actionModal.open && (
+      {actionModal.open && actionModal.food && (
         <InventoryStockModal
           modal={actionModal}
           onClose={closeActionModal}

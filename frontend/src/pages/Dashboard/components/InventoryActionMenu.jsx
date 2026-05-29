@@ -13,129 +13,189 @@ export default function InventoryActionMenu({
 
   if (!food) return null;
 
-  const imageSource = food.image_url || food.image;
+  const imageSource = food.image_url || food.image || "";
+  const unit = food.unit || "pcs";
+
   const totalQuantity = Number(food.quantity || 0);
   const freeQuantity = Number(food.free_quantity ?? food.quantity ?? 0);
   const marketplaceQuantity = Number(food.active_marketplace_quantity || 0);
 
-  const isFinishedStatus = [
-    "kedaluwarsa",
-    "dibuang",
-    "terjual",
-    "digunakan",
-  ].includes(food.status);
+  const finishedStatuses = ["kedaluwarsa", "dibuang", "terjual", "digunakan"];
+  const isFinishedStatus = finishedStatuses.includes(food.status);
 
   const canSell = !isFinishedStatus && freeQuantity > 0;
   const canReduceStock = freeQuantity > 0;
 
+  const handleEdit = () => {
+    onClose();
+    navigate(`/foods/edit/${food.id}`);
+  };
+
+  const handleSell = () => {
+    if (!canSell) return;
+
+    onClose();
+    navigate(`/marketplace/sell/${food.id}`);
+  };
+
+  const handleUsed = () => {
+    if (!canReduceStock) return;
+    onOpenStockAction(food, "digunakan");
+  };
+
+  const handleDiscard = () => {
+    if (!canReduceStock) return;
+    onOpenStockAction(food, "dibuang");
+  };
+
+  const handleDelete = () => {
+    onDelete(food);
+  };
+
+  const actions = [
+    {
+      title: "Edit Data",
+      desc: "Ubah nama, kategori, jumlah stok, harga, tanggal, dan catatan.",
+      icon: "edit",
+      disabled: false,
+      danger: false,
+      onClick: handleEdit,
+    },
+    {
+      title: "Jual",
+      desc: "Tawarkan stok bebas ke marketplace tanpa mengganggu stok lain.",
+      icon: "marketplace",
+      disabled: !canSell,
+      danger: false,
+      onClick: handleSell,
+    },
+    {
+      title: "Digunakan",
+      desc: "Kurangi stok bebas yang sudah kamu pakai atau masak.",
+      icon: "used",
+      disabled: !canReduceStock,
+      danger: false,
+      onClick: handleUsed,
+    },
+    {
+      title: "Dibuang",
+      desc: "Kurangi stok bebas yang sudah rusak atau tidak layak.",
+      icon: "discard",
+      disabled: !canReduceStock,
+      danger: false,
+      onClick: handleDiscard,
+    },
+    {
+      title: "Hapus",
+      desc: "Hapus data makanan dari inventaris kamu.",
+      icon: "delete",
+      disabled: false,
+      danger: true,
+      onClick: handleDelete,
+    },
+  ];
+
   return (
     <div className="inventory-modal-backdrop" onClick={onClose}>
-      <div
+      <section
         className="inventory-action-menu"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="inventory-modal-header">
-          <div>
-            <span>Aksi Makanan</span>
-            <h3>{food.name || "Tanpa nama"}</h3>
-          </div>
+        <button
+          type="button"
+          className="inventory-modal-close"
+          onClick={onClose}
+          aria-label="Tutup popup"
+        >
+          ×
+        </button>
 
-          <button
-            type="button"
-            className="inventory-modal-close"
-            onClick={onClose}
-          >
-            ×
-          </button>
+        <div className="inventory-action-heading">
+          <span>Aksi Makanan</span>
+          <h3>{food.name || "Tanpa nama"}</h3>
+          <p>
+            Pilih aksi yang ingin dilakukan. Stok bebas dan stok marketplace
+            dipisahkan supaya data inventaris tetap aman.
+          </p>
         </div>
 
-        <div className="inventory-modal-food">
-          <div className="inventory-modal-food-icon">
+        <div className="inventory-action-food-card">
+          <div className="inventory-action-food-image">
             {imageSource ? (
               <img src={imageSource} alt={food.name || "Foto makanan"} />
             ) : (
-              <AppIcon name="food" />
+              <AppIcon name="food" size={28} />
             )}
           </div>
 
-          <div>
+          <div className="inventory-action-food-content">
             <strong>{food.name || "Tanpa nama"}</strong>
-            <small>
-              Status: {getFoodStatusLabel(food.status)} • Total:{" "}
-              {totalQuantity} {food.unit || "pcs"} • Bebas: {freeQuantity}{" "}
-              {food.unit || "pcs"} • Dijual: {marketplaceQuantity}{" "}
-              {food.unit || "pcs"}
-            </small>
+            <small>{food.category || "Tanpa kategori"}</small>
+
+            <div className="inventory-action-status-pill">
+              {getFoodStatusLabel(food.status)}
+            </div>
           </div>
         </div>
 
-        <div className="inventory-menu-grid">
-          <button
-            type="button"
-            onClick={() => {
-              onClose();
-              navigate(`/foods/edit/${food.id}`);
-            }}
-          >
-            <span>
-              <AppIcon name="edit" />
-            </span>
-            <strong>Edit Data</strong>
-            <small>Ubah nama, stok, harga, tanggal, atau catatan.</small>
-          </button>
+        <div className="inventory-stock-strip">
+          <div>
+            <span>Total</span>
+            <strong>
+              {totalQuantity} {unit}
+            </strong>
+          </div>
 
-          <button
-            type="button"
-            disabled={!canSell}
-            onClick={() => {
-              onClose();
-              navigate(`/marketplace/sell/${food.id}`);
-            }}
-          >
-            <span>
-              <AppIcon name="marketplace" />
-            </span>
-            <strong>Jual</strong>
-            <small>Tawarkan stok bebas ke marketplace.</small>
-          </button>
+          <div>
+            <span>Bebas</span>
+            <strong>
+              {freeQuantity} {unit}
+            </strong>
+          </div>
 
-          <button
-            type="button"
-            disabled={!canReduceStock}
-            onClick={() => onOpenStockAction(food, "digunakan")}
-          >
-            <span>
-              <AppIcon name="used" />
-            </span>
-            <strong>Digunakan</strong>
-            <small>Kurangi stok bebas yang sudah kamu pakai.</small>
-          </button>
-
-          <button
-            type="button"
-            disabled={!canReduceStock}
-            onClick={() => onOpenStockAction(food, "dibuang")}
-          >
-            <span>
-              <AppIcon name="discard" />
-            </span>
-            <strong>Dibuang</strong>
-            <small>Kurangi stok bebas yang sudah terbuang.</small>
-          </button>
-
-          <button
-            type="button"
-            className="danger"
-            onClick={() => onDelete(food)}
-          >
-            <span>
-              <AppIcon name="delete" />
-            </span>
-            <strong>Hapus</strong>
-            <small>Hapus data makanan dari inventaris.</small>
-          </button>
+          <div>
+            <span>Dijual</span>
+            <strong>
+              {marketplaceQuantity} {unit}
+            </strong>
+          </div>
         </div>
-      </div>
+
+        {!canSell && !isFinishedStatus && (
+          <div className="inventory-action-alert">
+            Stok bebas sedang kosong, jadi makanan belum bisa dijual,
+            digunakan, atau dibuang.
+          </div>
+        )}
+
+        {isFinishedStatus && (
+          <div className="inventory-action-alert">
+            Status makanan ini sudah selesai/tidak aktif. Aksi jual, digunakan,
+            dan dibuang otomatis dinonaktifkan.
+          </div>
+        )}
+
+        <div className="inventory-menu-grid">
+          {actions.map((action) => (
+            <button
+              type="button"
+              key={action.title}
+              className={action.danger ? "danger" : ""}
+              disabled={action.disabled}
+              onClick={action.onClick}
+            >
+              <span>
+                <AppIcon name={action.icon} size={20} />
+              </span>
+
+              <div>
+                <strong>{action.title}</strong>
+                <small>{action.desc}</small>
+              </div>
+            </button>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }
