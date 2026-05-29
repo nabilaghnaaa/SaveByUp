@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
 
+import AppIcon from "../../../components/ui/AppIcon";
+
 import { formatCurrency } from "../../../utils/formatCurrency";
 import { formatDate, getDaysLeftLabel } from "../../../utils/formatDate";
 
@@ -28,7 +30,9 @@ export default function ProductCard({ product, currentUserId }) {
         {product.image_url ? (
           <img src={product.image_url} alt={product.name} />
         ) : (
-          <div className="product-placeholder">🍱</div>
+          <div className="product-placeholder">
+            <AppIcon name="food" />
+          </div>
         )}
 
         <div className="product-card-overlay" />
@@ -41,7 +45,7 @@ export default function ProductCard({ product, currentUserId }) {
           {getDaysLeftLabel(product.expiry_date)}
         </span>
 
-        {isMine && <span className="product-expiry-badge">Produk Kamu</span>}
+        {isMine && <span className="product-own-badge">Produk Kamu</span>}
       </div>
 
       <div className="product-card-body">
@@ -70,7 +74,7 @@ export default function ProductCard({ product, currentUserId }) {
 
         <div className="product-seller">
           <div className="seller-mini-avatar">
-            {product.seller_name?.charAt(0)?.toUpperCase() || "S"}
+            <AppIcon name="user" />
           </div>
 
           <div>

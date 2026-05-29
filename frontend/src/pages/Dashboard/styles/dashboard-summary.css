@@ -70,7 +70,14 @@
   margin-bottom: 18px;
   border-radius: 18px;
   background: rgba(87, 126, 72, 0.12);
-  font-size: 25px;
+  color: #274622;
+}
+
+.summary-icon svg {
+  width: 24px;
+  height: 24px;
+  display: block;
+  stroke-width: 2.4;
 }
 
 .summary-card-top {
@@ -135,6 +142,7 @@
 
 .summary-earth .summary-icon {
   background: rgba(122, 79, 47, 0.12);
+  color: #7a4f2f;
 }
 
 .summary-earth .summary-progress div {
@@ -143,6 +151,7 @@
 
 .summary-green .summary-icon {
   background: rgba(87, 126, 72, 0.13);
+  color: #386d35;
 }
 
 .summary-green .summary-progress div {
@@ -151,6 +160,7 @@
 
 .summary-warm .summary-icon {
   background: rgba(180, 133, 67, 0.15);
+  color: #b87b36;
 }
 
 .summary-warm .summary-progress div {
@@ -159,6 +169,7 @@
 
 .summary-brown .summary-icon {
   background: rgba(113, 74, 44, 0.15);
+  color: #6f492c;
 }
 
 .summary-brown .summary-progress div {
@@ -167,6 +178,7 @@
 
 .summary-blue .summary-icon {
   background: rgba(76, 111, 125, 0.13);
+  color: #406d78;
 }
 
 .summary-blue .summary-progress div {

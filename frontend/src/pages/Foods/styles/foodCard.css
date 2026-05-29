@@ -47,7 +47,13 @@
   height: 100%;
   display: grid;
   place-items: center;
-  font-size: 58px;
+  color: rgba(39, 70, 34, 0.72);
+}
+
+.food-card-placeholder svg {
+  width: 68px;
+  height: 68px;
+  stroke-width: 1.8;
 }
 
 .food-card-status,
@@ -161,9 +167,18 @@
 }
 
 .food-expiry-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   margin-top: 13px;
   color: #756b5d;
   font-size: 13px;
+}
+
+.food-expiry-line svg {
+  width: 16px;
+  height: 16px;
+  color: #7a4f2f;
 }
 
 .food-note {
@@ -187,10 +202,19 @@
   font-weight: 950;
   cursor: pointer;
   box-shadow: 0 16px 34px rgba(39, 70, 34, 0.18);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
     filter 0.2s ease;
+}
+
+.food-action-main svg {
+  width: 17px;
+  height: 17px;
 }
 
 .food-action-main:hover {
@@ -210,8 +234,6 @@
 .food-card-blue {
   border-color: rgba(74, 121, 67, 0.18);
 }
-
-/* POPUP AKSI MAKANAN */
 
 .food-action-backdrop {
   position: fixed;
@@ -319,7 +341,12 @@
   background:
     radial-gradient(circle at 20% 20%, rgba(74, 121, 67, 0.22), transparent 35%),
     linear-gradient(135deg, #edf6e8, #f7f0e4);
-  font-size: 30px;
+  color: #274622;
+}
+
+.food-action-food-image svg {
+  width: 30px;
+  height: 30px;
 }
 
 .food-action-food-image img {
@@ -389,7 +416,13 @@
   place-items: center;
   border-radius: 16px;
   background: rgba(74, 121, 67, 0.11);
-  font-size: 20px;
+  color: #274622;
+}
+
+.food-action-list button > span svg {
+  width: 22px;
+  height: 22px;
+  display: block;
 }
 
 .food-action-list strong {
@@ -416,6 +449,7 @@
 
 .food-action-list button.danger > span {
   background: rgba(169, 71, 50, 0.11);
+  color: #a94732;
 }
 
 .food-action-list button.danger strong {

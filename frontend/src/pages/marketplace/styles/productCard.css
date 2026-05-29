@@ -58,16 +58,22 @@
   height: 100%;
   display: grid;
   place-items: center;
-  font-size: 58px;
+  color: rgba(39, 70, 34, 0.72);
+}
+
+.product-placeholder svg {
+  width: 68px;
+  height: 68px;
+  stroke-width: 1.8;
 }
 
 .product-status,
-.product-expiry-badge {
+.product-expiry-badge,
+.product-own-badge {
   position: absolute;
   z-index: 2;
   border-radius: 999px;
   padding: 8px 12px;
-  color: #fff8ee;
   font-size: 12px;
   font-weight: 900;
   backdrop-filter: blur(14px);
@@ -77,20 +83,22 @@
 .product-status {
   left: 14px;
   top: 14px;
+  color: #fff8ee;
   background: rgba(32, 58, 30, 0.78);
 }
 
 .product-expiry-badge {
   right: 14px;
   bottom: 14px;
+  color: #fff8ee;
   background: rgba(122, 79, 47, 0.78);
 }
 
-.product-expiry-badge + .product-expiry-badge {
+.product-own-badge {
   left: 14px;
-  right: auto;
-  background: rgba(244, 232, 207, 0.92);
-  color: #274622;
+  bottom: 14px;
+  color: #18301d;
+  background: rgba(232, 237, 189, 0.94);
 }
 
 .product-tersedia {
@@ -193,7 +201,12 @@
   border-radius: 15px;
   color: #fff8ee;
   background: linear-gradient(135deg, #274622, #7a4f2f);
-  font-weight: 950;
+}
+
+.seller-mini-avatar svg {
+  width: 22px;
+  height: 22px;
+  display: block;
 }
 
 .product-seller span {

@@ -5,7 +5,6 @@
   isolation: isolate;
 }
 
-/* orb background halaman */
 .incoming-page::before {
   content: "";
   position: fixed;
@@ -44,7 +43,6 @@
   }
 }
 
-/* HERO: mirip notification */
 .incoming-hero {
   position: relative;
   overflow: hidden;
@@ -121,7 +119,6 @@
   line-height: 1.75;
 }
 
-/* SUMMARY CARD */
 .incoming-summary {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -189,7 +186,6 @@
   font-size: 14px;
 }
 
-/* NOTICE */
 .incoming-notice {
   padding: 15px 17px;
   border-radius: 20px;
@@ -199,7 +195,6 @@
   font-weight: 850;
 }
 
-/* LOADING / EMPTY AREA */
 .incoming-state {
   padding: 44px;
   border-radius: 34px;
@@ -237,7 +232,6 @@
   color: #756b5d;
 }
 
-/* REQUEST LIST */
 .incoming-list {
   display: grid;
   gap: 16px;
@@ -272,7 +266,7 @@
   justify-content: space-between;
   gap: 12px;
   flex-wrap: wrap;
-  margin-bottom: 10px;
+  margin-bottom: 14px;
 }
 
 .request-top small {
@@ -290,19 +284,50 @@
   font-weight: 900;
 }
 
+.request-pending,
 .request-menunggu {
   background: rgba(184, 123, 54, 0.13);
   color: #8b5c25;
 }
 
+.request-accepted,
 .request-disetujui {
   background: rgba(74, 121, 67, 0.12);
   color: #274622;
 }
 
+.request-rejected,
 .request-ditolak {
   background: rgba(170, 75, 48, 0.1);
   color: #9f3f2d;
+}
+
+.request-cancelled,
+.request-completed {
+  background: rgba(117, 107, 93, 0.12);
+  color: #5f554a;
+}
+
+.request-title-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.request-title-icon {
+  width: 50px;
+  height: 50px;
+  flex: 0 0 50px;
+  display: grid;
+  place-items: center;
+  border-radius: 18px;
+  color: #274622;
+  background: rgba(74, 121, 67, 0.1);
+}
+
+.request-title-icon svg {
+  width: 24px;
+  height: 24px;
 }
 
 .request-card h3 {
@@ -314,7 +339,7 @@
 }
 
 .request-card p {
-  margin: 9px 0 0;
+  margin: 7px 0 0;
   color: #756b5d;
   line-height: 1.65;
 }
@@ -347,6 +372,9 @@
 }
 
 .request-note {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
   margin-top: 14px !important;
   padding: 14px;
   border-radius: 20px;
@@ -355,8 +383,23 @@
   color: #675e52 !important;
 }
 
+.request-note svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  margin-top: 3px;
+  color: #7a4f2f;
+}
+
+.request-note p {
+  margin: 0;
+}
+
 .request-whatsapp {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   margin-top: 14px;
   padding: 11px 15px;
   border-radius: 999px;
@@ -367,9 +410,26 @@
   font-size: 13px;
 }
 
+.request-whatsapp svg {
+  width: 17px;
+  height: 17px;
+}
+
 .request-actions {
   display: grid;
   gap: 10px;
+}
+
+.request-actions .sb-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.request-actions svg {
+  width: 17px;
+  height: 17px;
 }
 
 .request-btn-outline {
@@ -428,5 +488,9 @@
   .incoming-summary-card,
   .request-card {
     border-radius: 24px;
+  }
+
+  .request-title-row {
+    align-items: flex-start;
   }
 }

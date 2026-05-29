@@ -1,3 +1,5 @@
+import AppIcon from "../../../components/ui/AppIcon";
+
 const getPercent = (value, total) => {
   const safeTotal = Number(total || 0);
   const safeValue = Number(value || 0);
@@ -31,7 +33,7 @@ export default function SummaryGrid({ summary, loading }) {
       desc: `${totalItems} jenis makanan tercatat. Angka utama dihitung berdasarkan jumlah stok, bukan jumlah kartu makanan.`,
       tone: "earth",
       percent: totalStok > 0 ? 100 : 0,
-      icon: "🍱",
+      icon: "stock",
     },
     {
       title: "Aman Dikonsumsi",
@@ -39,7 +41,7 @@ export default function SummaryGrid({ summary, loading }) {
       desc: "Stok yang masih aman berdasarkan tanggal kedaluwarsa, termasuk stok yang sedang dijual jika kondisinya masih aman.",
       tone: "green",
       percent: getPercent(totalAman, totalStok),
-      icon: "🌿",
+      icon: "safe",
     },
     {
       title: "Mendekati Kedaluwarsa",
@@ -47,7 +49,7 @@ export default function SummaryGrid({ summary, loading }) {
       desc: "Stok yang perlu diprioritaskan karena tanggal kedaluwarsanya sudah dekat.",
       tone: "warm",
       percent: getPercent(totalMendekati, totalStok),
-      icon: "⏰",
+      icon: "warning",
     },
     {
       title: "Aktif Dijual",
@@ -55,7 +57,7 @@ export default function SummaryGrid({ summary, loading }) {
       desc: "Jumlah stok yang sedang aktif ditawarkan di marketplace.",
       tone: "blue",
       percent: getPercent(totalDijual, totalStok),
-      icon: "🛒",
+      icon: "sold",
     },
     {
       title: "Selesai / Waste",
@@ -63,7 +65,7 @@ export default function SummaryGrid({ summary, loading }) {
       desc: "Akumulasi stok yang sudah digunakan, dibuang, terjual, atau melewati kedaluwarsa.",
       tone: "brown",
       percent: getPercent(selesaiWaste, totalStok + selesaiWaste),
-      icon: "♻️",
+      icon: "waste",
     },
   ];
 
@@ -85,7 +87,9 @@ export default function SummaryGrid({ summary, loading }) {
             className={`summary-card summary-${card.tone}`}
             key={card.title}
           >
-            <div className="summary-icon">{card.icon}</div>
+            <div className="summary-icon">
+              <AppIcon name={card.icon} />
+            </div>
 
             <div className="summary-card-top">
               <span>{card.title}</span>

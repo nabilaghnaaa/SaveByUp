@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import AppIcon from "../../../components/ui/AppIcon";
+
 import { formatDate, getDaysLeftLabel } from "../../../utils/formatDate";
 
 import {
@@ -44,7 +46,7 @@ export default function FoodCard({
             <img src={imageSource} alt={food.name} />
           ) : (
             <div className="food-card-placeholder">
-              <span>🍱</span>
+              <AppIcon name="food" />
             </div>
           )}
 
@@ -82,6 +84,7 @@ export default function FoodCard({
           </div>
 
           <div className="food-expiry-line">
+            <AppIcon name="calendar" />
             <span>Tanggal: {formatDate(food.expiry_date)}</span>
           </div>
 
@@ -92,7 +95,8 @@ export default function FoodCard({
             className="food-action-main"
             onClick={() => setShowActions(true)}
           >
-            Aksi Makanan
+            <AppIcon name="sparkle" />
+            <span>Aksi Makanan</span>
           </button>
         </div>
       </article>
@@ -126,7 +130,7 @@ export default function FoodCard({
                 {imageSource ? (
                   <img src={imageSource} alt={food.name} />
                 ) : (
-                  <span>🍱</span>
+                  <AppIcon name="food" />
                 )}
               </div>
 
@@ -141,7 +145,9 @@ export default function FoodCard({
 
             <div className="food-action-list">
               <button type="button" onClick={() => handleAction(onEdit)}>
-                <span>✏️</span>
+                <span>
+                  <AppIcon name="edit" />
+                </span>
                 <div>
                   <strong>Edit Data</strong>
                   <small>Ubah nama, stok, harga, tanggal, atau catatan.</small>
@@ -153,7 +159,9 @@ export default function FoodCard({
                 disabled={!isSellable}
                 onClick={() => handleAction(onSell)}
               >
-                <span>🛒</span>
+                <span>
+                  <AppIcon name="marketplace" />
+                </span>
                 <div>
                   <strong>Jual</strong>
                   <small>Tawarkan stok makanan ke marketplace.</small>
@@ -161,7 +169,9 @@ export default function FoodCard({
               </button>
 
               <button type="button" onClick={() => handleAction(onUsed)}>
-                <span>✅</span>
+                <span>
+                  <AppIcon name="used" />
+                </span>
                 <div>
                   <strong>Digunakan</strong>
                   <small>Kurangi stok yang sudah kamu pakai.</small>
@@ -169,7 +179,9 @@ export default function FoodCard({
               </button>
 
               <button type="button" onClick={() => handleAction(onDiscard)}>
-                <span>🗑️</span>
+                <span>
+                  <AppIcon name="discard" />
+                </span>
                 <div>
                   <strong>Dibuang</strong>
                   <small>Kurangi stok yang sudah terbuang.</small>
@@ -181,7 +193,9 @@ export default function FoodCard({
                 className="danger"
                 onClick={() => handleAction(onDelete)}
               >
-                <span>⛔</span>
+                <span>
+                  <AppIcon name="delete" />
+                </span>
                 <div>
                   <strong>Hapus</strong>
                   <small>Hapus makanan dari inventaris.</small>
