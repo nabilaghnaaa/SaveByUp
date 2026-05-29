@@ -13,31 +13,35 @@ const getFileUrl = (filePath = "") => {
   return `${appURL}${filePath}`;
 };
 
-const normalizeProfile = (profile = {}) => ({
-  id: profile.id,
-  name: profile.name || "",
-  email: profile.email || "",
-  phone: profile.phone || "",
-  whatsapp: profile.whatsapp || "",
-  address: profile.address || "",
-  photo: profile.photo || profile.avatar_url || "",
-  photo_url: getFileUrl(profile.photo || profile.avatar_url || ""),
-  avatar_url: profile.avatar_url || profile.photo || "",
-  bio: profile.bio || "",
-  rating: Number(profile.rating || 0),
+const normalizeProfile = (profile = {}) => {
+  const photoPath = profile.photo || profile.avatar_url || "";
 
-  is_profile_complete: Boolean(profile.is_profile_complete),
-  missing_fields: Array.isArray(profile.missing_fields)
-    ? profile.missing_fields
-    : [],
-});
+  return {
+    id: profile.id,
+    name: profile.name || "",
+    email: profile.email || "",
+    phone: profile.phone || "",
+    whatsapp: profile.whatsapp || "",
+    address: profile.address || "",
+    photo: photoPath,
+    photo_url: getFileUrl(photoPath),
+    avatar_url: photoPath,
+    bio: profile.bio || "",
+    rating: Number(profile.rating || 0),
+
+    is_profile_complete: Boolean(profile.is_profile_complete),
+    missing_fields: Array.isArray(profile.missing_fields)
+      ? profile.missing_fields
+      : [],
+  };
+};
 
 export const getProfile = async () => {
   const response = await API.get("/profile");
-  return normalizeProfile(response.data.data);
+  return normalizeProfile(response.data.data || {});
 };
 
-export const updateProfile = async (payload) => {
+export const updateProfile = async (payload = {}) => {
   const formData = new FormData();
 
   formData.append("name", payload.name || "");
@@ -56,7 +60,10 @@ export const updateProfile = async (payload) => {
     },
   });
 
-  return response.data;
+  return {
+    ...response.data,
+    data: normalizeProfile(response.data.data || {}),
+  };
 };
 
 export const isProfileComplete = (profile = {}) => {
@@ -74,7 +81,7 @@ export const getMissingProfileFields = (profile = {}) => {
   if (!String(profile.name || "").trim()) missing.push("Nama");
   if (!String(profile.email || "").trim()) missing.push("Email");
   if (!String(profile.whatsapp || "").trim()) missing.push("WhatsApp");
-  if (!String(profile.address || "").trim()) missing.push("Alamat");
+  if (!String(profile.address || "").trim()) missing.push("Area COD");
 
   return missing;
 };

@@ -6,24 +6,19 @@ const getUserId = (req) => {
   return req.user?.id || req.user?.user_id || req.userId;
 };
 
+const normalizePhone = (value = "") => {
+  return String(value || "")
+    .replace(/[^\d+]/g, "")
+    .replace(/(?!^)\+/g, "");
+};
+
 const getProfileCompleteness = (user = {}) => {
   const missingFields = [];
 
-  if (!String(user.name || "").trim()) {
-    missingFields.push("name");
-  }
-
-  if (!String(user.email || "").trim()) {
-    missingFields.push("email");
-  }
-
-  if (!String(user.whatsapp || "").trim()) {
-    missingFields.push("whatsapp");
-  }
-
-  if (!String(user.address || "").trim()) {
-    missingFields.push("address");
-  }
+  if (!String(user.name || "").trim()) missingFields.push("name");
+  if (!String(user.email || "").trim()) missingFields.push("email");
+  if (!String(user.whatsapp || "").trim()) missingFields.push("whatsapp");
+  if (!String(user.address || "").trim()) missingFields.push("address");
 
   return {
     is_profile_complete: missingFields.length === 0,
@@ -31,25 +26,52 @@ const getProfileCompleteness = (user = {}) => {
   };
 };
 
-const deleteOldProfilePhoto = (oldPhotoPath = "") => {
+const validateProfilePayload = ({ name, phone, whatsapp, address, bio }) => {
+  const cleanName = String(name || "").trim();
+  const cleanPhone = normalizePhone(phone);
+  const cleanWhatsapp = normalizePhone(whatsapp);
+  const cleanAddress = String(address || "").trim();
+  const cleanBio = String(bio || "").trim();
+
+  if (!cleanName) return "Nama wajib diisi.";
+  if (cleanName.length < 3) return "Nama minimal 3 karakter.";
+  if (cleanName.length > 80) return "Nama maksimal 80 karakter.";
+
+  if (cleanPhone && !/^\+?\d{8,15}$/.test(cleanPhone)) {
+    return "Nomor HP harus berisi angka 8 sampai 15 digit.";
+  }
+
+  if (!cleanWhatsapp) return "Nomor WhatsApp wajib diisi.";
+
+  if (!/^\+?\d{8,15}$/.test(cleanWhatsapp)) {
+    return "Nomor WhatsApp harus berisi angka 8 sampai 15 digit.";
+  }
+
+  if (!cleanAddress) return "Area COD wajib diisi.";
+  if (cleanAddress.length < 5) return "Area COD terlalu pendek.";
+  if (cleanAddress.length > 220) return "Area COD maksimal 220 karakter.";
+
+  if (cleanBio.length > 160) return "Bio maksimal 160 karakter.";
+
+  return "";
+};
+
+const deleteUploadedFile = (filePath = "") => {
   try {
-    if (!oldPhotoPath) return;
+    if (!filePath) return;
 
-    if (!oldPhotoPath.startsWith("/uploads/profiles/")) return;
+    let fullPath = filePath;
 
-    const fileName = oldPhotoPath.replace("/uploads/profiles/", "");
-
-    const fullPath = path.join(
-      __dirname,
-      "../../uploads/profiles",
-      fileName
-    );
+    if (filePath.startsWith("/uploads/profiles/")) {
+      const fileName = filePath.replace("/uploads/profiles/", "");
+      fullPath = path.join(__dirname, "../../uploads/profiles", fileName);
+    }
 
     if (fs.existsSync(fullPath)) {
       fs.unlinkSync(fullPath);
     }
   } catch (error) {
-    console.error("Delete old profile photo error:", error.message);
+    console.error("Delete uploaded profile photo error:", error.message);
   }
 };
 
@@ -82,7 +104,7 @@ const getProfile = async (req, res) => {
 
     if (users.length === 0) {
       return res.status(404).json({
-        message: "Profil pengguna tidak ditemukan",
+        message: "Profil pengguna tidak ditemukan.",
       });
     }
 
@@ -91,7 +113,7 @@ const getProfile = async (req, res) => {
     const completeness = getProfileCompleteness(user);
 
     return res.status(200).json({
-      message: "Profil berhasil diambil",
+      message: "Profil berhasil diambil.",
       data: {
         ...user,
         photo: photoPath,
@@ -103,7 +125,7 @@ const getProfile = async (req, res) => {
     console.error("Get profile error:", error);
 
     return res.status(500).json({
-      message: "Terjadi kesalahan pada server",
+      message: "Terjadi kesalahan pada server.",
       error: error.message,
     });
   }
@@ -113,17 +135,35 @@ const updateProfile = async (req, res) => {
   try {
     const userId = getUserId(req);
 
-    const { name, phone, whatsapp, address, bio } = req.body;
+    const {
+      name = "",
+      phone = "",
+      whatsapp = "",
+      address = "",
+      bio = "",
+    } = req.body;
 
     if (!userId) {
+      if (req.file) deleteUploadedFile(req.file.path);
+
       return res.status(401).json({
         message: "User tidak terautentikasi.",
       });
     }
 
-    if (!String(name || "").trim()) {
+    const validationMessage = validateProfilePayload({
+      name,
+      phone,
+      whatsapp,
+      address,
+      bio,
+    });
+
+    if (validationMessage) {
+      if (req.file) deleteUploadedFile(req.file.path);
+
       return res.status(400).json({
-        message: "Nama wajib diisi",
+        message: validationMessage,
       });
     }
 
@@ -135,8 +175,10 @@ const updateProfile = async (req, res) => {
     );
 
     if (oldUsers.length === 0) {
+      if (req.file) deleteUploadedFile(req.file.path);
+
       return res.status(404).json({
-        message: "Profil pengguna tidak ditemukan",
+        message: "Profil pengguna tidak ditemukan.",
       });
     }
 
@@ -147,7 +189,7 @@ const updateProfile = async (req, res) => {
     if (req.file) {
       photoPath = `/uploads/profiles/${req.file.filename}`;
 
-      deleteOldProfilePhoto(oldUser.photo || oldUser.avatar_url || "");
+      deleteUploadedFile(oldUser.photo || oldUser.avatar_url || "");
     }
 
     await db.query(
@@ -163,12 +205,12 @@ const updateProfile = async (req, res) => {
        WHERE id = ?`,
       [
         String(name || "").trim(),
-        phone || null,
-        whatsapp || null,
-        address || null,
+        normalizePhone(phone) || null,
+        normalizePhone(whatsapp) || null,
+        String(address || "").trim() || null,
         photoPath || null,
         photoPath || null,
-        bio || null,
+        String(bio || "").trim() || null,
         userId,
       ]
     );
@@ -195,7 +237,7 @@ const updateProfile = async (req, res) => {
     const completeness = getProfileCompleteness(user);
 
     return res.status(200).json({
-      message: "Profil berhasil diperbarui",
+      message: "Profil berhasil diperbarui.",
       data: {
         ...user,
         photo: finalPhotoPath,
@@ -206,8 +248,10 @@ const updateProfile = async (req, res) => {
   } catch (error) {
     console.error("Update profile error:", error);
 
+    if (req.file) deleteUploadedFile(req.file.path);
+
     return res.status(500).json({
-      message: "Terjadi kesalahan pada server",
+      message: "Terjadi kesalahan pada server.",
       error: error.message,
     });
   }

@@ -44,7 +44,7 @@ const fileFilter = (req, file, cb) => {
 
   if (!allowedMimeTypes.includes(file.mimetype)) {
     return cb(
-      new Error("Format foto harus JPG, JPEG, PNG, atau WEBP"),
+      new Error("Format foto harus JPG, JPEG, PNG, atau WEBP."),
       false
     );
   }
