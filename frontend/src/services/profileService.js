@@ -13,8 +13,19 @@ const getFileUrl = (filePath = "") => {
   return `${appURL}${filePath}`;
 };
 
+const toNullableNumber = (value) => {
+  if (value === null || value === undefined || value === "") return null;
+
+  const parsed = Number(value);
+
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
 const normalizeProfile = (profile = {}) => {
   const photoPath = profile.photo || profile.avatar_url || "";
+
+  const latitude = toNullableNumber(profile.latitude);
+  const longitude = toNullableNumber(profile.longitude);
 
   return {
     id: profile.id,
@@ -23,9 +34,17 @@ const normalizeProfile = (profile = {}) => {
     phone: profile.phone || "",
     whatsapp: profile.whatsapp || "",
     address: profile.address || "",
+
+    latitude,
+    longitude,
+    location_label: profile.location_label || "",
+    location_updated_at: profile.location_updated_at || "",
+    has_location: Boolean(profile.has_location || (latitude && longitude)),
+
     photo: photoPath,
     photo_url: getFileUrl(photoPath),
     avatar_url: photoPath,
+
     bio: profile.bio || "",
     rating: Number(profile.rating || 0),
 
@@ -38,6 +57,7 @@ const normalizeProfile = (profile = {}) => {
 
 export const getProfile = async () => {
   const response = await API.get("/profile");
+
   return normalizeProfile(response.data.data || {});
 };
 
@@ -49,6 +69,22 @@ export const updateProfile = async (payload = {}) => {
   formData.append("whatsapp", payload.whatsapp || "");
   formData.append("address", payload.address || "");
   formData.append("bio", payload.bio || "");
+
+  formData.append(
+    "latitude",
+    payload.latitude !== null && payload.latitude !== undefined
+      ? String(payload.latitude)
+      : ""
+  );
+
+  formData.append(
+    "longitude",
+    payload.longitude !== null && payload.longitude !== undefined
+      ? String(payload.longitude)
+      : ""
+  );
+
+  formData.append("location_label", payload.location_label || "");
 
   if (payload.photoFile) {
     formData.append("photo", payload.photoFile);

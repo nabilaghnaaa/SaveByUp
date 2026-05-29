@@ -1,14 +1,27 @@
 import API from "./api";
 
+const normalizeDistance = (value) => {
+  if (value === null || value === undefined || value === "") return null;
+
+  const parsed = Number(value);
+
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
 const normalizeProduct = (product = {}) => ({
   id: product.id,
   food_id: product.food_id,
   seller_id: product.seller_id,
+
   seller_name: product.seller_name || "Penjual SaveByUp",
   seller_email: product.seller_email || "",
   seller_whatsapp: product.seller_whatsapp || "",
   seller_address: product.seller_address || "Area kos UMY",
+  seller_location_label: product.seller_location_label || "",
   seller_rating: Number(product.seller_rating || 0),
+
+  distance_km: normalizeDistance(product.distance_km),
+
   name: product.name || "",
   category: product.category || "",
   description: product.description || "",
@@ -48,20 +61,25 @@ const normalizeRequest = (request = {}) => ({
   product_id: request.product_id,
   product_name: request.product_name || "",
   product_image: request.product_image || "",
+
   buyer_id: request.buyer_id,
   buyer_name: request.buyer_name || "",
   buyer_email: request.buyer_email || "",
   buyer_whatsapp: request.buyer_whatsapp || "",
+
   seller_id: request.seller_id,
   seller_name: request.seller_name || "",
   seller_whatsapp: request.seller_whatsapp || "",
+
   quantity: Number(request.quantity || 0),
   original_price: Number(request.original_price || 0),
   offer_price: Number(request.offer_price || 0),
   is_negotiated: Boolean(request.is_negotiated),
+
   cod_location: request.cod_location || "",
   cod_time: request.cod_time || "",
   note: request.note || "",
+
   status: normalizeRequestStatus(request.status),
   created_at: request.created_at,
   updated_at: request.updated_at,
@@ -82,6 +100,7 @@ export const getMarketplaceProducts = async () => {
 
 export const getMarketplaceProductById = async (id) => {
   const response = await API.get(`/marketplace/${id}`);
+
   return normalizeProduct(response.data.data || response.data);
 };
 
@@ -107,11 +126,13 @@ export const updateMarketplaceProduct = async (id, payload) => {
 
 export const cancelMarketplaceProduct = async (id) => {
   const response = await API.patch(`/marketplace/${id}/cancel`);
+
   return response.data;
 };
 
 export const deleteMarketplaceProduct = async (id) => {
   const response = await API.delete(`/marketplace/${id}`);
+
   return response.data;
 };
 
@@ -156,11 +177,13 @@ export const getMyRequests = async () => {
 
 export const approveRequest = async (id) => {
   const response = await API.patch(`/requests/${id}/approve`);
+
   return response.data;
 };
 
 export const rejectRequest = async (id) => {
   const response = await API.patch(`/requests/${id}/reject`);
+
   return response.data;
 };
 

@@ -14,29 +14,19 @@ import {
 } from "../../services/marketplaceService";
 import { getProfile } from "../../services/profileService";
 
-import { formatCurrency } from "../../utils/formatCurrency";
-import { formatDate, getDaysLeftLabel } from "../../utils/formatDate";
-
 import NegotiationModal from "./components/NegotiationModal";
+import MarketplaceProductAside from "./components/MarketplaceProductAside";
+import MarketplaceProductSummary from "./components/MarketplaceProductSummary";
+import MarketplaceOwnerPanel from "./components/MarketplaceOwnerPanel";
+import MarketplaceBuyerPanel from "./components/MarketplaceBuyerPanel";
+import MarketplaceEditProductForm from "./components/MarketplaceEditProductForm";
+
+import {
+  getStatusProgress,
+  toNumber,
+} from "./utils/marketplaceDetailUtils";
 
 import "./styles/productDetail.css";
-
-function getProductStatusLabel(status) {
-  const labels = {
-    tersedia: "Tersedia",
-    dalam_proses: "Dalam Proses",
-    selesai: "Selesai",
-    dibatalkan: "Dibatalkan",
-    tidak_tersedia: "Tidak Tersedia",
-  };
-
-  return labels[status] || "Tersedia";
-}
-
-function toNumber(value, fallback = 0) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : fallback;
-}
 
 export default function MarketplaceDetail() {
   const { id } = useParams();
@@ -77,6 +67,7 @@ export default function MarketplaceDetail() {
       });
     } catch (error) {
       console.error("Gagal mengambil detail produk:", error);
+
       setMessage(
         error.response?.data?.message || "Gagal mengambil detail produk."
       );
@@ -100,15 +91,8 @@ export default function MarketplaceDetail() {
   const editTotal = editQuantity * editPrice;
 
   const statusProgress = useMemo(() => {
-    if (!product) return 0;
-
-    if (product.status === "tersedia") return 100;
-    if (product.status === "dalam_proses") return 62;
-    if (product.status === "selesai") return 100;
-    if (product.status === "dibatalkan") return 100;
-
-    return 35;
-  }, [product]);
+    return getStatusProgress(product?.status);
+  }, [product?.status]);
 
   const getDisabledReason = () => {
     if (!product) return "";
@@ -152,6 +136,13 @@ export default function MarketplaceDetail() {
     return "";
   };
 
+  const handleEditChange = (field, value) => {
+    setEditForm((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+
   const handleCancelSell = async () => {
     const confirmCancel = window.confirm(
       "Yakin ingin membatalkan produk ini dari marketplace?"
@@ -171,6 +162,7 @@ export default function MarketplaceDetail() {
       }, 900);
     } catch (error) {
       console.error("Gagal membatalkan produk:", error);
+
       setMessage(
         error.response?.data?.message ||
           "Gagal membatalkan produk dari marketplace."
@@ -204,6 +196,7 @@ export default function MarketplaceDetail() {
       await fetchProduct();
     } catch (error) {
       console.error("Gagal update produk marketplace:", error);
+
       setMessage(
         error.response?.data?.message ||
           "Gagal memperbarui produk marketplace."
@@ -227,7 +220,7 @@ export default function MarketplaceDetail() {
           description={
             productIsMine
               ? "Kelola produk yang kamu tawarkan, ubah jumlah jual, perbarui harga, atau batalkan dari marketplace."
-              : "Periksa kondisi, stok, tanggal kedaluwarsa, harga, dan profil penjual sebelum mengajukan pembelian."
+              : "Periksa kondisi, stok, tanggal kedaluwarsa, jarak penjual, dan profil penjual sebelum mengajukan pembelian."
           }
           action={
             <button
@@ -235,7 +228,6 @@ export default function MarketplaceDetail() {
               className="sb-btn marketplace-btn-outline"
               onClick={() => navigate("/marketplace")}
             >
-              <AppIcon name="back" />
               Kembali
             </button>
           }
@@ -271,322 +263,50 @@ export default function MarketplaceDetail() {
           product && (
             <>
               <section className="product-detail-page">
-                <aside className="product-detail-left">
-                  <article className="product-image-card">
-                    <div className="product-detail-image">
-                      {product.image_url ? (
-                        <img src={product.image_url} alt={product.name} />
-                      ) : (
-                        <div className="product-detail-placeholder">
-                          <AppIcon name="food" size={72} />
-                        </div>
-                      )}
-
-                      <div className="product-detail-image-overlay" />
-
-                      <span className={`product-detail-status status-${product.status}`}>
-                        {getProductStatusLabel(product.status)}
-                      </span>
-
-                      {productIsMine && (
-                        <span className="product-owner-badge">
-                          Produk Kamu
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="product-image-info">
-                      <div>
-                        <span>{product.category || "Tanpa Kategori"}</span>
-                        <strong>{getDaysLeftLabel(product.expiry_date)}</strong>
-                      </div>
-
-                      <p>
-                        Kedaluwarsa pada {formatDate(product.expiry_date)}.
-                      </p>
-                    </div>
-                  </article>
-
-                  <article className="seller-panel">
-                    <div className="seller-avatar">
-                      <AppIcon name="user" size={26} />
-                    </div>
-
-                    <div>
-                      <span>Penjual</span>
-                      <strong>
-                        {product.seller_name || "Penjual SaveByUp"}
-                        {productIsMine ? " (Kamu)" : ""}
-                      </strong>
-
-                      <small>
-                        Rating {product.seller_rating || 0}/5 •{" "}
-                        {product.seller_address || "Area kos UMY"}
-                      </small>
-                    </div>
-                  </article>
-                </aside>
+                <MarketplaceProductAside
+                  product={product}
+                  productIsMine={productIsMine}
+                />
 
                 <section className="product-detail-content">
-                  <div className="product-detail-hero">
-                    <div>
-                      <span>
-                        {productIsMine
-                          ? "Product Management"
-                          : "Marketplace Item"}
-                      </span>
+                  <MarketplaceProductSummary
+                    product={product}
+                    productIsMine={productIsMine}
+                    productPrice={productPrice}
+                    statusProgress={statusProgress}
+                  />
 
-                      <h2>{product.name}</h2>
-
-                      <p>
-                        {product.description ||
-                          "Produk belum memiliki deskripsi tambahan dari penjual."}
-                      </p>
-                    </div>
-
-                    <strong>{formatCurrency(productPrice)}</strong>
-                  </div>
-
-                  <div className="product-status-strip">
-                    <div className="product-status-strip-head">
-                      <span>Status Produk</span>
-                      <strong>{getProductStatusLabel(product.status)}</strong>
-                    </div>
-
-                    <div className="product-status-progress">
-                      <span style={{ width: `${statusProgress}%` }} />
-                    </div>
-                  </div>
-
-                  <div className="product-detail-grid">
-                    <div>
-                      <AppIcon name="stock" />
-                      <span>Stok Tersedia</span>
-                      <strong>
-                        {product.quantity} {product.unit}
-                      </strong>
-                    </div>
-
-                    <div>
-                      <AppIcon name="clock" />
-                      <span>Sisa Waktu</span>
-                      <strong>{getDaysLeftLabel(product.expiry_date)}</strong>
-                    </div>
-
-                    <div>
-                      <AppIcon name="calendar" />
-                      <span>Tanggal Kedaluwarsa</span>
-                      <strong>{formatDate(product.expiry_date)}</strong>
-                    </div>
-
-                    <div>
-                      <AppIcon name="price" />
-                      <span>Harga Satuan</span>
-                      <strong>{formatCurrency(productPrice)}</strong>
-                    </div>
-                  </div>
-
-                  {message && <div className="product-detail-message">{message}</div>}
+                  {message && (
+                    <div className="product-detail-message">{message}</div>
+                  )}
 
                   {productIsMine ? (
-                    <section className="product-owner-panel">
-                      <div className="product-owner-panel-head">
-                        <div>
-                          <span>Kelola Produk Kamu</span>
-                          <h3>Atur penjualan tanpa pindah halaman.</h3>
-                        </div>
-
-                        <div className="product-owner-panel-icon">
-                          <AppIcon name="shield" size={26} />
-                        </div>
-                      </div>
-
-                      <div className="product-owner-actions">
-                        <button
-                          type="button"
-                          className="product-action-card primary"
-                          disabled={product.status !== "tersedia"}
-                          onClick={() => setEditMode((prev) => !prev)}
-                        >
-                          <span>
-                            <AppIcon name="edit" />
-                          </span>
-
-                          <div>
-                            <strong>
-                              {editMode ? "Tutup Edit Produk" : "Edit Produk Jual"}
-                            </strong>
-                            <small>Ubah jumlah, harga, dan deskripsi produk.</small>
-                          </div>
-                        </button>
-
-                        <button
-                          type="button"
-                          className="product-action-card danger"
-                          disabled={product.status !== "tersedia"}
-                          onClick={handleCancelSell}
-                        >
-                          <span>
-                            <AppIcon name="delete" />
-                          </span>
-
-                          <div>
-                            <strong>Batal Jual</strong>
-                            <small>Hapus produk dari daftar marketplace aktif.</small>
-                          </div>
-                        </button>
-                      </div>
-
-                      {product.status !== "tersedia" && (
-                        <small className="product-detail-note">
-                          Produk tidak bisa diedit atau dibatalkan karena statusnya
-                          bukan tersedia.
-                        </small>
-                      )}
-                    </section>
+                    <MarketplaceOwnerPanel
+                      product={product}
+                      editMode={editMode}
+                      onToggleEdit={() => setEditMode((prev) => !prev)}
+                      onCancelSell={handleCancelSell}
+                    />
                   ) : (
-                    <section className="buyer-panel">
-                      <div>
-                        <span>Ajukan Pembelian</span>
-                        <h3>Minat dengan produk ini?</h3>
-                        <p>
-                          Kamu bisa mengajukan pembelian atau menawar harga sesuai
-                          kesepakatan dengan penjual.
-                        </p>
-                      </div>
-
-                      <button
-                        type="button"
-                        className="sb-btn sb-btn-primary product-request-button"
-                        disabled={!productCanBeBought}
-                        onClick={() => setShowNegotiation(true)}
-                      >
-                        <AppIcon name="request" />
-                        {product.status !== "tersedia"
-                          ? "Produk Tidak Tersedia"
-                          : productQuantity <= 0
-                            ? "Stok Habis"
-                            : "Ajukan Pembelian / Negosiasi"}
-                      </button>
-
-                      {disabledReason && (
-                        <small className="product-detail-note">
-                          {disabledReason}
-                        </small>
-                      )}
-                    </section>
+                    <MarketplaceBuyerPanel
+                      product={product}
+                      productQuantity={productQuantity}
+                      productCanBeBought={productCanBeBought}
+                      disabledReason={disabledReason}
+                      onOpenNegotiation={() => setShowNegotiation(true)}
+                    />
                   )}
 
                   {productIsMine && editMode && (
-                    <form className="product-edit-panel" onSubmit={handleSaveEdit}>
-                      <div className="product-edit-header">
-                        <div>
-                          <span>Edit Produk Jual</span>
-                          <h3>{product.name}</h3>
-                        </div>
-
-                        <button
-                          type="button"
-                          disabled={savingEdit}
-                          onClick={() => setEditMode(false)}
-                        >
-                          ×
-                        </button>
-                      </div>
-
-                      <div className="product-edit-grid">
-                        <div className="product-edit-group">
-                          <label>Jumlah Dijual</label>
-
-                          <div className="product-input-with-icon">
-                            <span>
-                              <AppIcon name="stock" />
-                            </span>
-
-                            <input
-                              type="number"
-                              min="1"
-                              value={editForm.quantity}
-                              disabled={savingEdit}
-                              onChange={(event) =>
-                                setEditForm((prev) => ({
-                                  ...prev,
-                                  quantity: event.target.value,
-                                }))
-                              }
-                            />
-                          </div>
-                        </div>
-
-                        <div className="product-edit-group">
-                          <label>Harga Jual</label>
-
-                          <div className="product-input-with-icon">
-                            <span>
-                              <AppIcon name="price" />
-                            </span>
-
-                            <input
-                              type="number"
-                              min="1"
-                              value={editForm.price}
-                              disabled={savingEdit}
-                              onChange={(event) =>
-                                setEditForm((prev) => ({
-                                  ...prev,
-                                  price: event.target.value,
-                                }))
-                              }
-                            />
-                          </div>
-
-                          <small>
-                            Estimasi total: Rp{editTotal.toLocaleString("id-ID")}
-                          </small>
-                        </div>
-
-                        <div className="product-edit-group product-edit-full">
-                          <label>Deskripsi Produk</label>
-
-                          <textarea
-                            rows="5"
-                            maxLength="500"
-                            value={editForm.description}
-                            disabled={savingEdit}
-                            placeholder="Contoh: Masih tersegel, disimpan di rak atas, COD sekitar kampus UMY."
-                            onChange={(event) =>
-                              setEditForm((prev) => ({
-                                ...prev,
-                                description: event.target.value,
-                              }))
-                            }
-                          />
-
-                          <small>
-                            {String(editForm.description || "").length}/500 karakter
-                          </small>
-                        </div>
-                      </div>
-
-                      <div className="product-edit-actions">
-                        <button
-                          type="button"
-                          className="sb-btn marketplace-btn-outline"
-                          disabled={savingEdit}
-                          onClick={() => setEditMode(false)}
-                        >
-                          Batal
-                        </button>
-
-                        <button
-                          type="submit"
-                          className="sb-btn sb-btn-primary"
-                          disabled={savingEdit}
-                        >
-                          {savingEdit ? "Menyimpan..." : "Simpan Perubahan"}
-                        </button>
-                      </div>
-                    </form>
+                    <MarketplaceEditProductForm
+                      product={product}
+                      editForm={editForm}
+                      editTotal={editTotal}
+                      savingEdit={savingEdit}
+                      onChange={handleEditChange}
+                      onClose={() => setEditMode(false)}
+                      onSubmit={handleSaveEdit}
+                    />
                   )}
                 </section>
               </section>

@@ -42,7 +42,9 @@ const createPurchaseRequest = async (req, res) => {
     }
 
     const [buyers] = await db.query(
-      "SELECT id, name, email, whatsapp, address FROM users WHERE id = ?",
+      `SELECT id, name, email, whatsapp, address, latitude, longitude
+       FROM users
+       WHERE id = ?`,
       [buyerId]
     );
 
@@ -286,9 +288,16 @@ const approveRequest = async (req, res) => {
         mp.name AS product_name, 
         mp.food_id,
         mp.quantity AS marketplace_quantity,
-        mp.status AS marketplace_status
+        mp.status AS marketplace_status,
+        buyer.latitude AS buyer_latitude,
+        buyer.longitude AS buyer_longitude,
+        seller.latitude AS seller_latitude,
+        seller.longitude AS seller_longitude,
+        seller.location_label AS seller_location_label
        FROM purchase_requests pr
        JOIN marketplace_products mp ON pr.product_id = mp.id
+       JOIN users buyer ON pr.buyer_id = buyer.id
+       JOIN users seller ON pr.seller_id = seller.id
        WHERE pr.id = ? AND pr.seller_id = ?`,
       [id, sellerId]
     );
@@ -372,9 +381,15 @@ const approveRequest = async (req, res) => {
         total_price, 
         cod_location,
         cod_time,
+        buyer_latitude,
+        buyer_longitude,
+        seller_latitude,
+        seller_longitude,
+        seller_location_label,
+        location_revealed,
         status
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         request.id,
         request.product_id,
@@ -385,19 +400,26 @@ const approveRequest = async (req, res) => {
         totalPrice,
         request.cod_location || null,
         request.cod_time || null,
-        "waiting_cod",
+        request.buyer_latitude || null,
+        request.buyer_longitude || null,
+        request.seller_latitude || null,
+        request.seller_longitude || null,
+        request.seller_location_label || null,
+        0,
+        "waiting_buyer_confirmation",
       ]
     );
 
     await createNotification(
       request.buyer_id,
       "Pengajuan disetujui",
-      `Pengajuan kamu untuk produk ${request.product_name} disetujui. Silakan hubungi penjual via WhatsApp.`,
+      `Pengajuan kamu untuk produk ${request.product_name} disetujui. Konfirmasi terlebih dahulu untuk membuka titik lokasi COD.`,
       "request"
     );
 
     return res.status(200).json({
-      message: "Pengajuan berhasil disetujui",
+      message:
+        "Pengajuan berhasil disetujui. Pembeli perlu mengonfirmasi sebelum titik lokasi COD dibuka.",
       data: {
         request_id: Number(id),
         product_id: request.product_id,

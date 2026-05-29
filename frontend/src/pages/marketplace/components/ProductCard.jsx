@@ -19,6 +19,24 @@ function getStatusLabel(status) {
   return labels[status] || "Tersedia";
 }
 
+function getDistanceLabel(distanceKm) {
+  if (distanceKm === null || distanceKm === undefined || distanceKm === "") {
+    return "Jarak belum tersedia";
+  }
+
+  const value = Number(distanceKm);
+
+  if (!Number.isFinite(value)) {
+    return "Jarak belum tersedia";
+  }
+
+  if (value < 1) {
+    return `${Math.round(value * 1000)} m dari kamu`;
+  }
+
+  return `${value.toFixed(1)} km dari kamu`;
+}
+
 export default function ProductCard({ product, currentUserId }) {
   const navigate = useNavigate();
 
@@ -72,6 +90,19 @@ export default function ProductCard({ product, currentUserId }) {
           </div>
         </div>
 
+        <div className="product-distance">
+          <span>
+            <AppIcon name="location" />
+          </span>
+
+          <div>
+            <strong>{getDistanceLabel(product.distance_km)}</strong>
+            <small>
+              Titik lokasi detail disembunyikan sampai transaksi disetujui.
+            </small>
+          </div>
+        </div>
+
         <div className="product-seller">
           <div className="seller-mini-avatar">
             <AppIcon name="user" />
@@ -83,7 +114,11 @@ export default function ProductCard({ product, currentUserId }) {
               {product.seller_name || "Penjual SaveByUp"}
               {isMine ? " (Kamu)" : ""}
             </strong>
-            <small>{product.seller_address || "Area kos UMY"}</small>
+            <small>
+              {product.seller_address ||
+                product.seller_location_label ||
+                "Area kos UMY"}
+            </small>
           </div>
         </div>
 

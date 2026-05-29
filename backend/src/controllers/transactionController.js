@@ -15,6 +15,22 @@ const createNotification = async (userId, title, message, type = "system") => {
   }
 };
 
+const maskTransactionLocation = (transaction = {}) => {
+  const isLocationRevealed = Number(transaction.location_revealed || 0) === 1;
+
+  return {
+    ...transaction,
+    exact_location_available: isLocationRevealed,
+
+    buyer_latitude: isLocationRevealed ? transaction.buyer_latitude : null,
+    buyer_longitude: isLocationRevealed ? transaction.buyer_longitude : null,
+    seller_latitude: isLocationRevealed ? transaction.seller_latitude : null,
+    seller_longitude: isLocationRevealed ? transaction.seller_longitude : null,
+
+    seller_location_label: transaction.seller_location_label || null,
+  };
+};
+
 const getTransactions = async (req, res) => {
   try {
     const userId = getUserId(req);
@@ -45,10 +61,75 @@ const getTransactions = async (req, res) => {
 
     return res.status(200).json({
       message: "Riwayat transaksi berhasil diambil",
-      data: transactions,
+      data: transactions.map(maskTransactionLocation),
     });
   } catch (error) {
     console.error("Get transactions error:", error);
+
+    return res.status(500).json({
+      message: "Terjadi kesalahan pada server",
+      error: error.message,
+    });
+  }
+};
+
+const confirmTransactionLocation = async (req, res) => {
+  try {
+    const buyerId = getUserId(req);
+    const { id } = req.params;
+
+    if (!buyerId) {
+      return res.status(401).json({
+        message: "User tidak terautentikasi.",
+      });
+    }
+
+    const [transactions] = await db.query(
+      `SELECT *
+       FROM transactions
+       WHERE id = ?
+       AND buyer_id = ?`,
+      [id, buyerId]
+    );
+
+    if (transactions.length === 0) {
+      return res.status(404).json({
+        message: "Transaksi tidak ditemukan atau bukan milik kamu.",
+      });
+    }
+
+    const transaction = transactions[0];
+
+    if (transaction.status !== "waiting_buyer_confirmation") {
+      return res.status(400).json({
+        message: "Transaksi ini tidak menunggu konfirmasi pembeli.",
+      });
+    }
+
+    await db.query(
+      `UPDATE transactions
+       SET 
+        status = 'waiting_cod',
+        location_revealed = 1,
+        location_confirmed_at = NOW()
+       WHERE id = ?
+       AND buyer_id = ?`,
+      [id, buyerId]
+    );
+
+    await createNotification(
+      transaction.seller_id,
+      "Pembeli menyetujui lokasi COD",
+      "Pembeli sudah menyetujui untuk membuka titik lokasi COD.",
+      "transaction"
+    );
+
+    return res.status(200).json({
+      message:
+        "Lokasi COD berhasil dikonfirmasi. Titik lokasi sekarang dapat dilihat di transaksi.",
+    });
+  } catch (error) {
+    console.error("Confirm transaction location error:", error);
 
     return res.status(500).json({
       message: "Terjadi kesalahan pada server",
@@ -95,7 +176,8 @@ const completeTransaction = async (req, res) => {
 
     if (transaction.status !== "waiting_cod") {
       return res.status(400).json({
-        message: "Transaksi belum berada pada tahap COD yang bisa diselesaikan",
+        message:
+          "Transaksi belum berada pada tahap COD. Pembeli harus mengonfirmasi lokasi terlebih dahulu.",
       });
     }
 
@@ -293,6 +375,7 @@ const rateTransaction = async (req, res) => {
 
 module.exports = {
   getTransactions,
+  confirmTransactionLocation,
   completeTransaction,
   rateTransaction,
 };

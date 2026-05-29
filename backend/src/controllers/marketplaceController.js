@@ -1,5 +1,7 @@
 const db = require("../config/db");
 
+const { hasCoordinate } = require("../utils/location.util");
+
 const getUserId = (req) => {
   return req.user?.id || req.user?.user_id || req.userId;
 };
@@ -18,8 +20,71 @@ const getProfileCompleteness = (user = {}) => {
   };
 };
 
+const getBuyerLocation = async (buyerId) => {
+  if (!buyerId) {
+    return {
+      latitude: null,
+      longitude: null,
+      hasLocation: false,
+    };
+  }
+
+  const [buyers] = await db.query(
+    `SELECT latitude, longitude
+     FROM users
+     WHERE id = ?`,
+    [buyerId]
+  );
+
+  const buyer = buyers[0] || {};
+
+  return {
+    latitude: buyer.latitude,
+    longitude: buyer.longitude,
+    hasLocation: hasCoordinate(buyer.latitude, buyer.longitude),
+  };
+};
+
 const getMarketplaceProducts = async (req, res) => {
   try {
+    const buyerId = getUserId(req);
+    const buyerLocation = await getBuyerLocation(buyerId);
+
+    const distanceSelect = buyerLocation.hasLocation
+      ? `,
+        CASE
+          WHEN u.latitude IS NOT NULL AND u.longitude IS NOT NULL THEN
+            ROUND(
+              6371 * ACOS(
+                LEAST(
+                  1,
+                  GREATEST(
+                    -1,
+                    COS(RADIANS(?)) *
+                    COS(RADIANS(u.latitude)) *
+                    COS(RADIANS(u.longitude) - RADIANS(?)) +
+                    SIN(RADIANS(?)) *
+                    SIN(RADIANS(u.latitude))
+                  )
+                )
+              ),
+              2
+            )
+          ELSE NULL
+        END AS distance_km
+      `
+      : `,
+        NULL AS distance_km
+      `;
+
+    const params = buyerLocation.hasLocation
+      ? [
+          buyerLocation.latitude,
+          buyerLocation.longitude,
+          buyerLocation.latitude,
+        ]
+      : [];
+
     const [products] = await db.query(
       `SELECT 
         mp.*,
@@ -27,13 +92,19 @@ const getMarketplaceProducts = async (req, res) => {
         u.email AS seller_email,
         u.whatsapp AS seller_whatsapp,
         u.address AS seller_address,
+        u.location_label AS seller_location_label,
         u.rating AS seller_rating
+        ${distanceSelect}
        FROM marketplace_products mp
        JOIN users u ON mp.seller_id = u.id
        WHERE 
         (mp.status = 'tersedia' AND mp.quantity > 0)
         OR mp.status = 'dalam_proses'
-       ORDER BY mp.created_at DESC`
+       ORDER BY 
+        CASE WHEN distance_km IS NULL THEN 1 ELSE 0 END ASC,
+        distance_km ASC,
+        mp.created_at DESC`,
+      params
     );
 
     return res.status(200).json({
@@ -52,7 +123,45 @@ const getMarketplaceProducts = async (req, res) => {
 
 const getMarketplaceProductById = async (req, res) => {
   try {
+    const buyerId = getUserId(req);
     const { id } = req.params;
+    const buyerLocation = await getBuyerLocation(buyerId);
+
+    const distanceSelect = buyerLocation.hasLocation
+      ? `,
+        CASE
+          WHEN u.latitude IS NOT NULL AND u.longitude IS NOT NULL THEN
+            ROUND(
+              6371 * ACOS(
+                LEAST(
+                  1,
+                  GREATEST(
+                    -1,
+                    COS(RADIANS(?)) *
+                    COS(RADIANS(u.latitude)) *
+                    COS(RADIANS(u.longitude) - RADIANS(?)) +
+                    SIN(RADIANS(?)) *
+                    SIN(RADIANS(u.latitude))
+                  )
+                )
+              ),
+              2
+            )
+          ELSE NULL
+        END AS distance_km
+      `
+      : `,
+        NULL AS distance_km
+      `;
+
+    const params = buyerLocation.hasLocation
+      ? [
+          buyerLocation.latitude,
+          buyerLocation.longitude,
+          buyerLocation.latitude,
+          id,
+        ]
+      : [id];
 
     const [products] = await db.query(
       `SELECT 
@@ -61,11 +170,13 @@ const getMarketplaceProductById = async (req, res) => {
         u.email AS seller_email,
         u.whatsapp AS seller_whatsapp,
         u.address AS seller_address,
+        u.location_label AS seller_location_label,
         u.rating AS seller_rating
+        ${distanceSelect}
        FROM marketplace_products mp
        JOIN users u ON mp.seller_id = u.id
        WHERE mp.id = ?`,
-      [id]
+      params
     );
 
     if (products.length === 0) {
@@ -245,7 +356,10 @@ const sellFoodToMarketplace = async (req, res) => {
           food.expiry_date,
           food.image_url || food.image || existingProduct.image_url || null,
           food.image || food.image_url || existingProduct.image || null,
-          food.storage_location || seller.address || existingProduct.location || null,
+          food.storage_location ||
+            seller.address ||
+            existingProduct.location ||
+            null,
           existingProduct.id,
           sellerId,
         ]

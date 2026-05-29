@@ -2,6 +2,11 @@ const db = require("../config/db");
 const fs = require("fs");
 const path = require("path");
 
+const {
+  normalizeCoordinate,
+  isValidCoordinate,
+} = require("../utils/location.util");
+
 const getUserId = (req) => {
   return req.user?.id || req.user?.user_id || req.userId;
 };
@@ -26,12 +31,22 @@ const getProfileCompleteness = (user = {}) => {
   };
 };
 
-const validateProfilePayload = ({ name, phone, whatsapp, address, bio }) => {
+const validateProfilePayload = ({
+  name,
+  phone,
+  whatsapp,
+  address,
+  bio,
+  latitude,
+  longitude,
+  location_label,
+}) => {
   const cleanName = String(name || "").trim();
   const cleanPhone = normalizePhone(phone);
   const cleanWhatsapp = normalizePhone(whatsapp);
   const cleanAddress = String(address || "").trim();
   const cleanBio = String(bio || "").trim();
+  const cleanLocationLabel = String(location_label || "").trim();
 
   if (!cleanName) return "Nama wajib diisi.";
   if (cleanName.length < 3) return "Nama minimal 3 karakter.";
@@ -53,6 +68,18 @@ const validateProfilePayload = ({ name, phone, whatsapp, address, bio }) => {
 
   if (cleanBio.length > 160) return "Bio maksimal 160 karakter.";
 
+  if (cleanLocationLabel.length > 255) {
+    return "Label lokasi maksimal 255 karakter.";
+  }
+
+  const hasLat = latitude !== null && latitude !== undefined && latitude !== "";
+  const hasLng =
+    longitude !== null && longitude !== undefined && longitude !== "";
+
+  if ((hasLat || hasLng) && !isValidCoordinate(latitude, longitude)) {
+    return "Titik lokasi tidak valid.";
+  }
+
   return "";
 };
 
@@ -64,6 +91,7 @@ const deleteUploadedFile = (filePath = "") => {
 
     if (filePath.startsWith("/uploads/profiles/")) {
       const fileName = filePath.replace("/uploads/profiles/", "");
+
       fullPath = path.join(__dirname, "../../uploads/profiles", fileName);
     }
 
@@ -92,7 +120,11 @@ const getProfile = async (req, res) => {
         email, 
         phone,
         whatsapp, 
-        address, 
+        address,
+        latitude,
+        longitude,
+        location_label,
+        location_updated_at,
         photo,
         avatar_url, 
         bio,
@@ -118,6 +150,7 @@ const getProfile = async (req, res) => {
         ...user,
         photo: photoPath,
         avatar_url: photoPath,
+        has_location: Boolean(user.latitude && user.longitude),
         ...completeness,
       },
     });
@@ -141,6 +174,9 @@ const updateProfile = async (req, res) => {
       whatsapp = "",
       address = "",
       bio = "",
+      latitude = "",
+      longitude = "",
+      location_label = "",
     } = req.body;
 
     if (!userId) {
@@ -157,6 +193,9 @@ const updateProfile = async (req, res) => {
       whatsapp,
       address,
       bio,
+      latitude,
+      longitude,
+      location_label,
     });
 
     if (validationMessage) {
@@ -192,13 +231,26 @@ const updateProfile = async (req, res) => {
       deleteUploadedFile(oldUser.photo || oldUser.avatar_url || "");
     }
 
+    const normalizedLatitude = normalizeCoordinate(latitude);
+    const normalizedLongitude = normalizeCoordinate(longitude);
+
+    const shouldUpdateLocationTime =
+      normalizedLatitude !== null && normalizedLongitude !== null;
+
     await db.query(
       `UPDATE users
        SET 
         name = ?, 
         phone = ?, 
         whatsapp = ?, 
-        address = ?, 
+        address = ?,
+        latitude = ?,
+        longitude = ?,
+        location_label = ?,
+        location_updated_at = CASE
+          WHEN ? = 1 THEN NOW()
+          ELSE location_updated_at
+        END,
         photo = ?,
         avatar_url = ?,
         bio = ?
@@ -208,6 +260,10 @@ const updateProfile = async (req, res) => {
         normalizePhone(phone) || null,
         normalizePhone(whatsapp) || null,
         String(address || "").trim() || null,
+        normalizedLatitude,
+        normalizedLongitude,
+        String(location_label || "").trim() || null,
+        shouldUpdateLocationTime ? 1 : 0,
         photoPath || null,
         photoPath || null,
         String(bio || "").trim() || null,
@@ -222,7 +278,11 @@ const updateProfile = async (req, res) => {
         email, 
         phone,
         whatsapp, 
-        address, 
+        address,
+        latitude,
+        longitude,
+        location_label,
+        location_updated_at,
         photo,
         avatar_url, 
         bio,
@@ -242,6 +302,7 @@ const updateProfile = async (req, res) => {
         ...user,
         photo: finalPhotoPath,
         avatar_url: finalPhotoPath,
+        has_location: Boolean(user.latitude && user.longitude),
         ...completeness,
       },
     });

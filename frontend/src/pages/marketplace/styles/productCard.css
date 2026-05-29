@@ -245,4 +245,44 @@
   .product-card-image {
     height: 190px;
   }
+
+  .product-distance {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-top: 15px;
+  padding: 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.58);
+  border: 1px solid rgba(95, 71, 47, 0.1);
+}
+
+.product-distance > span {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 15px;
+  color: #274622;
+  background: rgba(74, 121, 67, 0.1);
+}
+
+.product-distance svg {
+  width: 21px;
+  height: 21px;
+}
+
+.product-distance strong {
+  display: block;
+  color: #21351e;
+  font-size: 14px;
+}
+
+.product-distance small {
+  display: block;
+  margin-top: 2px;
+  color: #756b5d;
+  line-height: 1.45;
+}
 }
