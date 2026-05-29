@@ -1,210 +1,100 @@
-import { useState } from "react";
-
 import AppIcon from "../../../components/ui/AppIcon";
 
 import { formatDate, getDaysLeftLabel } from "../../../utils/formatDate";
 
 import {
-  canSellFood,
   getFoodPriority,
   getFoodStatusLabel,
 } from "../../../utils/foodStatus";
 
 import "../styles/foodCard.css";
 
-export default function FoodCard({
-  food,
-  onEdit,
-  onDelete,
-  onUsed,
-  onDiscard,
-  onSell,
-}) {
-  const [showActions, setShowActions] = useState(false);
-
+export default function FoodCard({ food, onAction }) {
   const priority = getFoodPriority(food.expiry_date, food.status);
-  const isSellable = canSellFood(food);
   const imageSource = food.image_url || food.image;
 
-  const closeActions = () => {
-    setShowActions(false);
-  };
-
-  const handleAction = (callback) => {
-    closeActions();
-
-    if (typeof callback === "function") {
-      callback();
-    }
-  };
+  const totalQuantity = Number(food.quantity || 0);
+  const freeQuantity = Number(food.free_quantity ?? food.quantity ?? 0);
+  const marketplaceQuantity = Number(food.active_marketplace_quantity || 0);
 
   return (
-    <>
-      <article className={`food-card food-card-${priority.tone}`}>
-        <div className="food-card-image">
-          {imageSource ? (
-            <img src={imageSource} alt={food.name} />
-          ) : (
-            <div className="food-card-placeholder">
-              <AppIcon name="food" />
-            </div>
-          )}
+    <article className={`food-card food-card-${priority.tone}`}>
+      <div className="food-card-image">
+        {imageSource ? (
+          <img src={imageSource} alt={food.name || "Foto makanan"} />
+        ) : (
+          <div className="food-card-placeholder">
+            <AppIcon name="food" />
+          </div>
+        )}
 
-          <div className="food-card-overlay" />
+        <div className="food-card-overlay" />
 
-          <span className={`food-card-status status-${priority.tone}`}>
-            {getFoodStatusLabel(food.status)}
-          </span>
+        <span className={`food-card-status status-${priority.tone}`}>
+          {getFoodStatusLabel(food.status)}
+        </span>
 
-          <span className={`food-card-priority priority-${priority.tone}`}>
-            {priority.label}
-          </span>
+        <span className={`food-card-priority priority-${priority.tone}`}>
+          {priority.label}
+        </span>
+      </div>
+
+      <div className="food-card-body">
+        <div className="food-card-head">
+          <div>
+            <span>{food.category || "Tanpa kategori"}</span>
+            <h3>{food.name || "Tanpa nama"}</h3>
+          </div>
         </div>
 
-        <div className="food-card-body">
-          <div className="food-card-head">
-            <div>
-              <span>{food.category || "Tanpa kategori"}</span>
-              <h3>{food.name || "Tanpa nama"}</h3>
-            </div>
+        <div className="food-meta-grid">
+          <div>
+            <span>Total Stok</span>
+            <strong>
+              {totalQuantity} {food.unit || "pcs"}
+            </strong>
           </div>
 
-          <div className="food-meta-grid">
-            <div>
-              <span>Jumlah Stok</span>
-              <strong>
-                {food.quantity} {food.unit || "pcs"}
-              </strong>
-            </div>
-
-            <div>
-              <span>Kedaluwarsa</span>
-              <strong>{getDaysLeftLabel(food.expiry_date)}</strong>
-            </div>
+          <div>
+            <span>Kedaluwarsa</span>
+            <strong>{getDaysLeftLabel(food.expiry_date)}</strong>
           </div>
 
-          <div className="food-expiry-line">
-            <AppIcon name="calendar" />
-            <span>Tanggal: {formatDate(food.expiry_date)}</span>
+          <div>
+            <span>Stok Bebas</span>
+            <strong>
+              {freeQuantity} {food.unit || "pcs"}
+            </strong>
           </div>
 
-          {food.note && <p className="food-note">{food.note}</p>}
-
-          <button
-            type="button"
-            className="food-action-main"
-            onClick={() => setShowActions(true)}
-          >
-            <AppIcon name="sparkle" />
-            <span>Aksi Makanan</span>
-          </button>
+          <div>
+            <span>Di Marketplace</span>
+            <strong>
+              {marketplaceQuantity} {food.unit || "pcs"}
+            </strong>
+          </div>
         </div>
-      </article>
 
-      {showActions && (
-        <div className="food-action-backdrop" onClick={closeActions}>
-          <section
-            className="food-action-panel"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="food-action-panel-header">
-              <div>
-                <span>Aksi Makanan</span>
-                <h3>{food.name || "Tanpa nama"}</h3>
-                <p>
-                  Total stok: {food.quantity} {food.unit || "pcs"}
-                </p>
-              </div>
-
-              <button
-                type="button"
-                className="food-action-close"
-                onClick={closeActions}
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="food-action-food-preview">
-              <div className="food-action-food-image">
-                {imageSource ? (
-                  <img src={imageSource} alt={food.name} />
-                ) : (
-                  <AppIcon name="food" />
-                )}
-              </div>
-
-              <div>
-                <strong>{food.name || "Tanpa nama"}</strong>
-                <small>
-                  Status: {getFoodStatusLabel(food.status)} • Stok:{" "}
-                  {food.quantity} {food.unit || "pcs"}
-                </small>
-              </div>
-            </div>
-
-            <div className="food-action-list">
-              <button type="button" onClick={() => handleAction(onEdit)}>
-                <span>
-                  <AppIcon name="edit" />
-                </span>
-                <div>
-                  <strong>Edit Data</strong>
-                  <small>Ubah nama, stok, harga, tanggal, atau catatan.</small>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                disabled={!isSellable}
-                onClick={() => handleAction(onSell)}
-              >
-                <span>
-                  <AppIcon name="marketplace" />
-                </span>
-                <div>
-                  <strong>Jual</strong>
-                  <small>Tawarkan stok makanan ke marketplace.</small>
-                </div>
-              </button>
-
-              <button type="button" onClick={() => handleAction(onUsed)}>
-                <span>
-                  <AppIcon name="used" />
-                </span>
-                <div>
-                  <strong>Digunakan</strong>
-                  <small>Kurangi stok yang sudah kamu pakai.</small>
-                </div>
-              </button>
-
-              <button type="button" onClick={() => handleAction(onDiscard)}>
-                <span>
-                  <AppIcon name="discard" />
-                </span>
-                <div>
-                  <strong>Dibuang</strong>
-                  <small>Kurangi stok yang sudah terbuang.</small>
-                </div>
-              </button>
-
-              <button
-                type="button"
-                className="danger"
-                onClick={() => handleAction(onDelete)}
-              >
-                <span>
-                  <AppIcon name="delete" />
-                </span>
-                <div>
-                  <strong>Hapus</strong>
-                  <small>Hapus makanan dari inventaris.</small>
-                </div>
-              </button>
-            </div>
-          </section>
+        <div className="food-expiry-line">
+          <AppIcon name="calendar" />
+          <span>Tanggal: {formatDate(food.expiry_date)}</span>
         </div>
-      )}
-    </>
+
+        {food.note && <p className="food-note">{food.note}</p>}
+
+        <button
+          type="button"
+          className="food-action-main"
+          onClick={() => {
+            if (typeof onAction === "function") {
+              onAction(food);
+            }
+          }}
+        >
+          <AppIcon name="sparkle" />
+          <span>Aksi Makanan</span>
+        </button>
+      </div>
+    </article>
   );
 }
