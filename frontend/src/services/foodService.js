@@ -69,6 +69,33 @@ const normalizeFood = (food = {}) => {
   };
 };
 
+const normalizeFoodHistory = (item = {}) => ({
+  id: item.id,
+  log_id: item.log_id,
+  food_id: item.food_id,
+  user_id: item.user_id,
+
+  name: item.name || item.food_name || "Makanan",
+  category: item.category || "Riwayat",
+  unit: item.unit || "pcs",
+  price: toNumber(item.price),
+
+  quantity: toNumber(item.quantity),
+  action: item.action || item.status || "",
+  status: item.status || item.action || "",
+
+  note: item.note || item.notes || "",
+  notes: item.notes || item.note || "",
+
+  expiry_date: normalizeDate(item.expiry_date),
+  image_url: item.image_url || item.image || "",
+  image: item.image || item.image_url || "",
+
+  current_food_status: item.current_food_status || "",
+  source: item.source || "history",
+  created_at: item.created_at,
+});
+
 const normalizeSummary = (data = {}) => {
   const totalStok = toNumber(data.total_stok || data.total_foods);
   const totalDijual = toNumber(data.total_dijual);
@@ -130,6 +157,13 @@ const toFoodPayload = (food = {}) => ({
 export const getFoodSummary = async () => {
   const response = await API.get("/foods/summary");
   return normalizeSummary(response.data.data || {});
+};
+
+export const getFoodHistory = async () => {
+  const response = await API.get("/foods/history");
+  const history = response.data.data || [];
+
+  return Array.isArray(history) ? history.map(normalizeFoodHistory) : [];
 };
 
 export const getFoods = async () => {

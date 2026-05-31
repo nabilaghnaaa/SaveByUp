@@ -4,14 +4,23 @@ import { useNavigate, useParams } from "react-router-dom";
 import AppShell from "../../components/layout/AppShell";
 import EmptyState from "../../components/ui/EmptyState";
 
+import FoodCard from "./components/FoodCard";
+import FoodHistoryCard from "./components/FoodHistoryCard";
+
+import InventoryActionMenu from "../Dashboard/components/InventoryActionMenu";
+import InventoryStockModal from "../Dashboard/components/InventoryStockModal";
+
 import {
   deleteFood,
+  getFoodHistory,
   getFoods,
-  throwFoodStock,
-  useFoodStock,
+  updateFoodStatus,
 } from "../../services/foodService";
 
+import { getFoodStatus } from "../../utils/foodStatus";
+
 import "./styles/foodStatusList.css";
+import "../Dashboard/styles/dashboard-action-modal.css";
 
 const PAGE_CONFIG = {
   semua: {
@@ -50,10 +59,81 @@ const PAGE_CONFIG = {
   },
 };
 
-const FINISHED_STATUSES = ["digunakan", "dibuang", "terjual", "kedaluwarsa"];
+const MANUAL_FINISHED_STATUSES = ["digunakan", "dibuang", "terjual"];
 
-const getStatusLabel = (status) => {
+const emptyMenuModal = {
+  open: false,
+  food: null,
+};
+
+const emptyActionModal = {
+  open: false,
+  food: null,
+  status: "",
+  quantity: "",
+  title: "",
+  description: "",
+  buttonLabel: "",
+};
+
+const getConditionStatusByDate = (food) => {
+  return getFoodStatus(food.expiry_date, "aman");
+};
+
+const getEffectiveFoodStatus = (food) => {
+  if (MANUAL_FINISHED_STATUSES.includes(food.status)) {
+    return food.status;
+  }
+
+  const conditionStatus = getConditionStatusByDate(food);
+
+  if (conditionStatus === "kedaluwarsa") {
+    return "kedaluwarsa";
+  }
+
+  return food.status || conditionStatus;
+};
+
+const isFoodFinishedOrWaste = (food) => {
+  const conditionStatus = getConditionStatusByDate(food);
+
+  return (
+    MANUAL_FINISHED_STATUSES.includes(food.status) ||
+    conditionStatus === "kedaluwarsa"
+  );
+};
+
+const isFoodMatchPageStatus = (food, activeStatus) => {
+  const conditionStatus = getConditionStatusByDate(food);
+
+  if (activeStatus === "semua") {
+    return true;
+  }
+
+  if (activeStatus === "selesai-waste") {
+    return isFoodFinishedOrWaste(food);
+  }
+
+  if (activeStatus === "aman") {
+    return (
+      conditionStatus === "aman" &&
+      !MANUAL_FINISHED_STATUSES.includes(food.status)
+    );
+  }
+
+  if (activeStatus === "mendekati_kedaluwarsa") {
+    return (
+      conditionStatus === "mendekati_kedaluwarsa" &&
+      !MANUAL_FINISHED_STATUSES.includes(food.status)
+    );
+  }
+
+  return food.status === activeStatus;
+};
+
+const getPageStatusLabel = (status) => {
   const labels = {
+    semua: "Semua",
     aman: "Aman",
     mendekati_kedaluwarsa: "Mendekati Kedaluwarsa",
     kedaluwarsa: "Kedaluwarsa",
@@ -61,91 +141,10 @@ const getStatusLabel = (status) => {
     digunakan: "Digunakan",
     dibuang: "Dibuang",
     terjual: "Terjual",
+    "selesai-waste": "Selesai / Waste",
   };
 
-  return labels[status] || "Tidak diketahui";
-};
-
-const getStatusClass = (status) => {
-  if (status === "aman") return "safe";
-  if (status === "mendekati_kedaluwarsa") return "warning";
-  if (status === "kedaluwarsa" || status === "dibuang") return "danger";
-  if (status === "dijual") return "market";
-  if (status === "digunakan" || status === "terjual") return "done";
-
-  return "neutral";
-};
-
-const getImageSource = (food) => {
-  return food.image_url || food.image || "";
-};
-
-const formatRupiah = (value) => {
-  return `Rp${Number(value || 0).toLocaleString("id-ID")}`;
-};
-
-const formatDate = (value) => {
-  if (!value) return "-";
-
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return "-";
-
-  return date.toLocaleDateString("id-ID", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-};
-
-const getRemainingDays = (expiryDate) => {
-  if (!expiryDate) return null;
-
-  const today = new Date();
-  const expired = new Date(expiryDate);
-
-  today.setHours(0, 0, 0, 0);
-  expired.setHours(0, 0, 0, 0);
-
-  const diffTime = expired.getTime() - today.getTime();
-
-  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-};
-
-const getRemainingLabel = (expiryDate) => {
-  const days = getRemainingDays(expiryDate);
-
-  if (days === null) return "Tanggal belum diisi";
-  if (days < 0) return `Lewat ${Math.abs(days)} hari`;
-  if (days === 0) return "Hari ini";
-
-  return `${days} hari lagi`;
-};
-
-const getValidQuantityInput = (value, maxQuantity) => {
-  const quantity = Number(value);
-
-  if (!Number.isFinite(quantity) || quantity <= 0) {
-    return {
-      valid: false,
-      message: "Jumlah harus berupa angka dan lebih dari 0.",
-      quantity: 0,
-    };
-  }
-
-  if (quantity > Number(maxQuantity || 0)) {
-    return {
-      valid: false,
-      message: `Jumlah tidak boleh melebihi stok bebas: ${maxQuantity}.`,
-      quantity: 0,
-    };
-  }
-
-  return {
-    valid: true,
-    message: "",
-    quantity,
-  };
+  return labels[status] || "Semua";
 };
 
 export default function FoodStatusList() {
@@ -154,21 +153,37 @@ export default function FoodStatusList() {
 
   const activeStatus = PAGE_CONFIG[status] ? status : "semua";
   const pageConfig = PAGE_CONFIG[activeStatus];
+  const isHistoryPage = activeStatus === "selesai-waste";
 
   const [foods, setFoods] = useState([]);
+  const [historyItems, setHistoryItems] = useState([]);
+
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+
   const [search, setSearch] = useState("");
 
-  const fetchFoods = async () => {
+  const [menuModal, setMenuModal] = useState(emptyMenuModal);
+  const [actionModal, setActionModal] = useState(emptyActionModal);
+
+  const fetchData = async () => {
     try {
       setLoading(true);
       setMessage("");
 
+      if (isHistoryPage) {
+        const data = await getFoodHistory();
+        setHistoryItems(Array.isArray(data) ? data : []);
+        setFoods([]);
+        return;
+      }
+
       const data = await getFoods();
       setFoods(Array.isArray(data) ? data : []);
+      setHistoryItems([]);
     } catch (error) {
       console.error("Gagal mengambil data makanan:", error);
+
       setMessage(
         error.response?.data?.message || "Gagal mengambil data makanan."
       );
@@ -177,31 +192,40 @@ export default function FoodStatusList() {
     }
   };
 
+  const showMessage = (text) => {
+    setMessage(text);
+
+    setTimeout(() => {
+      setMessage("");
+    }, 3200);
+  };
+
+  const refreshAll = async () => {
+    await fetchData();
+  };
+
   useEffect(() => {
-    fetchFoods();
+    fetchData();
   }, [activeStatus]);
 
   const filteredFoods = useMemo(() => {
     const keyword = search.toLowerCase().trim();
 
     return foods
-      .filter((food) => {
-        if (activeStatus === "semua") return true;
-
-        if (activeStatus === "selesai-waste") {
-          return FINISHED_STATUSES.includes(food.status);
-        }
-
-        return food.status === activeStatus;
-      })
+      .filter((food) => isFoodMatchPageStatus(food, activeStatus))
       .filter((food) => {
         if (!keyword) return true;
+
+        const conditionStatus = getConditionStatusByDate(food);
+        const effectiveStatus = getEffectiveFoodStatus(food);
 
         return (
           food.name?.toLowerCase().includes(keyword) ||
           food.category?.toLowerCase().includes(keyword) ||
+          food.unit?.toLowerCase().includes(keyword) ||
           food.status?.toLowerCase().includes(keyword) ||
-          food.unit?.toLowerCase().includes(keyword)
+          conditionStatus?.toLowerCase().includes(keyword) ||
+          effectiveStatus?.toLowerCase().includes(keyword)
         );
       })
       .sort((a, b) => {
@@ -212,96 +236,145 @@ export default function FoodStatusList() {
       });
   }, [foods, activeStatus, search]);
 
-  const totalStock = filteredFoods.reduce((total, food) => {
-    return total + Number(food.quantity || 0);
+  const filteredHistory = useMemo(() => {
+    const keyword = search.toLowerCase().trim();
+
+    return historyItems.filter((item) => {
+      if (!keyword) return true;
+
+      return (
+        item.name?.toLowerCase().includes(keyword) ||
+        item.category?.toLowerCase().includes(keyword) ||
+        item.unit?.toLowerCase().includes(keyword) ||
+        item.action?.toLowerCase().includes(keyword) ||
+        item.status?.toLowerCase().includes(keyword) ||
+        item.note?.toLowerCase().includes(keyword)
+      );
+    });
+  }, [historyItems, search]);
+
+  const activeItems = isHistoryPage ? filteredHistory : filteredFoods;
+
+  const totalStock = activeItems.reduce((total, item) => {
+    return total + Number(item.quantity || 0);
   }, 0);
 
-  const totalExpired = filteredFoods.filter(
-    (food) => food.status === "kedaluwarsa"
-  ).length;
+  const totalExpired = activeItems.filter((item) => {
+    if (isHistoryPage) return item.action === "kedaluwarsa";
+    return getConditionStatusByDate(item) === "kedaluwarsa";
+  }).length;
+
+  const openMenuModal = (food) => {
+    const effectiveFood = {
+      ...food,
+      status: getEffectiveFoodStatus(food),
+    };
+
+    setMessage("");
+    setActionModal(emptyActionModal);
+
+    setMenuModal({
+      open: true,
+      food: effectiveFood,
+    });
+  };
+
+  const closeMenuModal = () => {
+    setMenuModal(emptyMenuModal);
+  };
+
+  const openActionModal = (food, status) => {
+    const isUsed = status === "digunakan";
+
+    closeMenuModal();
+    setMessage("");
+
+    setActionModal({
+      open: true,
+      food,
+      status,
+      quantity: "",
+      title: isUsed ? "Gunakan Stok Makanan" : "Buang Stok Makanan",
+      description: isUsed
+        ? `Masukkan jumlah ${food.name} yang sudah kamu gunakan. Sistem hanya mengurangi stok bebas, bukan stok yang sedang dijual.`
+        : `Masukkan jumlah ${food.name} yang ingin kamu buang. Sistem hanya mengurangi stok bebas, bukan stok yang sedang dijual.`,
+      buttonLabel: isUsed ? "Simpan Digunakan" : "Simpan Dibuang",
+    });
+  };
+
+  const closeActionModal = () => {
+    setActionModal(emptyActionModal);
+  };
+
+  const handleActionQuantityChange = (value) => {
+    setActionModal((prev) => ({
+      ...prev,
+      quantity: value,
+    }));
+  };
 
   const handleDelete = async (food) => {
-    const confirmed = window.confirm(
-      `Yakin ingin menghapus "${food.name}" dari inventaris?`
-    );
+    closeMenuModal();
 
-    if (!confirmed) return;
+    const ok = window.confirm(`Hapus data makanan "${food.name}"?`);
+
+    if (!ok) return;
 
     try {
       await deleteFood(food.id);
-      setMessage("Data makanan berhasil dihapus.");
-      await fetchFoods();
+      showMessage("Data makanan berhasil dihapus.");
+      await refreshAll();
     } catch (error) {
       console.error("Gagal menghapus makanan:", error);
-      setMessage(error.response?.data?.message || "Gagal menghapus makanan.");
-    }
-  };
 
-  const handleUseFood = async (food) => {
-    const maxQuantity = Number(food.free_quantity ?? food.quantity ?? 0);
-
-    if (maxQuantity <= 0) {
-      setMessage("Stok bebas tidak tersedia untuk digunakan.");
-      return;
-    }
-
-    const input = window.prompt(
-      `Masukkan jumlah ${food.name} yang digunakan.\nStok bebas: ${maxQuantity} ${
-        food.unit || "pcs"
-      }`
-    );
-
-    if (input === null) return;
-
-    const validation = getValidQuantityInput(input, maxQuantity);
-
-    if (!validation.valid) {
-      setMessage(validation.message);
-      return;
-    }
-
-    try {
-      await useFoodStock(food, validation.quantity);
-      setMessage("Stok makanan berhasil ditandai digunakan.");
-      await fetchFoods();
-    } catch (error) {
-      console.error("Gagal menggunakan makanan:", error);
-      setMessage(
-        error.response?.data?.message || "Gagal mengubah status makanan."
+      showMessage(
+        error.response?.data?.message || "Gagal menghapus data makanan."
       );
     }
   };
 
-  const handleDiscardFood = async (food) => {
-    const maxQuantity = Number(food.free_quantity ?? food.quantity ?? 0);
+  const handleSubmitActionModal = async (event) => {
+    event.preventDefault();
 
-    if (maxQuantity <= 0) {
-      setMessage("Stok bebas tidak tersedia untuk dibuang.");
+    const { food, status, quantity } = actionModal;
+
+    if (!food) return;
+
+    const parsedQuantity = Number(quantity);
+    const actionLabel = status === "digunakan" ? "digunakan" : "dibuang";
+    const freeQuantity = Number(food.free_quantity ?? food.quantity ?? 0);
+
+    if (!quantity || parsedQuantity <= 0) {
+      showMessage(
+        `Jumlah makanan yang ${actionLabel} wajib diisi dan harus lebih dari 0.`
+      );
       return;
     }
 
-    const input = window.prompt(
-      `Masukkan jumlah ${food.name} yang dibuang.\nStok bebas: ${maxQuantity} ${
-        food.unit || "pcs"
-      }`
-    );
-
-    if (input === null) return;
-
-    const validation = getValidQuantityInput(input, maxQuantity);
-
-    if (!validation.valid) {
-      setMessage(validation.message);
+    if (parsedQuantity > freeQuantity) {
+      showMessage(
+        `Jumlah yang ${actionLabel} tidak boleh melebihi stok bebas. Stok bebas saat ini: ${freeQuantity} ${
+          food.unit || "pcs"
+        }.`
+      );
       return;
     }
 
     try {
-      await throwFoodStock(food, validation.quantity);
-      setMessage("Stok makanan berhasil ditandai dibuang.");
-      await fetchFoods();
+      await updateFoodStatus(food, status, parsedQuantity);
+
+      showMessage(
+        status === "digunakan"
+          ? `${parsedQuantity} ${food.unit || "pcs"} ${food.name} berhasil ditandai digunakan.`
+          : `${parsedQuantity} ${food.unit || "pcs"} ${food.name} berhasil ditandai dibuang.`
+      );
+
+      closeActionModal();
+      await refreshAll();
     } catch (error) {
-      console.error("Gagal membuang makanan:", error);
-      setMessage(
+      console.error("Gagal mengubah status makanan:", error);
+
+      showMessage(
         error.response?.data?.message || "Gagal mengubah status makanan."
       );
     }
@@ -311,13 +384,25 @@ export default function FoodStatusList() {
     <AppShell>
       <main className="food-status-list-page">
         <section className="food-status-hero">
-          <button
-            type="button"
-            className="food-status-back"
-            onClick={() => navigate("/dashboard")}
-          >
-            ← Kembali ke Dashboard
-          </button>
+          <div className="food-status-hero-top">
+            <button
+              type="button"
+              className="food-status-back"
+              onClick={() => navigate("/dashboard")}
+            >
+              ← Kembali ke Dashboard
+            </button>
+
+            {!isHistoryPage && (
+              <button
+                type="button"
+                className="food-status-add"
+                onClick={() => navigate("/foods/add")}
+              >
+                + Tambah Makanan
+              </button>
+            )}
+          </div>
 
           <div className="food-status-heading">
             <span>{pageConfig.label}</span>
@@ -328,12 +413,17 @@ export default function FoodStatusList() {
           <div className="food-status-stats">
             <div>
               <span>Total Data</span>
-              <strong>{loading ? "..." : filteredFoods.length}</strong>
+              <strong>{loading ? "..." : activeItems.length}</strong>
             </div>
 
             <div>
               <span>Total Stok</span>
               <strong>{loading ? "..." : totalStock}</strong>
+            </div>
+
+            <div>
+              <span>Status Halaman</span>
+              <strong>{getPageStatusLabel(activeStatus)}</strong>
             </div>
 
             <div>
@@ -347,11 +437,15 @@ export default function FoodStatusList() {
           <input
             type="text"
             value={search}
-            placeholder="Cari nama, kategori, satuan, atau status makanan..."
+            placeholder={
+              isHistoryPage
+                ? "Cari riwayat makanan, aksi, kategori, atau catatan..."
+                : "Cari nama makanan, kategori, satuan, atau status..."
+            }
             onChange={(event) => setSearch(event.target.value)}
           />
 
-          <button type="button" onClick={fetchFoods} disabled={loading}>
+          <button type="button" onClick={fetchData} disabled={loading}>
             {loading ? "Memuat..." : "Refresh"}
           </button>
         </section>
@@ -364,134 +458,63 @@ export default function FoodStatusList() {
             <h3>Memuat data makanan...</h3>
             <p>Sedang mengambil daftar makanan sesuai status.</p>
           </section>
-        ) : filteredFoods.length === 0 ? (
+        ) : activeItems.length === 0 ? (
           <EmptyState
             title={pageConfig.emptyTitle}
             description={pageConfig.emptyDesc}
             action={
-              <button
-                type="button"
-                className="food-status-primary-btn"
-                onClick={() => navigate("/foods/add")}
-              >
-                Tambah Makanan
-              </button>
+              !isHistoryPage && (
+                <button
+                  type="button"
+                  className="food-status-primary-btn"
+                  onClick={() => navigate("/foods/add")}
+                >
+                  Tambah Makanan
+                </button>
+              )
             }
           />
+        ) : isHistoryPage ? (
+          <section className="food-history-grid">
+            {filteredHistory.map((item) => (
+              <FoodHistoryCard item={item} key={item.id} />
+            ))}
+          </section>
         ) : (
-          <section className="food-status-grid">
+          <section className="food-status-food-grid">
             {filteredFoods.map((food) => {
-              const imageSource = getImageSource(food);
-              const isFinished = FINISHED_STATUSES.includes(food.status);
-              const statusClass = getStatusClass(food.status);
+              const effectiveFood = {
+                ...food,
+                status: getEffectiveFoodStatus(food),
+              };
 
               return (
-                <article className="food-status-card" key={food.id}>
-                  <div className="food-status-image">
-                    {imageSource ? (
-                      <img src={imageSource} alt={food.name} />
-                    ) : (
-                      <div className="food-status-placeholder">
-                        {food.name?.charAt(0)?.toUpperCase() || "F"}
-                      </div>
-                    )}
-
-                    <span className={`food-status-badge ${statusClass}`}>
-                      {getStatusLabel(food.status)}
-                    </span>
-                  </div>
-
-                  <div className="food-status-content">
-                    <div className="food-status-title-row">
-                      <div>
-                        <span>{food.category || "Tanpa Kategori"}</span>
-                        <h3>{food.name}</h3>
-                      </div>
-
-                      <strong>{formatRupiah(food.price)}</strong>
-                    </div>
-
-                    <p className="food-status-desc">
-                      {food.note ||
-                        "Belum ada catatan tambahan untuk makanan ini."}
-                    </p>
-
-                    <div className="food-status-info-grid">
-                      <div>
-                        <span>Stok</span>
-                        <strong>
-                          {food.quantity} {food.unit || "pcs"}
-                        </strong>
-                      </div>
-
-                      <div>
-                        <span>Stok Bebas</span>
-                        <strong>
-                          {food.free_quantity ?? food.quantity}{" "}
-                          {food.unit || "pcs"}
-                        </strong>
-                      </div>
-
-                      <div>
-                        <span>Kedaluwarsa</span>
-                        <strong>{formatDate(food.expiry_date)}</strong>
-                      </div>
-
-                      <div>
-                        <span>Sisa Waktu</span>
-                        <strong>{getRemainingLabel(food.expiry_date)}</strong>
-                      </div>
-                    </div>
-
-                    <div className="food-status-actions">
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/foods/edit/${food.id}`)}
-                      >
-                        Edit
-                      </button>
-
-                      {!isFinished && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() =>
-                              navigate(`/marketplace/sell/${food.id}`)
-                            }
-                          >
-                            Jual
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => handleUseFood(food)}
-                          >
-                            Gunakan
-                          </button>
-
-                          <button
-                            type="button"
-                            className="danger"
-                            onClick={() => handleDiscardFood(food)}
-                          >
-                            Buang
-                          </button>
-                        </>
-                      )}
-
-                      <button
-                        type="button"
-                        className="ghost danger"
-                        onClick={() => handleDelete(food)}
-                      >
-                        Hapus
-                      </button>
-                    </div>
-                  </div>
-                </article>
+                <FoodCard
+                  key={food.id}
+                  food={effectiveFood}
+                  onAction={() => openMenuModal(food)}
+                />
               );
             })}
           </section>
+        )}
+
+        {menuModal.open && menuModal.food && (
+          <InventoryActionMenu
+            food={menuModal.food}
+            onClose={closeMenuModal}
+            onDelete={handleDelete}
+            onOpenStockAction={openActionModal}
+          />
+        )}
+
+        {actionModal.open && actionModal.food && (
+          <InventoryStockModal
+            modal={actionModal}
+            onClose={closeActionModal}
+            onQuantityChange={handleActionQuantityChange}
+            onSubmit={handleSubmitActionModal}
+          />
         )}
       </main>
     </AppShell>

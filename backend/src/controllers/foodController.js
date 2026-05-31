@@ -6,6 +6,7 @@ const {
   updateFoodStatusByUser,
   deleteFoodByUser,
   getFoodSummaryByUser,
+  getFoodHistoryByUser,
 } = require("../services/foodInventory.service");
 
 const getUserId = (req) => {
@@ -126,6 +127,21 @@ const getFoodSummary = async (req, res) => {
   }
 };
 
+const getFoodHistory = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+
+    const data = await getFoodHistoryByUser(userId);
+
+    return res.status(200).json({
+      message: "Riwayat makanan selesai/waste berhasil diambil",
+      data,
+    });
+  } catch (error) {
+    return handleControllerError(res, error, "Get food history error:");
+  }
+};
+
 module.exports = {
   getFoods,
   getFoodById,
@@ -134,4 +150,5 @@ module.exports = {
   updateFoodStatus,
   deleteFood,
   getFoodSummary,
+  getFoodHistory,
 };

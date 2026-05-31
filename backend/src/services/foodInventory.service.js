@@ -17,7 +17,11 @@ const {
   enrichFoodsWithMarketplaceState,
 } = require("./foodMarketplace.service");
 
-const { createStockLog } = require("./foodStockLog.service");
+const {
+  createStockLog,
+  getFoodStockHistoryByUser,
+} = require("./foodStockLog.service");
+
 const { buildSummaryFromFoods } = require("./foodSummary.service");
 
 const createHttpError = (statusCode, publicMessage) => {
@@ -566,6 +570,58 @@ const getFoodSummaryByUser = async (userId) => {
   return summary;
 };
 
+const getFoodHistoryByUser = async (userId) => {
+  ensureAuthenticated(userId);
+
+  const stockHistory = await getFoodStockHistoryByUser(userId);
+
+  const [expiredFoods] = await db.query(
+    `SELECT *
+     FROM foods
+     WHERE user_id = ?
+     AND expiry_date < CURDATE()
+     AND status NOT IN ('digunakan', 'dibuang', 'terjual')
+     ORDER BY expiry_date DESC`,
+    [userId]
+  );
+
+  const expiredHistory = expiredFoods.map((food) => ({
+    id: `expired-${food.id}`,
+    food_id: food.id,
+    user_id: food.user_id,
+
+    name: food.name || "Tanpa nama",
+    category: food.category || "Kedaluwarsa",
+    unit: food.unit || "pcs",
+    price: Number(food.price || 0),
+
+    quantity: Number(food.quantity || 0),
+    action: "kedaluwarsa",
+    status: "kedaluwarsa",
+
+    note:
+      food.note ||
+      food.notes ||
+      "Makanan sudah melewati tanggal kedaluwarsa.",
+    notes:
+      food.notes ||
+      food.note ||
+      "Makanan sudah melewati tanggal kedaluwarsa.",
+
+    expiry_date: food.expiry_date ? String(food.expiry_date).slice(0, 10) : "",
+    image_url: food.image_url || food.image || "",
+    image: food.image || food.image_url || "",
+
+    current_food_status: food.status || "kedaluwarsa",
+    source: "expired_food",
+    created_at: food.updated_at || food.expiry_date,
+  }));
+
+  return [...expiredHistory, ...stockHistory].sort((a, b) => {
+    return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+  });
+};
+
 module.exports = {
   getFoodsByUser,
   getFoodDetailByUser,
@@ -574,4 +630,5 @@ module.exports = {
   updateFoodStatusByUser,
   deleteFoodByUser,
   getFoodSummaryByUser,
+  getFoodHistoryByUser,
 };

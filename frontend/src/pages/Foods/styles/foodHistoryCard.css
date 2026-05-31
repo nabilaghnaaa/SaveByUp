@@ -1,0 +1,242 @@
+.food-history-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 22px;
+  align-items: stretch;
+}
+
+.food-history-card {
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  min-height: 292px;
+  border-radius: 30px;
+  background: rgba(255, 251, 244, 0.9);
+  border: 1px solid rgba(95, 71, 47, 0.13);
+  box-shadow: 0 22px 64px rgba(69, 48, 31, 0.08);
+  backdrop-filter: blur(20px);
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease,
+    border-color 0.25s ease,
+    background 0.25s ease;
+}
+
+.food-history-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(95, 71, 47, 0.24);
+  background: rgba(255, 251, 244, 0.98);
+  box-shadow: 0 30px 84px rgba(69, 48, 31, 0.13);
+}
+
+.food-history-media {
+  position: relative;
+  min-height: 292px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(74, 121, 67, 0.22), transparent 35%),
+    radial-gradient(circle at 90% 80%, rgba(122, 79, 47, 0.17), transparent 35%),
+    linear-gradient(135deg, #edf6e8, #f7f0e4);
+}
+
+.food-history-media img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.food-history-placeholder {
+  width: 100%;
+  height: 100%;
+  min-height: 292px;
+  display: grid;
+  place-items: center;
+  color: rgba(39, 70, 34, 0.72);
+}
+
+.food-history-placeholder svg {
+  width: 68px;
+  height: 68px;
+  stroke-width: 1.8;
+}
+
+.food-history-overlay {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to top, rgba(29, 40, 24, 0.62), transparent 62%),
+    linear-gradient(to bottom, rgba(29, 40, 24, 0.18), transparent 42%);
+  pointer-events: none;
+}
+
+.food-history-action-badge {
+  position: absolute;
+  z-index: 2;
+  left: 14px;
+  top: 14px;
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: #fff8ee;
+  background: rgba(32, 58, 30, 0.82);
+  font-size: 12px;
+  font-weight: 950;
+  backdrop-filter: blur(14px);
+  box-shadow: 0 10px 22px rgba(29, 40, 24, 0.14);
+}
+
+.food-history-danger .food-history-action-badge {
+  background: rgba(170, 75, 48, 0.9);
+}
+
+.food-history-market .food-history-action-badge {
+  background: rgba(64, 109, 120, 0.9);
+}
+
+.food-history-done .food-history-action-badge {
+  background: rgba(63, 103, 65, 0.9);
+}
+
+.food-history-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 22px;
+}
+
+.food-history-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.food-history-category {
+  display: inline-flex;
+  margin-bottom: 8px;
+  color: #7a4f2f;
+  font-size: 12px;
+  font-weight: 950;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.food-history-main h3 {
+  margin: 0;
+  color: #21351e;
+  font-size: 24px;
+  line-height: 1.12;
+  letter-spacing: -0.6px;
+}
+
+.food-history-price {
+  flex-shrink: 0;
+  color: #386d35;
+  font-size: 15px;
+  font-weight: 950;
+  white-space: nowrap;
+}
+
+.food-history-note {
+  margin: 14px 0;
+  color: #756b5d;
+  line-height: 1.65;
+  font-size: 14px;
+}
+
+.food-history-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: auto;
+}
+
+.food-history-meta-grid div {
+  min-width: 0;
+  padding: 13px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid rgba(95, 71, 47, 0.1);
+}
+
+.food-history-meta-grid span {
+  display: block;
+  color: #756b5d;
+  font-size: 12px;
+  font-weight: 850;
+}
+
+.food-history-meta-grid strong {
+  display: block;
+  margin-top: 5px;
+  color: #263f24;
+  font-size: 13px;
+  font-weight: 950;
+  overflow-wrap: anywhere;
+}
+
+.food-history-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-top: 15px;
+  padding: 13px;
+  border-radius: 18px;
+  background: rgba(74, 121, 67, 0.07);
+  border: 1px solid rgba(74, 121, 67, 0.08);
+}
+
+.food-history-footer span {
+  color: #756b5d;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.food-history-footer b {
+  flex-shrink: 0;
+  color: #263f24;
+  font-size: 12px;
+  font-weight: 950;
+}
+
+.food-history-danger {
+  border-color: rgba(170, 75, 48, 0.18);
+}
+
+.food-history-market {
+  border-color: rgba(64, 109, 120, 0.18);
+}
+
+.food-history-done {
+  border-color: rgba(63, 103, 65, 0.18);
+}
+
+@media (max-width: 1280px) {
+  .food-history-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 780px) {
+  .food-history-card {
+    grid-template-columns: 1fr;
+  }
+
+  .food-history-media,
+  .food-history-placeholder {
+    min-height: 230px;
+  }
+
+  .food-history-main,
+  .food-history-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .food-history-meta-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,7 +1,22 @@
 .food-status-list-page {
+  position: relative;
   display: grid;
   gap: 24px;
   padding-bottom: 34px;
+  isolation: isolate;
+}
+
+.food-status-list-page::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -5;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 8% 8%, rgba(122, 79, 47, 0.13), transparent 28%),
+    radial-gradient(circle at 92% 10%, rgba(74, 121, 67, 0.16), transparent 28%),
+    radial-gradient(circle at 52% 98%, rgba(232, 237, 189, 0.22), transparent 35%),
+    linear-gradient(135deg, #f7f3ea 0%, #edf6e8 48%, #f3eadf 100%);
 }
 
 .food-status-hero {
@@ -28,24 +43,30 @@
   pointer-events: none;
 }
 
-.food-status-back,
-.food-status-toolbar button,
-.food-status-primary-btn {
+.food-status-hero-top {
   position: relative;
   z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.food-status-back,
+.food-status-add,
+.food-status-toolbar button,
+.food-status-primary-btn {
   min-height: 44px;
   border: 0;
   border-radius: 16px;
   padding: 11px 18px;
-  color: #fff8ee;
-  background: linear-gradient(135deg, #294e24, #5f8f4d);
   font-weight: 900;
   cursor: pointer;
-  box-shadow: 0 14px 28px rgba(74, 121, 67, 0.18);
   transition:
     transform 0.2s ease,
     box-shadow 0.2s ease,
-    opacity 0.2s ease;
+    opacity 0.2s ease,
+    background 0.2s ease;
 }
 
 .food-status-back {
@@ -55,7 +76,16 @@
   box-shadow: 0 12px 28px rgba(69, 48, 31, 0.06);
 }
 
+.food-status-add,
+.food-status-toolbar button,
+.food-status-primary-btn {
+  color: #fff8ee;
+  background: linear-gradient(135deg, #294e24, #5f8f4d);
+  box-shadow: 0 14px 28px rgba(74, 121, 67, 0.18);
+}
+
 .food-status-back:hover,
+.food-status-add:hover,
 .food-status-toolbar button:hover,
 .food-status-primary-btn:hover {
   transform: translateY(-2px);
@@ -102,7 +132,7 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
   margin-top: 28px;
 }
@@ -154,6 +184,10 @@
   color: #263f24;
   background: rgba(255, 255, 255, 0.78);
   font-weight: 650;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 .food-status-toolbar input:focus {
@@ -208,231 +242,43 @@
   color: #756b5d;
 }
 
-.food-status-grid {
+.food-status-food-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 22px;
 }
 
-.food-status-card {
-  overflow: hidden;
-  display: grid;
-  grid-template-columns: 220px minmax(0, 1fr);
-  border-radius: 32px;
-  background: rgba(255, 251, 244, 0.78);
-  border: 1px solid rgba(95, 71, 47, 0.13);
-  box-shadow: 0 22px 64px rgba(69, 48, 31, 0.08);
-  backdrop-filter: blur(20px);
-  transition:
-    transform 0.22s ease,
-    box-shadow 0.22s ease,
-    border-color 0.22s ease;
-}
-
-.food-status-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 30px 82px rgba(69, 48, 31, 0.12);
-  border-color: rgba(95, 71, 47, 0.2);
-}
-
-.food-status-image {
-  position: relative;
-  min-height: 260px;
-  background:
-    radial-gradient(circle at 30% 24%, rgba(123, 153, 91, 0.22), transparent 34%),
-    linear-gradient(135deg, #edf7e9, #f8eee2);
-}
-
-.food-status-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-.food-status-placeholder {
-  width: 100%;
-  height: 100%;
-  min-height: 260px;
-  display: grid;
-  place-items: center;
-  color: #fff8ee;
-  background: linear-gradient(135deg, #294e24, #7a4f2f);
-  font-size: 54px;
-  font-weight: 950;
-}
-
-.food-status-badge {
-  position: absolute;
-  left: 14px;
-  top: 14px;
-  display: inline-flex;
-  padding: 9px 12px;
-  border-radius: 999px;
-  color: #263f24;
-  background: rgba(255, 251, 244, 0.9);
-  font-size: 12px;
-  font-weight: 950;
-  box-shadow: 0 10px 24px rgba(69, 48, 31, 0.12);
-  backdrop-filter: blur(14px);
-}
-
-.food-status-badge.safe {
-  color: #23631f;
-  background: rgba(226, 246, 216, 0.94);
-}
-
-.food-status-badge.warning {
-  color: #9a641c;
-  background: rgba(255, 239, 195, 0.94);
-}
-
-.food-status-badge.danger {
-  color: #9f3f2d;
-  background: rgba(255, 220, 210, 0.94);
-}
-
-.food-status-badge.market {
-  color: #38606b;
-  background: rgba(219, 239, 245, 0.94);
-}
-
-.food-status-badge.done {
-  color: #6f492c;
-  background: rgba(239, 223, 207, 0.94);
-}
-
-.food-status-content {
-  display: flex;
-  flex-direction: column;
-  padding: 22px;
-}
-
-.food-status-title-row {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: flex-start;
-}
-
-.food-status-title-row span {
-  color: #7a6a4f;
-  font-size: 12px;
-  font-weight: 950;
-  text-transform: uppercase;
-  letter-spacing: 0.07em;
-}
-
-.food-status-title-row h3 {
-  margin: 7px 0 0;
-  color: #203a1e;
-  font-size: 24px;
-  line-height: 1.1;
-  letter-spacing: -0.6px;
-}
-
-.food-status-title-row strong {
-  flex-shrink: 0;
-  color: #386d35;
-  font-size: 15px;
-  font-weight: 950;
-}
-
-.food-status-desc {
-  margin: 14px 0;
-  color: #756b5d;
-  line-height: 1.65;
-  font-size: 14px;
-}
-
-.food-status-info-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: auto;
-}
-
-.food-status-info-grid div {
-  padding: 12px;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.58);
-  border: 1px solid rgba(95, 71, 47, 0.09);
-}
-
-.food-status-info-grid span {
-  display: block;
-  margin-bottom: 5px;
-  color: #8a7f70;
-  font-size: 11px;
-  font-weight: 900;
-}
-
-.food-status-info-grid strong {
-  color: #263f24;
-  font-size: 13px;
-  font-weight: 950;
-}
-
-.food-status-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 16px;
-}
-
-.food-status-actions button {
-  min-height: 38px;
-  padding: 0 13px;
-  border: 0;
-  border-radius: 14px;
-  color: #fff8ee;
-  background: linear-gradient(135deg, #294e24, #5f8f4d);
-  cursor: pointer;
-  font-weight: 900;
-  font-size: 13px;
-  transition:
-    transform 0.18s ease,
-    box-shadow 0.18s ease,
-    background 0.18s ease;
-}
-
-.food-status-actions button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 24px rgba(74, 121, 67, 0.16);
-}
-
-.food-status-actions button.danger {
-  background: linear-gradient(135deg, #8f3f2f, #b45a3c);
-}
-
-.food-status-actions button.ghost {
-  color: #8f3f2f;
-  background: rgba(255, 251, 244, 0.78);
-  border: 1px solid rgba(143, 63, 47, 0.18);
-}
-
 @media (max-width: 1180px) {
-  .food-status-grid {
-    grid-template-columns: 1fr;
+  .food-status-food-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .food-status-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 780px) {
-  .food-status-stats,
-  .food-status-toolbar,
-  .food-status-card {
-    grid-template-columns: 1fr;
-  }
-
-  .food-status-image,
-  .food-status-placeholder {
-    min-height: 220px;
-  }
-
-  .food-status-title-row {
+  .food-status-hero-top {
     flex-direction: column;
+    align-items: stretch;
   }
 
-  .food-status-info-grid {
+  .food-status-back,
+  .food-status-add {
+    width: 100%;
+  }
+
+  .food-status-toolbar {
     grid-template-columns: 1fr;
+  }
+
+  .food-status-stats,
+  .food-status-food-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .food-status-heading h1 {
+    font-size: 34px;
   }
 }

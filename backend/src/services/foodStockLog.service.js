@@ -107,6 +107,63 @@ const getStockLogTotalsByUser = async (userId) => {
   };
 };
 
+const getFoodStockHistoryByUser = async (userId) => {
+  await ensureFoodStockLogTable();
+
+  const [rows] = await db.query(
+    `SELECT
+      fsl.id,
+      fsl.food_id,
+      fsl.user_id,
+      fsl.action,
+      fsl.quantity,
+      fsl.note,
+      fsl.created_at,
+
+      f.name AS food_name,
+      f.category,
+      f.unit,
+      f.price,
+      f.expiry_date,
+      f.image_url,
+      f.image,
+      f.notes,
+      f.status AS current_food_status
+     FROM food_stock_logs fsl
+     LEFT JOIN foods f ON fsl.food_id = f.id
+     WHERE fsl.user_id = ?
+     ORDER BY fsl.created_at DESC`,
+    [userId]
+  );
+
+  return rows.map((row) => ({
+    id: `log-${row.id}`,
+    log_id: row.id,
+    food_id: row.food_id,
+    user_id: row.user_id,
+
+    name: row.food_name || "Makanan sudah dihapus",
+    category: row.category || "Riwayat",
+    unit: row.unit || "pcs",
+    price: Number(row.price || 0),
+
+    quantity: Number(row.quantity || 0),
+    action: row.action,
+    status: row.action,
+
+    note: row.note || row.notes || "",
+    notes: row.notes || row.note || "",
+
+    expiry_date: row.expiry_date ? String(row.expiry_date).slice(0, 10) : "",
+    image_url: row.image_url || row.image || "",
+    image: row.image || row.image_url || "",
+
+    current_food_status: row.current_food_status || "",
+    source: "stock_log",
+    created_at: row.created_at,
+  }));
+};
+
 const getCompletedTransactionStockBySeller = async (userId) => {
   const [rows] = await db.query(
     `SELECT
@@ -124,5 +181,6 @@ const getCompletedTransactionStockBySeller = async (userId) => {
 module.exports = {
   createStockLog,
   getStockLogTotalsByUser,
+  getFoodStockHistoryByUser,
   getCompletedTransactionStockBySeller,
 };
