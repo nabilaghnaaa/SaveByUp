@@ -1,40 +1,49 @@
 import {
   getFoodPriority,
-  getFoodStatus,
   getRemainingDays,
 } from "../../../utils/foodStatus";
 
 import "../styles/foodStatusPreview.css";
 
+const getAutoFoodStatus = (expiryDate) => {
+  if (!expiryDate) return "aman";
+
+  const today = new Date();
+  const expiry = new Date(expiryDate);
+
+  today.setHours(0, 0, 0, 0);
+  expiry.setHours(0, 0, 0, 0);
+
+  const diffTime = expiry.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  if (diffDays < 0) return "kedaluwarsa";
+  if (diffDays <= 7) return "mendekati_kedaluwarsa";
+
+  return "aman";
+};
+
 export default function FoodStatusPreview({ form }) {
-  const status = getFoodStatus(form);
-  const priority = getFoodPriority(form);
+  const status = getAutoFoodStatus(form.expiry_date);
+  const priority = getFoodPriority({
+    ...form,
+    status,
+  });
   const remainingDays = getRemainingDays(form.expiry_date);
 
   const getStatusTitle = () => {
     if (status === "kedaluwarsa") return "Kedaluwarsa";
     if (status === "mendekati_kedaluwarsa") return "Mendekati Kedaluwarsa";
-    if (status === "dijual") return "Dijual";
-    if (status === "digunakan") return "Digunakan";
-    if (status === "dibuang") return "Dibuang";
     return "Aman";
   };
 
   const getStatusClass = () => {
-    if (status === "kedaluwarsa" || status === "dibuang") {
+    if (status === "kedaluwarsa") {
       return "status-danger";
     }
 
     if (status === "mendekati_kedaluwarsa") {
       return "status-warning";
-    }
-
-    if (status === "dijual") {
-      return "status-market";
-    }
-
-    if (status === "digunakan") {
-      return "status-done";
     }
 
     return "status-safe";
@@ -46,26 +55,14 @@ export default function FoodStatusPreview({ form }) {
     }
 
     if (status === "kedaluwarsa") {
-      return "Makanan sudah melewati tanggal kedaluwarsa. Periksa kondisi sebelum mengambil tindakan.";
+      return "Makanan sudah melewati tanggal kedaluwarsa. Periksa kondisi makanan sebelum mengambil tindakan.";
     }
 
     if (status === "mendekati_kedaluwarsa") {
       return "Makanan perlu diprioritaskan untuk digunakan atau ditawarkan jika masih layak.";
     }
 
-    if (status === "dijual") {
-      return "Makanan ditandai untuk ditawarkan ke marketplace.";
-    }
-
-    if (status === "digunakan") {
-      return "Makanan ditandai sudah digunakan.";
-    }
-
-    if (status === "dibuang") {
-      return "Makanan ditandai sudah dibuang.";
-    }
-
-    return "Makanan masih aman dan belum mendesak.";
+    return "Makanan masih aman berdasarkan tanggal kedaluwarsa yang kamu isi.";
   };
 
   const getRemainingLabel = () => {
@@ -104,11 +101,7 @@ export default function FoodStatusPreview({ form }) {
       return "Gunakan lebih dulu atau tawarkan ke marketplace jika masih layak.";
     }
 
-    if (status === "aman") {
-      return "Simpan dengan baik dan cek kembali saat mendekati tanggal kedaluwarsa.";
-    }
-
-    return "Status makanan sudah ditandai secara manual.";
+    return "Simpan dengan baik dan cek kembali saat mendekati tanggal kedaluwarsa.";
   };
 
   return (

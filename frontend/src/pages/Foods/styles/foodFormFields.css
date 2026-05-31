@@ -55,8 +55,173 @@
   line-height: 1.6;
 }
 
+/* AUTO STATUS */
+.food-auto-status-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 24px;
+  padding: 20px;
+  border: 1px solid rgba(95, 71, 47, 0.12);
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.94), rgba(250, 247, 238, 0.88)),
+    #fffdf8;
+  box-shadow: 0 16px 36px rgba(38, 63, 36, 0.08);
+}
+
+.food-auto-status-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 7px;
+  background: #7b995b;
+}
+
+.food-auto-status-main {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.food-auto-status-eyebrow {
+  display: inline-flex;
+  margin-bottom: 7px;
+  color: #7a6a4f;
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.food-auto-status-card h3 {
+  margin: 0;
+  color: #263f24;
+  font-size: 24px;
+  font-weight: 950;
+  letter-spacing: -0.03em;
+}
+
+.food-auto-status-card p {
+  max-width: 680px;
+  margin: 8px 0 0;
+  color: #5f574c;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.food-auto-status-badge {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: max-content;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 950;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.48);
+}
+
+.food-auto-status-badge.status-aman {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.food-auto-status-badge.status-mendekati_kedaluwarsa {
+  color: #92400e;
+  background: #fef3c7;
+}
+
+.food-auto-status-badge.status-kedaluwarsa {
+  color: #991b1b;
+  background: #fee2e2;
+}
+
+.food-auto-status-info {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.food-auto-status-info div {
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(95, 71, 47, 0.1);
+}
+
+.food-auto-status-info span {
+  display: block;
+  margin-bottom: 4px;
+  color: #7a6a4f;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.food-auto-status-info strong {
+  color: #263f24;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.food-auto-status-card small {
+  display: block;
+  margin-top: 14px;
+  color: #756b5d;
+  line-height: 1.7;
+  position: relative;
+  z-index: 1;
+}
+
+.food-auto-status-aman::before {
+  background: #22c55e;
+}
+
+.food-auto-status-mendekati_kedaluwarsa::before {
+  background: #f59e0b;
+}
+
+.food-auto-status-kedaluwarsa::before {
+  background: #ef4444;
+}
+
+.food-auto-status-aman {
+  background:
+    linear-gradient(135deg, rgba(240, 253, 244, 0.98), rgba(255, 253, 248, 0.92)),
+    #fffdf8;
+}
+
+.food-auto-status-mendekati_kedaluwarsa {
+  background:
+    linear-gradient(135deg, rgba(255, 251, 235, 0.98), rgba(255, 253, 248, 0.92)),
+    #fffdf8;
+}
+
+.food-auto-status-kedaluwarsa {
+  background:
+    linear-gradient(135deg, rgba(254, 242, 242, 0.98), rgba(255, 253, 248, 0.92)),
+    #fffdf8;
+}
+
 @media (max-width: 720px) {
   .food-form-fields {
     grid-template-columns: 1fr;
+  }
+
+  .food-auto-status-main {
+    flex-direction: column;
+  }
+
+  .food-auto-status-info {
+    grid-template-columns: 1fr;
+  }
+
+  .food-auto-status-card h3 {
+    font-size: 21px;
   }
 }

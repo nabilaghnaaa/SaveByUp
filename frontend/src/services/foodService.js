@@ -125,8 +125,6 @@ const toFoodPayload = (food = {}) => ({
 
   image_url: food.image_url || food.image || "",
   image: food.image || food.image_url || "",
-
-  status: food.status || "aman",
 });
 
 export const getFoodSummary = async () => {

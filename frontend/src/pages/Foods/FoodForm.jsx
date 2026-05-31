@@ -20,7 +20,6 @@ const initialForm = {
   unit: "pcs",
   price: "",
   expiry_date: "",
-  status: "aman",
   note: "",
   image_url: "",
 };
@@ -49,8 +48,9 @@ export default function FoodForm() {
         quantity: data.quantity || 1,
         unit: data.unit || "pcs",
         price: data.price || "",
-        expiry_date: data.expiry_date ? String(data.expiry_date).slice(0, 10) : "",
-        status: data.status || "aman",
+        expiry_date: data.expiry_date
+          ? String(data.expiry_date).slice(0, 10)
+          : "",
         note: data.note || data.notes || "",
         image_url: data.image_url || data.image || "",
       });
@@ -79,6 +79,8 @@ export default function FoodForm() {
 
   const validateForm = () => {
     if (!form.name.trim()) return "Nama makanan wajib diisi.";
+
+    if (!form.category) return "Kategori makanan wajib dipilih.";
 
     if (!form.quantity || Number(form.quantity) <= 0) {
       return "Jumlah stok harus lebih dari 0.";
@@ -110,9 +112,14 @@ export default function FoodForm() {
       setMessage("");
 
       const payload = {
-        ...form,
+        name: form.name.trim(),
+        category: form.category,
         quantity: Number(form.quantity),
+        unit: form.unit,
         price: Number(form.price),
+        expiry_date: form.expiry_date,
+        note: form.note,
+        image_url: form.image_url,
       };
 
       if (isEdit) {

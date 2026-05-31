@@ -86,26 +86,8 @@ export default function FoodFormFields({ form, onChange }) {
           value={form.expiry_date}
           onChange={(event) => onChange("expiry_date", event.target.value)}
         />
-      </div>
-
-      <div className="food-field food-field-full">
-        <label>Status Makanan</label>
-        <select
-          value={form.status}
-          onChange={(event) => onChange("status", event.target.value)}
-        >
-          <option value="aman">Aman</option>
-          <option value="mendekati_kedaluwarsa">Mendekati Kedaluwarsa</option>
-          <option value="kedaluwarsa">Kedaluwarsa</option>
-          <option value="dijual">Dijual</option>
-          <option value="digunakan">Digunakan</option>
-          <option value="dibuang">Dibuang</option>
-        </select>
-
         <small>
-          Status aman, mendekati kedaluwarsa, dan kedaluwarsa dihitung otomatis
-          berdasarkan tanggal. Status dijual, digunakan, dan dibuang dipakai
-          untuk aksi manual.
+          Status makanan akan dihitung otomatis berdasarkan tanggal kedaluwarsa.
         </small>
       </div>
     </section>
