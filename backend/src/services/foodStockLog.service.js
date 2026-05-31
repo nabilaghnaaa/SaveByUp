@@ -1,177 +1,128 @@
 const db = require("../config/db");
 
-const cancelActiveMarketplaceByFood = async (
+const ensureFoodStockLogTable = async () => {
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS food_stock_logs (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      food_id INT NOT NULL,
+      user_id INT NOT NULL,
+      action ENUM('digunakan', 'dibuang', 'terjual', 'kedaluwarsa') NOT NULL,
+      quantity DECIMAL(10,2) NOT NULL DEFAULT 0,
+      note TEXT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+};
+
+const createStockLog = async ({
   foodId,
   userId,
-  detachFood = false
-) => {
-  if (detachFood) {
-    await db.query(
-      `UPDATE marketplace_products
-       SET 
-        status = 'dibatalkan',
-        quantity = 0,
-        stock = 0,
-        food_id = NULL
-       WHERE food_id = ?
-       AND seller_id = ?
-       AND status IN ('tersedia', 'dalam_proses')`,
-      [foodId, userId]
-    );
+  action,
+  quantity,
+  note = "",
+}) => {
+  await ensureFoodStockLogTable();
 
-    return;
-  }
-
-  await db.query(
-    `UPDATE marketplace_products
-     SET 
-      status = 'dibatalkan',
-      quantity = 0,
-      stock = 0
-     WHERE food_id = ?
-     AND seller_id = ?
-     AND status IN ('tersedia', 'dalam_proses')`,
-    [foodId, userId]
-  );
-};
-
-const getFoodMarketplaceState = async (foodId, userId) => {
-  const [marketplaceRows] = await db.query(
-    `SELECT
-      COALESCE(
-        SUM(
-          CASE 
-            WHEN status IN ('tersedia', 'dalam_proses') 
-            THEN quantity 
-            ELSE 0 
-          END
-        ), 
-        0
-      ) AS active_marketplace_quantity,
-
-      COALESCE(
-        SUM(
-          CASE 
-            WHEN status = 'tersedia' 
-            THEN quantity 
-            ELSE 0 
-          END
-        ), 
-        0
-      ) AS available_marketplace_quantity,
-
-      COALESCE(
-        SUM(
-          CASE 
-            WHEN status = 'dalam_proses' 
-            THEN quantity 
-            ELSE 0 
-          END
-        ), 
-        0
-      ) AS process_marketplace_quantity
-     FROM marketplace_products
-     WHERE food_id = ?
-     AND seller_id = ?`,
-    [foodId, userId]
-  );
-
-  const [transactionRows] = await db.query(
-    `SELECT COUNT(*) AS active_transactions
-     FROM transactions t
-     JOIN marketplace_products mp ON t.product_id = mp.id
-     WHERE mp.food_id = ?
-     AND mp.seller_id = ?
-     AND t.status = 'waiting_cod'`,
-    [foodId, userId]
+  const [result] = await db.query(
+    `INSERT INTO food_stock_logs
+     (
+      food_id,
+      user_id,
+      action,
+      quantity,
+      note
+     )
+     VALUES (?, ?, ?, ?, ?)`,
+    [foodId, userId, action, Number(quantity || 0), note]
   );
 
   return {
-    activeMarketplaceQuantity: Number(
-      marketplaceRows[0]?.active_marketplace_quantity || 0
-    ),
-    availableMarketplaceQuantity: Number(
-      marketplaceRows[0]?.available_marketplace_quantity || 0
-    ),
-    processMarketplaceQuantity: Number(
-      marketplaceRows[0]?.process_marketplace_quantity || 0
-    ),
-    activeTransactions: Number(transactionRows[0]?.active_transactions || 0),
+    id: result.insertId,
+    food_id: Number(foodId),
+    user_id: Number(userId),
+    action,
+    quantity: Number(quantity || 0),
+    note,
   };
 };
 
-const enrichFoodWithMarketplaceState = async (food, userId) => {
-  const state = await getFoodMarketplaceState(food.id, userId);
+const getStockLogTotalsByUser = async (userId) => {
+  await ensureFoodStockLogTable();
 
-  return {
-    ...food,
-    active_marketplace_quantity: state.activeMarketplaceQuantity,
-    available_marketplace_quantity: state.availableMarketplaceQuantity,
-    process_marketplace_quantity: state.processMarketplaceQuantity,
-    free_quantity: Math.max(
-      Number(food.quantity || 0) - state.activeMarketplaceQuantity,
-      0
-    ),
-  };
-};
-
-const enrichFoodsWithMarketplaceState = async (foods = [], userId) => {
-  return Promise.all(
-    foods.map((food) => enrichFoodWithMarketplaceState(food, userId))
-  );
-};
-
-const getMarketplaceSummaryBySeller = async (userId) => {
   const [rows] = await db.query(
     `SELECT
       COALESCE(
         SUM(
           CASE 
-            WHEN status IN ('tersedia', 'dalam_proses') 
+            WHEN action = 'digunakan' 
             THEN quantity 
             ELSE 0 
           END
         ), 
         0
-      ) AS total_dijual,
+      ) AS total_digunakan,
 
       COALESCE(
         SUM(
           CASE 
-            WHEN status = 'tersedia' 
+            WHEN action = 'dibuang' 
             THEN quantity 
             ELSE 0 
           END
         ), 
         0
-      ) AS total_dijual_tersedia,
+      ) AS total_dibuang,
 
       COALESCE(
         SUM(
           CASE 
-            WHEN status = 'dalam_proses' 
+            WHEN action = 'terjual' 
             THEN quantity 
             ELSE 0 
           END
         ), 
         0
-      ) AS total_dalam_proses
-     FROM marketplace_products
-     WHERE seller_id = ?`,
+      ) AS total_terjual_log,
+
+      COALESCE(
+        SUM(
+          CASE 
+            WHEN action = 'kedaluwarsa' 
+            THEN quantity 
+            ELSE 0 
+          END
+        ), 
+        0
+      ) AS total_kedaluwarsa_log
+     FROM food_stock_logs
+     WHERE user_id = ?`,
     [userId]
   );
 
   return {
-    total_dijual: Number(rows[0]?.total_dijual || 0),
-    total_dijual_tersedia: Number(rows[0]?.total_dijual_tersedia || 0),
-    total_dalam_proses: Number(rows[0]?.total_dalam_proses || 0),
+    total_digunakan: Number(rows[0]?.total_digunakan || 0),
+    total_dibuang: Number(rows[0]?.total_dibuang || 0),
+    total_terjual_log: Number(rows[0]?.total_terjual_log || 0),
+    total_kedaluwarsa_log: Number(rows[0]?.total_kedaluwarsa_log || 0),
   };
 };
 
+const getCompletedTransactionStockBySeller = async (userId) => {
+  const [rows] = await db.query(
+    `SELECT
+      COALESCE(SUM(t.quantity), 0) AS total_terjual
+     FROM transactions t
+     JOIN marketplace_products mp ON t.product_id = mp.id
+     WHERE mp.seller_id = ?
+     AND t.status IN ('selesai', 'completed', 'success', 'berhasil')`,
+    [userId]
+  );
+
+  return Number(rows[0]?.total_terjual || 0);
+};
+
 module.exports = {
-  cancelActiveMarketplaceByFood,
-  getFoodMarketplaceState,
-  enrichFoodWithMarketplaceState,
-  enrichFoodsWithMarketplaceState,
-  getMarketplaceSummaryBySeller,
+  createStockLog,
+  getStockLogTotalsByUser,
+  getCompletedTransactionStockBySeller,
 };

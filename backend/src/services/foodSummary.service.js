@@ -13,7 +13,9 @@ const {
 } = require("./foodStockLog.service");
 
 const sumBy = (items = [], callback) => {
-  return items.reduce((total, item) => total + Number(callback(item) || 0), 0);
+  return items.reduce((total, item) => {
+    return total + Number(callback(item) || 0);
+  }, 0);
 };
 
 const buildSummaryFromFoods = async (foods = [], userId) => {
@@ -64,7 +66,8 @@ const buildSummaryFromFoods = async (foods = [], userId) => {
   return {
     total_items: totalItems,
 
-    // Dipakai frontend lama agar tidak error, tapi sekarang artinya total stok aktif.
+    // Dipakai frontend lama agar tidak error.
+    // Sekarang artinya total stok aktif yang masih ada di inventaris.
     total_foods: totalCurrentStock,
     total_stok: totalCurrentStock,
 
