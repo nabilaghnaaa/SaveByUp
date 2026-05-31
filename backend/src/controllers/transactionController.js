@@ -1,9 +1,5 @@
 const db = require("../config/db");
 
-const {
-  buildTransactionLocations,
-} = require("../services/location.service");
-
 const getUserId = (req) => {
   return req.user?.id || req.user?.user_id || req.userId;
 };
@@ -19,31 +15,125 @@ const createNotification = async (userId, title, message, type = "system") => {
   }
 };
 
-const maskTransactionLocation = (transaction = {}) => {
-  const locationData = buildTransactionLocations(transaction);
+const hasCoordinate = (latitude, longitude) => {
+  const lat = Number(latitude);
+  const lng = Number(longitude);
+
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  );
+};
+
+const buildMapsUrl = (latitude, longitude) => {
+  if (!hasCoordinate(latitude, longitude)) return "";
+
+  return `https://www.google.com/maps?q=${latitude},${longitude}`;
+};
+
+const buildExactLocation = ({
+  name,
+  whatsapp,
+  address,
+  locationLabel,
+  latitude,
+  longitude,
+  shared,
+}) => {
+  const isShared = Boolean(Number(shared || 0));
+  const hasLocation = isShared && hasCoordinate(latitude, longitude);
+
+  return {
+    name: name || "",
+    whatsapp: whatsapp || "",
+    address: isShared ? address || "" : "",
+    location_label: isShared ? locationLabel || address || "" : "",
+    latitude: hasLocation ? Number(latitude) : null,
+    longitude: hasLocation ? Number(longitude) : null,
+    has_location: hasLocation,
+    maps_url: hasLocation ? buildMapsUrl(latitude, longitude) : "",
+    shared: isShared,
+  };
+};
+
+const normalizeTransactionStatus = (status = "") => {
+  const value = String(status || "").toLowerCase();
+
+  const map = {
+    waiting_buyer_confirmation: "menunggu_komunikasi",
+    waiting_cod: "menunggu_komunikasi",
+    menunggu_komunikasi: "menunggu_komunikasi",
+    completed: "selesai",
+    selesai: "selesai",
+    cancelled: "dibatalkan",
+    dibatalkan: "dibatalkan",
+  };
+
+  return map[value] || value || "menunggu_komunikasi";
+};
+
+const maskTransactionLocation = (transaction = {}, currentUserId) => {
+  const isBuyer = Number(transaction.buyer_id) === Number(currentUserId);
+  const isSeller = Number(transaction.seller_id) === Number(currentUserId);
+
+  const buyerShared = Number(transaction.buyer_location_shared || 0) === 1;
+  const sellerShared = Number(transaction.seller_location_shared || 0) === 1;
+  const bothShared = buyerShared && sellerShared;
+
+  const buyerLocation = buildExactLocation({
+    name: transaction.buyer_name,
+    whatsapp: transaction.buyer_whatsapp,
+    address: transaction.buyer_address,
+    locationLabel: transaction.buyer_location_label,
+    latitude: transaction.buyer_latitude,
+    longitude: transaction.buyer_longitude,
+    shared: bothShared || isBuyer ? buyerShared : false,
+  });
+
+  const sellerLocation = buildExactLocation({
+    name: transaction.seller_name,
+    whatsapp: transaction.seller_whatsapp,
+    address: transaction.seller_address,
+    locationLabel: transaction.seller_location_label,
+    latitude: transaction.seller_latitude,
+    longitude: transaction.seller_longitude,
+    shared: bothShared || isSeller ? sellerShared : false,
+  });
+
+  const waitingParty =
+    !buyerShared && !sellerShared
+      ? "pembeli dan penjual"
+      : !buyerShared
+        ? "pembeli"
+        : !sellerShared
+          ? "penjual"
+          : "";
 
   return {
     ...transaction,
 
-    exact_location_available: locationData.exact_location_available,
+    status: normalizeTransactionStatus(transaction.status),
 
-    buyer_latitude: locationData.exact_location_available
-      ? transaction.buyer_latitude
-      : null,
-    buyer_longitude: locationData.exact_location_available
-      ? transaction.buyer_longitude
-      : null,
-    seller_latitude: locationData.exact_location_available
-      ? transaction.seller_latitude
-      : null,
-    seller_longitude: locationData.exact_location_available
-      ? transaction.seller_longitude
-      : null,
+    buyer_location_shared: buyerShared,
+    seller_location_shared: sellerShared,
+    both_location_shared: bothShared,
+    exact_location_available: bothShared,
 
-    buyer_location: locationData.buyer_location,
-    seller_location: locationData.seller_location,
+    current_user_role: isBuyer ? "buyer" : isSeller ? "seller" : "unknown",
+    current_user_has_shared_location: isBuyer ? buyerShared : sellerShared,
+    waiting_location_party: waitingParty,
 
-    seller_location_label: transaction.seller_location_label || null,
+    buyer_location: buyerLocation,
+    seller_location: sellerLocation,
+
+    buyer_latitude: bothShared ? transaction.buyer_latitude : null,
+    buyer_longitude: bothShared ? transaction.buyer_longitude : null,
+    seller_latitude: bothShared ? transaction.seller_latitude : null,
+    seller_longitude: bothShared ? transaction.seller_longitude : null,
   };
 };
 
@@ -67,12 +157,10 @@ const getTransactions = async (req, res) => {
         buyer.name AS buyer_name,
         buyer.whatsapp AS buyer_whatsapp,
         buyer.address AS buyer_address,
-        buyer.location_label AS buyer_location_label,
 
         seller.name AS seller_name,
         seller.whatsapp AS seller_whatsapp,
-        seller.address AS seller_address,
-        seller.location_label AS seller_profile_location_label
+        seller.address AS seller_address
        FROM transactions t
        JOIN marketplace_products mp ON t.product_id = mp.id
        JOIN users buyer ON t.buyer_id = buyer.id
@@ -84,7 +172,7 @@ const getTransactions = async (req, res) => {
 
     return res.status(200).json({
       message: "Riwayat transaksi berhasil diambil",
-      data: transactions.map(maskTransactionLocation),
+      data: transactions.map((item) => maskTransactionLocation(item, userId)),
     });
   } catch (error) {
     console.error("Get transactions error:", error);
@@ -96,12 +184,12 @@ const getTransactions = async (req, res) => {
   }
 };
 
-const confirmTransactionLocation = async (req, res) => {
+const shareTransactionLocation = async (req, res) => {
   try {
-    const buyerId = getUserId(req);
+    const userId = getUserId(req);
     const { id } = req.params;
 
-    if (!buyerId) {
+    if (!userId) {
       return res.status(401).json({
         message: "User tidak terautentikasi.",
       });
@@ -111,8 +199,8 @@ const confirmTransactionLocation = async (req, res) => {
       `SELECT *
        FROM transactions
        WHERE id = ?
-       AND buyer_id = ?`,
-      [id, buyerId]
+       AND (buyer_id = ? OR seller_id = ?)`,
+      [id, userId, userId]
     );
 
     if (transactions.length === 0) {
@@ -122,51 +210,126 @@ const confirmTransactionLocation = async (req, res) => {
     }
 
     const transaction = transactions[0];
+    const isBuyer = Number(transaction.buyer_id) === Number(userId);
+    const isSeller = Number(transaction.seller_id) === Number(userId);
 
-    if (transaction.status !== "waiting_buyer_confirmation") {
-      return res.status(400).json({
-        message: "Transaksi ini tidak menunggu konfirmasi pembeli.",
+    if (!isBuyer && !isSeller) {
+      return res.status(403).json({
+        message: "Kamu tidak memiliki akses ke transaksi ini.",
       });
     }
 
-    if (!transaction.buyer_latitude || !transaction.buyer_longitude) {
+    if (["completed", "selesai", "cancelled", "dibatalkan"].includes(transaction.status)) {
       return res.status(400).json({
-        message:
-          "Lokasi pembeli belum tersedia. Silakan lengkapi lokasi di profil terlebih dahulu.",
+        message: "Lokasi tidak bisa dibagikan karena transaksi sudah selesai atau dibatalkan.",
       });
     }
 
-    if (!transaction.seller_latitude || !transaction.seller_longitude) {
-      return res.status(400).json({
-        message:
-          "Lokasi penjual belum tersedia. Penjual perlu melengkapi lokasi di profil terlebih dahulu.",
-      });
-    }
-
-    await db.query(
-      `UPDATE transactions
-       SET 
-        status = 'waiting_cod',
-        location_revealed = 1,
-        location_confirmed_at = NOW()
-       WHERE id = ?
-       AND buyer_id = ?`,
-      [id, buyerId]
+    const [users] = await db.query(
+      `SELECT 
+        id,
+        name,
+        whatsapp,
+        address,
+        latitude,
+        longitude,
+        location_label,
+        location_updated_at
+       FROM users
+       WHERE id = ?`,
+      [userId]
     );
 
-    await createNotification(
-      transaction.seller_id,
-      "Pembeli menyetujui lokasi COD",
-      "Pembeli sudah menyetujui untuk membuka titik lokasi COD.",
-      "transaction"
-    );
+    if (users.length === 0) {
+      return res.status(404).json({
+        message: "Data user tidak ditemukan.",
+      });
+    }
+
+    const user = users[0];
+
+    if (!hasCoordinate(user.latitude, user.longitude)) {
+      return res.status(400).json({
+        message:
+          "Titik lokasi belum tersedia. Lengkapi lokasi GPS di halaman profil terlebih dahulu.",
+      });
+    }
+
+    if (isBuyer && Number(transaction.buyer_location_shared || 0) === 1) {
+      return res.status(400).json({
+        message:
+          "Lokasi pembeli sudah pernah dibagikan. Ubah lokasi di profil jika ingin memperbarui titik COD.",
+      });
+    }
+
+    if (isSeller && Number(transaction.seller_location_shared || 0) === 1) {
+      return res.status(400).json({
+        message:
+          "Lokasi penjual sudah pernah dibagikan. Ubah lokasi di profil jika ingin memperbarui titik COD.",
+      });
+    }
+
+    if (isBuyer) {
+      await db.query(
+        `UPDATE transactions
+         SET
+          buyer_latitude = ?,
+          buyer_longitude = ?,
+          buyer_location_label = ?,
+          buyer_location_shared = 1,
+          buyer_location_shared_at = NOW()
+         WHERE id = ?
+         AND buyer_id = ?`,
+        [
+          user.latitude,
+          user.longitude,
+          user.location_label || user.address || "",
+          id,
+          userId,
+        ]
+      );
+
+      await createNotification(
+        transaction.seller_id,
+        "Pembeli membagikan lokasi COD",
+        "Pembeli sudah membagikan titik lokasi COD. Bagikan lokasi kamu agar titik temu bisa dilihat bersama.",
+        "transaction"
+      );
+    }
+
+    if (isSeller) {
+      await db.query(
+        `UPDATE transactions
+         SET
+          seller_latitude = ?,
+          seller_longitude = ?,
+          seller_location_label = ?,
+          seller_location_shared = 1,
+          seller_location_shared_at = NOW()
+         WHERE id = ?
+         AND seller_id = ?`,
+        [
+          user.latitude,
+          user.longitude,
+          user.location_label || user.address || "",
+          id,
+          userId,
+        ]
+      );
+
+      await createNotification(
+        transaction.buyer_id,
+        "Penjual membagikan lokasi COD",
+        "Penjual sudah membagikan titik lokasi COD. Bagikan lokasi kamu agar titik temu bisa dilihat bersama.",
+        "transaction"
+      );
+    }
 
     return res.status(200).json({
-      message:
-        "Lokasi COD berhasil dikonfirmasi. Titik lokasi sekarang dapat dilihat di transaksi.",
+      message: "Lokasi COD berhasil dibagikan.",
     });
   } catch (error) {
-    console.error("Confirm transaction location error:", error);
+    console.error("Share transaction location error:", error);
 
     return res.status(500).json({
       message: "Terjadi kesalahan pada server",
@@ -199,22 +362,15 @@ const completeTransaction = async (req, res) => {
 
     const transaction = transactions[0];
 
-    if (transaction.status === "completed") {
+    if (["completed", "selesai"].includes(transaction.status)) {
       return res.status(400).json({
         message: "Transaksi ini sudah selesai",
       });
     }
 
-    if (transaction.status === "cancelled") {
+    if (["cancelled", "dibatalkan"].includes(transaction.status)) {
       return res.status(400).json({
         message: "Transaksi yang dibatalkan tidak bisa diselesaikan",
-      });
-    }
-
-    if (transaction.status !== "waiting_cod") {
-      return res.status(400).json({
-        message:
-          "Transaksi belum berada pada tahap COD. Pembeli harus mengonfirmasi lokasi terlebih dahulu.",
       });
     }
 
@@ -230,7 +386,9 @@ const completeTransaction = async (req, res) => {
     }
 
     const product = products[0];
-    const transactionQuantity = Number(transaction.quantity || 0);
+    const transactionQuantity = Number(transaction.quantity || 1);
+    const marketplaceQuantity = Number(product.quantity || 0);
+    const remainingMarketplaceQuantity = marketplaceQuantity - transactionQuantity;
 
     if (transactionQuantity <= 0) {
       return res.status(400).json({
@@ -238,22 +396,15 @@ const completeTransaction = async (req, res) => {
       });
     }
 
-    const [foods] = await db.query("SELECT * FROM foods WHERE id = ?", [
-      product.food_id,
-    ]);
-
-    if (foods.length === 0) {
-      return res.status(404).json({
-        message: "Data makanan inventaris tidak ditemukan",
+    if (marketplaceQuantity <= 0) {
+      return res.status(400).json({
+        message: "Stok produk marketplace sudah habis",
       });
     }
 
-    const food = foods[0];
-
-    if (Number(food.quantity) < transactionQuantity) {
+    if (transactionQuantity > marketplaceQuantity) {
       return res.status(400).json({
-        message:
-          "Stok inventaris tidak cukup untuk menyelesaikan transaksi ini.",
+        message: "Jumlah transaksi melebihi stok marketplace",
       });
     }
 
@@ -268,6 +419,21 @@ const completeTransaction = async (req, res) => {
         [transaction.purchase_request_id]
       );
     }
+
+    await db.query(
+      `UPDATE marketplace_products
+       SET
+        quantity = ?,
+        stock = ?,
+        status = ?
+       WHERE id = ?`,
+      [
+        remainingMarketplaceQuantity > 0 ? remainingMarketplaceQuantity : 0,
+        remainingMarketplaceQuantity > 0 ? remainingMarketplaceQuantity : 0,
+        remainingMarketplaceQuantity > 0 ? "tersedia" : "selesai",
+        transaction.product_id,
+      ]
+    );
 
     await db.query(
       `UPDATE foods
@@ -290,25 +456,6 @@ const completeTransaction = async (req, res) => {
       ]
     );
 
-    const [updatedProducts] = await db.query(
-      "SELECT quantity FROM marketplace_products WHERE id = ?",
-      [transaction.product_id]
-    );
-
-    const currentMarketplaceQuantity = Number(
-      updatedProducts[0]?.quantity || 0
-    );
-
-    await db.query(
-      `UPDATE marketplace_products
-       SET status = ?
-       WHERE id = ?`,
-      [
-        currentMarketplaceQuantity > 0 ? "tersedia" : "selesai",
-        transaction.product_id,
-      ]
-    );
-
     const receiverId =
       Number(transaction.buyer_id) === Number(userId)
         ? transaction.seller_id
@@ -327,6 +474,8 @@ const completeTransaction = async (req, res) => {
         transaction_id: Number(id),
         product_id: transaction.product_id,
         quantity_sold: transactionQuantity,
+        remaining_marketplace_quantity:
+          remainingMarketplaceQuantity > 0 ? remainingMarketplaceQuantity : 0,
       },
     });
   } catch (error) {
@@ -370,22 +519,17 @@ const rateTransaction = async (req, res) => {
 
     const transaction = transactions[0];
 
-    if (transaction.status !== "completed") {
+    if (!["completed", "selesai"].includes(transaction.status)) {
       return res.status(400).json({
         message: "Rating hanya bisa diberikan setelah transaksi selesai",
       });
     }
 
-    if (transaction.rating) {
-      return res.status(400).json({
-        message: "Transaksi ini sudah pernah diberi rating",
-      });
-    }
-
-    await db.query(
-      "UPDATE transactions SET rating = ?, review = ? WHERE id = ?",
-      [Number(rating), review || null, id]
-    );
+    await db.query("UPDATE transactions SET rating = ?, review = ? WHERE id = ?", [
+      Number(rating),
+      review || null,
+      id,
+    ]);
 
     const [avgRating] = await db.query(
       "SELECT AVG(rating) AS avg_rating FROM transactions WHERE seller_id = ? AND rating IS NOT NULL",
@@ -412,7 +556,7 @@ const rateTransaction = async (req, res) => {
 
 module.exports = {
   getTransactions,
-  confirmTransactionLocation,
+  shareTransactionLocation,
   completeTransaction,
   rateTransaction,
 };

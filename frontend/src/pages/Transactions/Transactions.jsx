@@ -6,9 +6,9 @@ import PageHeader from "../../components/ui/PageHeader";
 
 import {
   completeTransaction,
-  confirmTransactionLocation,
   getTransactions,
   rateTransaction,
+  shareTransactionLocation,
 } from "../../services/transactionService";
 
 import RatingModal from "./components/RatingModal";
@@ -19,9 +19,11 @@ import "./styles/transactions.css";
 
 const normalizeFilterStatus = (status) => {
   const map = {
-    menunggu_komunikasi: "waiting_cod",
-    selesai: "completed",
-    dibatalkan: "cancelled",
+    waiting_buyer_confirmation: "menunggu_komunikasi",
+    waiting_cod: "menunggu_komunikasi",
+    menunggu_komunikasi: "menunggu_komunikasi",
+    selesai: "selesai",
+    dibatalkan: "dibatalkan",
   };
 
   return map[status] || status;
@@ -31,6 +33,8 @@ export default function Transactions() {
   const [transactions, setTransactions] = useState([]);
   const [activeFilter, setActiveFilter] = useState("semua");
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [locationModalTransaction, setLocationModalTransaction] =
+    useState(null);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
 
@@ -65,37 +69,37 @@ export default function Transactions() {
     );
   }, [transactions, activeFilter]);
 
-  const totalMenunggu = transactions.filter((transaction) =>
-    ["waiting_buyer_confirmation", "waiting_cod"].includes(transaction.status)
+  const totalMenunggu = transactions.filter(
+    (transaction) => transaction.status === "menunggu_komunikasi"
   ).length;
 
   const totalSelesai = transactions.filter(
-    (transaction) => transaction.status === "completed"
+    (transaction) => transaction.status === "selesai"
   ).length;
 
   const totalDibatalkan = transactions.filter(
-    (transaction) => transaction.status === "cancelled"
+    (transaction) => transaction.status === "dibatalkan"
   ).length;
 
   const totalRating = transactions.filter(
     (transaction) => transaction.rating
   ).length;
 
-  const handleConfirmLocation = async (transaction) => {
+  const handleShareLocation = async (transaction) => {
     const ok = window.confirm(
-      "Konfirmasi untuk membuka lokasi detail pembeli dan penjual?"
+      "Bagikan lokasi COD dari profil kamu untuk transaksi ini?"
     );
 
     if (!ok) return;
 
     try {
-      await confirmTransactionLocation(transaction.id);
-      setMessage("Lokasi COD berhasil dikonfirmasi dan dibuka.");
+      await shareTransactionLocation(transaction.id);
+      setMessage("Lokasi COD kamu berhasil dibagikan.");
       await fetchTransactions();
     } catch (error) {
-      console.error("Gagal mengonfirmasi lokasi:", error);
+      console.error("Gagal membagikan lokasi:", error);
       setMessage(
-        error.response?.data?.message || "Gagal mengonfirmasi lokasi COD."
+        error.response?.data?.message || "Gagal membagikan lokasi COD."
       );
     }
   };
@@ -140,7 +144,7 @@ export default function Transactions() {
         <PageHeader
           label="Riwayat"
           title="Riwayat Transaksi"
-          description="Pantau transaksi pembelian dan penjualan, konfirmasi lokasi COD, hubungi pihak terkait, selesaikan transaksi, lalu beri rating untuk membangun kepercayaan."
+          description="Pantau transaksi pembelian dan penjualan, hubungi lewat WhatsApp, bagikan lokasi COD, lihat lokasi setelah kedua pihak membagikan lokasi, lalu selesaikan transaksi."
           action={
             <button
               type="button"
@@ -158,8 +162,8 @@ export default function Transactions() {
             <h2>Setiap makanan yang terselamatkan punya jejak transaksi.</h2>
             <p>
               Riwayat transaksi membantu kamu melihat proses pembelian dan
-              penjualan makanan layak konsumsi, mulai dari pengajuan, konfirmasi
-              lokasi COD, komunikasi, sampai rating setelah transaksi selesai.
+              penjualan makanan layak konsumsi, mulai dari pengajuan, komunikasi,
+              pembagian lokasi COD, sampai rating setelah transaksi selesai.
             </p>
           </div>
 
@@ -174,7 +178,7 @@ export default function Transactions() {
           <div className="transaction-summary-card">
             <span>Butuh Tindak Lanjut</span>
             <strong>{loading ? "..." : totalMenunggu}</strong>
-            <p>Transaksi yang menunggu konfirmasi lokasi atau COD.</p>
+            <p>Transaksi yang menunggu komunikasi atau lokasi COD.</p>
           </div>
 
           <div className="transaction-summary-card">
@@ -207,32 +211,24 @@ export default function Transactions() {
 
           <button
             type="button"
-            className={activeFilter === "waiting_buyer_confirmation" ? "active" : ""}
-            onClick={() => setActiveFilter("waiting_buyer_confirmation")}
+            className={activeFilter === "menunggu_komunikasi" ? "active" : ""}
+            onClick={() => setActiveFilter("menunggu_komunikasi")}
           >
-            Konfirmasi Lokasi
+            Menunggu Komunikasi
           </button>
 
           <button
             type="button"
-            className={activeFilter === "waiting_cod" ? "active" : ""}
-            onClick={() => setActiveFilter("waiting_cod")}
-          >
-            Menunggu COD
-          </button>
-
-          <button
-            type="button"
-            className={activeFilter === "completed" ? "active" : ""}
-            onClick={() => setActiveFilter("completed")}
+            className={activeFilter === "selesai" ? "active" : ""}
+            onClick={() => setActiveFilter("selesai")}
           >
             Selesai
           </button>
 
           <button
             type="button"
-            className={activeFilter === "cancelled" ? "active" : ""}
-            onClick={() => setActiveFilter("cancelled")}
+            className={activeFilter === "dibatalkan" ? "active" : ""}
+            onClick={() => setActiveFilter("dibatalkan")}
           >
             Dibatalkan
           </button>
@@ -268,18 +264,14 @@ export default function Transactions() {
         ) : (
           <section className="transaction-list">
             {filteredTransactions.map((transaction) => (
-              <div className="transaction-list-item" key={transaction.id}>
-                <TransactionCard
-                  transaction={transaction}
-                  onComplete={() => handleComplete(transaction)}
-                  onRate={() => setSelectedTransaction(transaction)}
-                />
-
-                <TransactionLocationPanel
-                  transaction={transaction}
-                  onConfirmLocation={() => handleConfirmLocation(transaction)}
-                />
-              </div>
+              <TransactionCard
+                key={transaction.id}
+                transaction={transaction}
+                onShareLocation={() => handleShareLocation(transaction)}
+                onViewLocation={() => setLocationModalTransaction(transaction)}
+                onComplete={() => handleComplete(transaction)}
+                onRate={() => setSelectedTransaction(transaction)}
+              />
             ))}
           </section>
         )}
@@ -289,6 +281,13 @@ export default function Transactions() {
             transaction={selectedTransaction}
             onClose={() => setSelectedTransaction(null)}
             onSubmit={handleRate}
+          />
+        )}
+
+        {locationModalTransaction && (
+          <TransactionLocationPanel
+            transaction={locationModalTransaction}
+            onClose={() => setLocationModalTransaction(null)}
           />
         )}
       </main>

@@ -24,7 +24,13 @@ function getStatusIcon(status) {
   return icons[status] || "💬";
 }
 
-export default function TransactionCard({ transaction, onComplete, onRate }) {
+export default function TransactionCard({
+  transaction,
+  onShareLocation,
+  onViewLocation,
+  onComplete,
+  onRate,
+}) {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userId = user.id || user.id_user || user.user_id;
 
@@ -46,9 +52,20 @@ export default function TransactionCard({ transaction, onComplete, onRate }) {
     offerPrice: transaction.final_price,
   });
 
+  const canManageLocation =
+    transaction.status !== "selesai" && transaction.status !== "dibatalkan";
+
   const canComplete = transaction.status !== "selesai";
   const canRate =
     transaction.status === "selesai" && isBuyer && !transaction.rating;
+
+  const currentUserHasShared = Boolean(
+    transaction.current_user_has_shared_location
+  );
+
+  const shareButtonLabel = currentUserHasShared
+    ? "Lokasi Sudah Dibagikan"
+    : "Bagikan Lokasi COD";
 
   return (
     <article className={`transaction-card transaction-${transaction.status}`}>
@@ -70,7 +87,11 @@ export default function TransactionCard({ transaction, onComplete, onRate }) {
       <div className="transaction-content">
         <div className="transaction-topline">
           <span className="transaction-role">
-            {isBuyer ? "Sebagai Pembeli" : isSeller ? "Sebagai Penjual" : "Transaksi"}
+            {isBuyer
+              ? "Sebagai Pembeli"
+              : isSeller
+                ? "Sebagai Penjual"
+                : "Transaksi"}
           </span>
 
           {transaction.rating && (
@@ -111,9 +132,7 @@ export default function TransactionCard({ transaction, onComplete, onRate }) {
         )}
 
         {transaction.review && (
-          <p className="transaction-review">
-            “{transaction.review}”
-          </p>
+          <p className="transaction-review">“{transaction.review}”</p>
         )}
       </div>
 
@@ -127,6 +146,27 @@ export default function TransactionCard({ transaction, onComplete, onRate }) {
           >
             WhatsApp
           </a>
+        )}
+
+        {canManageLocation && (
+          <>
+            <button
+              type="button"
+              className="sb-btn transaction-btn-outline"
+              disabled={currentUserHasShared}
+              onClick={onShareLocation}
+            >
+              {shareButtonLabel}
+            </button>
+
+            <button
+              type="button"
+              className="sb-btn transaction-btn-outline"
+              onClick={onViewLocation}
+            >
+              Lihat Lokasi Penjual / Pembeli
+            </button>
+          </>
         )}
 
         {canComplete && (

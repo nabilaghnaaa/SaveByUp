@@ -1,19 +1,6 @@
 import AppIcon from "../../../components/ui/AppIcon";
 
-import { formatDate } from "../../../utils/formatDate";
-
 import "../styles/transactionLocationPanel.css";
-
-const getStatusLabel = (status) => {
-  const labels = {
-    waiting_buyer_confirmation: "Menunggu Konfirmasi Lokasi",
-    waiting_cod: "Menunggu COD",
-    completed: "Selesai",
-    cancelled: "Dibatalkan",
-  };
-
-  return labels[status] || "Transaksi";
-};
 
 const getMapsUrl = (location = {}) => {
   if (location.maps_url) return location.maps_url;
@@ -25,136 +12,117 @@ const getMapsUrl = (location = {}) => {
   return "";
 };
 
-function ExactLocationCard({ title, location }) {
+function ExactLocationCard({ title, location = {} }) {
   const mapsUrl = getMapsUrl(location);
 
   return (
-    <div className="transaction-location-exact-card">
-      <div className="transaction-location-card-head">
+    <article className="cod-location-card">
+      <div className="cod-location-card-icon">
+        <AppIcon name="location" />
+      </div>
+
+      <div className="cod-location-card-content">
         <span>{title}</span>
-        <strong>{location.name || "Pengguna SaveByUp"}</strong>
-      </div>
+        <h4>{location.name || "Pengguna SaveByUp"}</h4>
 
-      <p>{location.location_label || location.address || "Lokasi belum tersedia."}</p>
+        <p>
+          {location.location_label ||
+            location.address ||
+            "Lokasi belum tersedia."}
+        </p>
 
-      <div className="transaction-location-mini-grid">
-        <div>
-          <span>WhatsApp</span>
-          <strong>{location.whatsapp || "-"}</strong>
+        <div className="cod-location-info-grid">
+          <div>
+            <small>WhatsApp</small>
+            <strong>{location.whatsapp || "-"}</strong>
+          </div>
+
+          <div>
+            <small>Koordinat</small>
+            <strong>
+              {location.latitude && location.longitude
+                ? `${location.latitude}, ${location.longitude}`
+                : "-"}
+            </strong>
+          </div>
         </div>
 
-        <div>
-          <span>Koordinat</span>
-          <strong>
-            {location.latitude && location.longitude
-              ? `${location.latitude}, ${location.longitude}`
-              : "-"}
-          </strong>
-        </div>
+        {mapsUrl && (
+          <a href={mapsUrl} target="_blank" rel="noreferrer">
+            <AppIcon name="location" />
+            <span>Buka Google Maps</span>
+          </a>
+        )}
       </div>
-
-      {mapsUrl && (
-        <a href={mapsUrl} target="_blank" rel="noreferrer">
-          <AppIcon name="location" />
-          <span>Buka Maps</span>
-        </a>
-      )}
-    </div>
+    </article>
   );
 }
 
-export default function TransactionLocationPanel({
-  transaction,
-  onConfirmLocation,
-}) {
-  const locationOpened = Boolean(transaction.exact_location_available);
-  const isWaitingBuyerConfirmation =
-    transaction.status === "waiting_buyer_confirmation";
-  const isWaitingCod = transaction.status === "waiting_cod";
+export default function TransactionLocationPanel({ transaction, onClose }) {
+  const bothShared = Boolean(transaction.both_location_shared);
+  const waitingParty = transaction.waiting_location_party || "pihak lain";
 
   return (
-    <section
-      className={`transaction-location-panel ${
-        locationOpened ? "location-opened" : ""
-      }`}
-    >
-      <div className="transaction-location-head">
-        <div className="transaction-location-icon">
-          <AppIcon name="location" />
-        </div>
+    <div className="cod-location-backdrop" onClick={onClose}>
+      <section
+        className="cod-location-modal"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <button type="button" className="cod-location-close" onClick={onClose}>
+          ×
+        </button>
 
-        <div>
-          <span>Lokasi COD Privat</span>
-          <h3>{getStatusLabel(transaction.status)}</h3>
+        <div className="cod-location-modal-head">
+          <span>Detail Lokasi COD</span>
+
+          <h3>
+            {bothShared
+              ? "Lokasi Pembeli & Penjual"
+              : "Lokasi Belum Lengkap"}
+          </h3>
+
           <p>
-            Lokasi detail pembeli dan penjual hanya dibuka setelah pembeli
-            mengonfirmasi bahwa transaksi akan dilanjutkan ke tahap COD.
+            {bothShared
+              ? "Kedua pihak sudah membagikan lokasi COD. Silakan pilih titik temu yang paling nyaman."
+              : `Lokasi belum dibagikan oleh ${waitingParty}. Hubungi pihak tersebut lewat WhatsApp agar lokasi COD bisa dibuka bersama.`}
           </p>
         </div>
-      </div>
 
-      <div className="transaction-location-status">
-        <div>
-          <span>Status Lokasi</span>
-          <strong>
-            {locationOpened ? "Lokasi detail sudah dibuka" : "Masih disembunyikan"}
-          </strong>
-        </div>
+        {bothShared ? (
+          <div className="cod-location-grid">
+            <ExactLocationCard
+              title="Lokasi Pembeli"
+              location={transaction.buyer_location}
+            />
 
-        <div>
-          <span>Konfirmasi Lokasi</span>
-          <strong>
-            {transaction.location_confirmed_at
-              ? formatDate(transaction.location_confirmed_at)
-              : "-"}
-          </strong>
-        </div>
-      </div>
+            <ExactLocationCard
+              title="Lokasi Penjual"
+              location={transaction.seller_location}
+            />
+          </div>
+        ) : (
+          <div className="cod-location-empty">
+            <div className="cod-location-empty-icon">
+              <AppIcon name="location" />
+            </div>
 
-      {!locationOpened && (
-        <div className="transaction-location-privacy">
-          <strong>Lokasi masih aman</strong>
-          <p>
-            Sebelum dikonfirmasi, sistem tidak menampilkan latitude, longitude,
-            atau link maps detail dari kedua pihak.
-          </p>
+            <h4>Lokasi belum dibagikan oleh {waitingParty}.</h4>
 
-          {isWaitingBuyerConfirmation && (
+            <p>
+              Lokasi detail baru akan muncul setelah pembeli dan penjual
+              sama-sama menekan tombol <strong>Bagikan Lokasi COD</strong>.
+            </p>
+
             <button
               type="button"
               className="sb-btn sb-btn-primary"
-              onClick={onConfirmLocation}
+              onClick={onClose}
             >
-              Konfirmasi & Buka Lokasi COD
+              Mengerti
             </button>
-          )}
-        </div>
-      )}
-
-      {locationOpened && (
-        <div className="transaction-location-exact-grid">
-          <ExactLocationCard
-            title="Lokasi Pembeli"
-            location={transaction.buyer_location}
-          />
-
-          <ExactLocationCard
-            title="Lokasi Penjual"
-            location={transaction.seller_location}
-          />
-        </div>
-      )}
-
-      {isWaitingCod && locationOpened && (
-        <div className="transaction-location-next-step">
-          <strong>Langkah berikutnya</strong>
-          <p>
-            Silakan hubungi pihak terkait melalui WhatsApp, pilih titik temu
-            yang paling nyaman, lalu tandai transaksi selesai setelah COD
-            berhasil.
-          </p>
-        </div>
-      )}
-    </section>
+          </div>
+        )}
+      </section>
+    </div>
   );
 }

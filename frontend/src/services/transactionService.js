@@ -12,20 +12,18 @@ const normalizeStatus = (status = "") => {
   const value = String(status || "").toLowerCase();
 
   const map = {
-    waiting_buyer_confirmation: "waiting_buyer_confirmation",
-    menunggu_konfirmasi_pembeli: "waiting_buyer_confirmation",
+    waiting_buyer_confirmation: "menunggu_komunikasi",
+    waiting_cod: "menunggu_komunikasi",
+    menunggu_komunikasi: "menunggu_komunikasi",
 
-    waiting_cod: "waiting_cod",
-    menunggu_komunikasi: "waiting_cod",
+    completed: "selesai",
+    selesai: "selesai",
 
-    completed: "completed",
-    selesai: "completed",
-
-    cancelled: "cancelled",
-    dibatalkan: "cancelled",
+    cancelled: "dibatalkan",
+    dibatalkan: "dibatalkan",
   };
 
-  return map[value] || value || "waiting_buyer_confirmation";
+  return map[value] || value || "menunggu_komunikasi";
 };
 
 const normalizeLocation = (location = {}) => ({
@@ -37,6 +35,7 @@ const normalizeLocation = (location = {}) => ({
   longitude: toNullableNumber(location.longitude),
   has_location: Boolean(location.has_location),
   maps_url: location.maps_url || "",
+  shared: Boolean(location.shared),
 });
 
 const normalizeTransaction = (transaction = {}) => {
@@ -66,17 +65,18 @@ const normalizeTransaction = (transaction = {}) => {
     cod_location: transaction.cod_location || "",
     cod_time: transaction.cod_time || "",
 
-    buyer_latitude: toNullableNumber(transaction.buyer_latitude),
-    buyer_longitude: toNullableNumber(transaction.buyer_longitude),
-    seller_latitude: toNullableNumber(transaction.seller_latitude),
-    seller_longitude: toNullableNumber(transaction.seller_longitude),
-    seller_location_label: transaction.seller_location_label || "",
+    buyer_location_shared: Boolean(transaction.buyer_location_shared),
+    seller_location_shared: Boolean(transaction.seller_location_shared),
+    both_location_shared: Boolean(transaction.both_location_shared),
+    exact_location_available: Boolean(transaction.exact_location_available),
+    current_user_role: transaction.current_user_role || "",
+    current_user_has_shared_location: Boolean(
+      transaction.current_user_has_shared_location
+    ),
+    waiting_location_party: transaction.waiting_location_party || "",
 
     buyer_location: normalizeLocation(transaction.buyer_location),
     seller_location: normalizeLocation(transaction.seller_location),
-
-    location_revealed: Boolean(Number(transaction.location_revealed || 0)),
-    exact_location_available: Boolean(transaction.exact_location_available),
 
     status,
     rating: transaction.rating,
@@ -84,7 +84,9 @@ const normalizeTransaction = (transaction = {}) => {
 
     created_at: transaction.created_at,
     completed_at: transaction.completed_at,
-    location_confirmed_at: transaction.location_confirmed_at,
+
+    buyer_location_shared_at: transaction.buyer_location_shared_at,
+    seller_location_shared_at: transaction.seller_location_shared_at,
   };
 };
 
@@ -97,8 +99,8 @@ export const getTransactions = async () => {
     : [];
 };
 
-export const confirmTransactionLocation = async (id) => {
-  const response = await API.patch(`/transactions/${id}/confirm-location`);
+export const shareTransactionLocation = async (id) => {
+  const response = await API.patch(`/transactions/${id}/share-location`);
 
   return response.data;
 };

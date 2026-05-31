@@ -2,7 +2,7 @@ const express = require("express");
 
 const {
   getTransactions,
-  confirmTransactionLocation,
+  shareTransactionLocation,
   completeTransaction,
   rateTransaction,
 } = require("../controllers/transactionController");
@@ -15,7 +15,7 @@ router.use(authMiddleware);
 
 router.get("/", getTransactions);
 
-router.patch("/:id/confirm-location", confirmTransactionLocation);
+router.patch("/:id/share-location", shareTransactionLocation);
 
 router.patch("/:id/complete", completeTransaction);
 
