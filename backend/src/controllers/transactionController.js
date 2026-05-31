@@ -1,5 +1,9 @@
 const db = require("../config/db");
 
+const {
+  buildTransactionLocations,
+} = require("../services/location.service");
+
 const getUserId = (req) => {
   return req.user?.id || req.user?.user_id || req.userId;
 };
@@ -16,16 +20,28 @@ const createNotification = async (userId, title, message, type = "system") => {
 };
 
 const maskTransactionLocation = (transaction = {}) => {
-  const isLocationRevealed = Number(transaction.location_revealed || 0) === 1;
+  const locationData = buildTransactionLocations(transaction);
 
   return {
     ...transaction,
-    exact_location_available: isLocationRevealed,
 
-    buyer_latitude: isLocationRevealed ? transaction.buyer_latitude : null,
-    buyer_longitude: isLocationRevealed ? transaction.buyer_longitude : null,
-    seller_latitude: isLocationRevealed ? transaction.seller_latitude : null,
-    seller_longitude: isLocationRevealed ? transaction.seller_longitude : null,
+    exact_location_available: locationData.exact_location_available,
+
+    buyer_latitude: locationData.exact_location_available
+      ? transaction.buyer_latitude
+      : null,
+    buyer_longitude: locationData.exact_location_available
+      ? transaction.buyer_longitude
+      : null,
+    seller_latitude: locationData.exact_location_available
+      ? transaction.seller_latitude
+      : null,
+    seller_longitude: locationData.exact_location_available
+      ? transaction.seller_longitude
+      : null,
+
+    buyer_location: locationData.buyer_location,
+    seller_location: locationData.seller_location,
 
     seller_location_label: transaction.seller_location_label || null,
   };
@@ -44,12 +60,19 @@ const getTransactions = async (req, res) => {
     const [transactions] = await db.query(
       `SELECT 
         t.*,
+
         mp.name AS product_name,
         mp.image_url AS product_image,
+
         buyer.name AS buyer_name,
         buyer.whatsapp AS buyer_whatsapp,
+        buyer.address AS buyer_address,
+        buyer.location_label AS buyer_location_label,
+
         seller.name AS seller_name,
-        seller.whatsapp AS seller_whatsapp
+        seller.whatsapp AS seller_whatsapp,
+        seller.address AS seller_address,
+        seller.location_label AS seller_profile_location_label
        FROM transactions t
        JOIN marketplace_products mp ON t.product_id = mp.id
        JOIN users buyer ON t.buyer_id = buyer.id
@@ -103,6 +126,20 @@ const confirmTransactionLocation = async (req, res) => {
     if (transaction.status !== "waiting_buyer_confirmation") {
       return res.status(400).json({
         message: "Transaksi ini tidak menunggu konfirmasi pembeli.",
+      });
+    }
+
+    if (!transaction.buyer_latitude || !transaction.buyer_longitude) {
+      return res.status(400).json({
+        message:
+          "Lokasi pembeli belum tersedia. Silakan lengkapi lokasi di profil terlebih dahulu.",
+      });
+    }
+
+    if (!transaction.seller_latitude || !transaction.seller_longitude) {
+      return res.status(400).json({
+        message:
+          "Lokasi penjual belum tersedia. Penjual perlu melengkapi lokasi di profil terlebih dahulu.",
       });
     }
 

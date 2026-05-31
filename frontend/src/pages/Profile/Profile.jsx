@@ -4,6 +4,7 @@ import AppShell from "../../components/layout/AppShell";
 import PageHeader from "../../components/ui/PageHeader";
 
 import { getProfile, updateProfile } from "../../services/profileService";
+import { isValidCoordinate } from "../../services/locationService";
 
 import ProfileCard from "./components/ProfileCard";
 
@@ -16,6 +17,11 @@ const initialProfile = {
   phone: "",
   whatsapp: "",
   address: "",
+  latitude: "",
+  longitude: "",
+  location_label: "",
+  location_updated_at: "",
+  has_location: false,
   photo: "",
   photo_url: "",
   avatar_url: "",
@@ -31,6 +37,14 @@ const normalizePhoneNumber = (value = "") => {
   return String(value || "")
     .replace(/[^\d+]/g, "")
     .replace(/(?!^)\+/g, "");
+};
+
+const normalizeCoordinateInput = (value) => {
+  if (value === null || value === undefined || value === "") return "";
+
+  const parsed = Number(value);
+
+  return Number.isFinite(parsed) ? parsed : "";
 };
 
 export default function Profile() {
@@ -57,6 +71,10 @@ export default function Profile() {
       {
         label: "Area COD",
         complete: Boolean(String(profile.address || "").trim()),
+      },
+      {
+        label: "Titik Lokasi",
+        complete: isValidCoordinate(profile.latitude, profile.longitude),
       },
       {
         label: "Foto",
@@ -98,6 +116,10 @@ export default function Profile() {
         return {
           ...initialProfile,
           ...data,
+          latitude: normalizeCoordinateInput(data.latitude),
+          longitude: normalizeCoordinateInput(data.longitude),
+          location_label: data.location_label || "",
+          location_updated_at: data.location_updated_at || "",
           photoFile: null,
           photoPreview: "",
         };
@@ -130,6 +152,16 @@ export default function Profile() {
     setProfile((prev) => ({
       ...prev,
       [name]: value,
+    }));
+  };
+
+  const handleLocationChange = (location) => {
+    setProfile((prev) => ({
+      ...prev,
+      latitude: location.latitude,
+      longitude: location.longitude,
+      location_label: location.location_label,
+      has_location: isValidCoordinate(location.latitude, location.longitude),
     }));
   };
 
@@ -190,6 +222,8 @@ export default function Profile() {
     const whatsapp = normalizePhoneNumber(profile.whatsapp);
     const address = String(profile.address || "").trim();
     const bio = String(profile.bio || "").trim();
+    const hasLatitude = profile.latitude !== null && profile.latitude !== "";
+    const hasLongitude = profile.longitude !== null && profile.longitude !== "";
 
     if (!name) {
       return "Nama wajib diisi.";
@@ -227,6 +261,14 @@ export default function Profile() {
       return "Area COD maksimal 220 karakter.";
     }
 
+    if ((hasLatitude || hasLongitude) && !isValidCoordinate(profile.latitude, profile.longitude)) {
+      return "Titik lokasi GPS tidak valid. Gunakan tombol lokasi atau isi latitude dan longitude dengan benar.";
+    }
+
+    if (String(profile.location_label || "").length > 255) {
+      return "Label lokasi maksimal 255 karakter.";
+    }
+
     if (bio.length > 160) {
       return "Bio maksimal 160 karakter.";
     }
@@ -253,6 +295,9 @@ export default function Profile() {
         phone: normalizePhoneNumber(profile.phone),
         whatsapp: normalizePhoneNumber(profile.whatsapp),
         address: profile.address.trim(),
+        latitude: profile.latitude,
+        longitude: profile.longitude,
+        location_label: String(profile.location_label || "").trim(),
         bio: String(profile.bio || "").trim(),
         photoFile: profile.photoFile,
       });
@@ -269,6 +314,12 @@ export default function Profile() {
         phone: updatedProfile.phone || profile.phone,
         whatsapp: updatedProfile.whatsapp || profile.whatsapp,
         address: updatedProfile.address || profile.address,
+        latitude: updatedProfile.latitude ?? profile.latitude,
+        longitude: updatedProfile.longitude ?? profile.longitude,
+        location_label: updatedProfile.location_label || profile.location_label,
+        has_location:
+          updatedProfile.has_location ||
+          isValidCoordinate(profile.latitude, profile.longitude),
         avatar_url:
           updatedProfile.photo_url ||
           updatedProfile.avatar_url ||
@@ -288,7 +339,7 @@ export default function Profile() {
 
       localStorage.setItem("user", JSON.stringify(updatedUser));
 
-      showMessage("Profil berhasil diperbarui.", "success");
+      showMessage("Profil dan lokasi berhasil diperbarui.", "success");
 
       await fetchProfile();
     } catch (error) {
@@ -312,7 +363,7 @@ export default function Profile() {
         <PageHeader
           label="Profil"
           title="Profil Pengguna"
-          description="Lengkapi identitas, foto profil, WhatsApp, area COD, dan bio agar transaksi marketplace lebih jelas dan terpercaya."
+          description="Lengkapi identitas, foto profil, WhatsApp, area COD, bio, dan titik lokasi agar estimasi jarak marketplace lebih akurat."
           action={
             <button
               type="button"
@@ -330,8 +381,9 @@ export default function Profile() {
             <span>User Trust Profile</span>
             <h2>Profil yang rapi bikin transaksi lebih dipercaya.</h2>
             <p>
-              Foto profil, WhatsApp aktif, area COD, bio singkat, dan rating
-              membantu pengguna lain mengenali kamu sebelum melakukan transaksi.
+              Foto profil, WhatsApp aktif, area COD, bio singkat, rating, dan
+              titik lokasi membantu sistem menampilkan estimasi jarak tanpa
+              membuka alamat detail sebelum transaksi disetujui.
             </p>
           </div>
 
@@ -369,6 +421,8 @@ export default function Profile() {
             onChange={handleChange}
             onPhoneChange={handlePhoneChange}
             onPhotoChange={handlePhotoChange}
+            onLocationChange={handleLocationChange}
+            onMessage={showMessage}
             onSubmit={handleSubmit}
           />
         )}

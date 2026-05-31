@@ -73,8 +73,7 @@ export default function Marketplace() {
     } catch (error) {
       console.error("Gagal mengambil produk marketplace:", error);
       setMessage(
-        error.response?.data?.message ||
-          "Gagal mengambil data marketplace."
+        error.response?.data?.message || "Gagal mengambil data marketplace."
       );
     } finally {
       setLoading(false);
@@ -112,6 +111,7 @@ export default function Marketplace() {
   }, [ownerFilter, statusFilter, setSearchParams]);
 
   const currentUserId = profile?.id || profile?.user_id || profile?.id_user;
+  const profileHasLocation = Boolean(profile?.has_location);
 
   const productStats = useMemo(() => {
     const mine = products.filter(
@@ -138,12 +138,14 @@ export default function Marketplace() {
     const keyword = search.toLowerCase().trim();
 
     return products.filter((product) => {
+      const safeLocationLabel = product.seller_location_label || "";
+
       const matchSearch =
         !keyword ||
         product.name?.toLowerCase().includes(keyword) ||
         product.category?.toLowerCase().includes(keyword) ||
         product.seller_name?.toLowerCase().includes(keyword) ||
-        product.seller_address?.toLowerCase().includes(keyword);
+        safeLocationLabel.toLowerCase().includes(keyword);
 
       const matchCategory =
         categoryFilter === "semua" || product.category === categoryFilter;
@@ -207,7 +209,7 @@ export default function Marketplace() {
           description={
             ownerFilter === "tokoku"
               ? "Kelola makanan yang sudah kamu tawarkan di marketplace. Kamu bisa melihat produk aktif, dalam proses, atau riwayat produk yang sudah selesai."
-              : "Temukan makanan layak konsumsi dari mahasiswa lain, cek tanggal kedaluwarsa, lalu ajukan pembelian atau negosiasi harga secara aman."
+              : "Temukan makanan layak konsumsi dari mahasiswa lain, cek tanggal kedaluwarsa, lihat estimasi jarak, lalu ajukan pembelian secara aman."
           }
           action={
             <button
@@ -221,6 +223,13 @@ export default function Marketplace() {
           }
         />
 
+        {!profileHasLocation && ownerFilter !== "tokoku" && (
+          <div className="marketplace-message">
+            Lengkapi titik lokasi di profil agar estimasi jarak produk bisa
+            dihitung lebih akurat.
+          </div>
+        )}
+
         <section className="marketplace-hero">
           <div className="marketplace-hero-content">
             <span>Save Food, Share Value</span>
@@ -232,7 +241,7 @@ export default function Marketplace() {
             <p>
               {ownerFilter === "tokoku"
                 ? "Halaman TokoKu membantu kamu melihat produk milikmu sendiri, termasuk stok yang masih tersedia dan produk yang sedang dalam proses pengajuan."
-                : "Marketplace SaveByUp membantu mahasiswa kos menawarkan makanan mendekati kedaluwarsa dengan sistem pengajuan, negosiasi, dan komunikasi lanjutan setelah disetujui."}
+                : "Marketplace SaveByUp menampilkan estimasi jarak tanpa membuka alamat detail penjual sebelum transaksi disetujui."}
             </p>
           </div>
 

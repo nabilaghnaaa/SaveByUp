@@ -1,3 +1,5 @@
+import LocationPicker from "../../../components/location/LocationPicker";
+
 import "../styles/profile.css";
 
 function getInitial(name) {
@@ -12,10 +14,17 @@ export default function ProfileCard({
   onChange,
   onPhoneChange,
   onPhotoChange,
+  onLocationChange,
+  onMessage,
   onSubmit,
 }) {
-  const photoSource =
-    profile.photoPreview || profile.photo_url || profile.avatar_url || "";
+  const avatarSource =
+    profile.photoPreview || profile.photo_url || profile.avatar_url || profile.photo;
+
+  const missingText =
+    completeness?.missing?.length > 0
+      ? completeness.missing.join(", ")
+      : "Semua data penting sudah terisi.";
 
   return (
     <form className="profile-page" onSubmit={onSubmit}>
@@ -24,21 +33,20 @@ export default function ProfileCard({
 
         <div className="profile-avatar-zone">
           <div className="profile-avatar">
-            {photoSource ? (
-              <img src={photoSource} alt={profile.name || "Foto profil"} />
+            {avatarSource ? (
+              <img src={avatarSource} alt={profile.name || "Foto profil"} />
             ) : (
-              <span>{getInitial(profile.name)}</span>
+              getInitial(profile.name)
             )}
           </div>
 
           <label className="profile-photo-button">
-            <span>Ganti Foto</span>
+            Ganti Foto
             <input
               type="file"
               accept="image/jpeg,image/jpg,image/png,image/webp"
-              onChange={(event) =>
-                onPhotoChange(event.target.files?.[0] || null)
-              }
+              disabled={saving}
+              onChange={(event) => onPhotoChange(event.target.files?.[0])}
             />
           </label>
         </div>
@@ -51,28 +59,23 @@ export default function ProfileCard({
 
         <div className="profile-rating-card">
           <div>
-            <span>Rating Akun</span>
+            <span>Rating</span>
             <strong>{Number(profile.rating || 0).toFixed(1)}</strong>
           </div>
-
-          <small>/ 5 berdasarkan transaksi selesai</small>
+          <small>/ 5 Rating dari transaksi selesai</small>
         </div>
 
         <div className="profile-completion-card">
           <div className="profile-completion-head">
             <span>Kelengkapan</span>
-            <strong>{completeness.percent}%</strong>
+            <strong>{completeness?.percent || 0}%</strong>
           </div>
 
           <div className="profile-completion-bar">
-            <div style={{ width: `${completeness.percent}%` }} />
+            <div style={{ width: `${completeness?.percent || 0}%` }} />
           </div>
 
-          {completeness.missing.length > 0 ? (
-            <small>Belum lengkap: {completeness.missing.join(", ")}</small>
-          ) : (
-            <small>Profil kamu sudah lengkap.</small>
-          )}
+          <small>Kurang: {missingText}</small>
         </div>
 
         <div className="profile-mini-grid">
@@ -85,13 +88,23 @@ export default function ProfileCard({
             <span>Area COD</span>
             <strong>{profile.address ? "Tersedia" : "Belum diisi"}</strong>
           </div>
+
+          <div>
+            <span>Titik GPS</span>
+            <strong>{profile.has_location ? "Tersimpan" : "Belum ada"}</strong>
+          </div>
+
+          <div>
+            <span>Privasi Lokasi</span>
+            <strong>Aman</strong>
+          </div>
         </div>
 
         <div className="profile-tips">
           <span>Tips Profil</span>
           <p>
-            Gunakan foto yang jelas, nomor WhatsApp aktif, dan area COD yang
-            mudah dikenali agar calon pembeli atau penjual lebih percaya.
+            Titik GPS hanya dipakai untuk menghitung estimasi jarak. Lokasi
+            detail baru dibuka setelah transaksi disetujui dan masuk tahap COD.
           </p>
         </div>
       </aside>
@@ -99,10 +112,10 @@ export default function ProfileCard({
       <section className="profile-form">
         <div className="profile-form-header">
           <span>Informasi Akun</span>
-          <h3>Lengkapi data profil dan kontak</h3>
+          <h3>Data profil dan kontak</h3>
           <p>
-            Data ini dipakai untuk marketplace, pengajuan pembelian, komunikasi
-            WhatsApp, rating, dan area COD.
+            Pastikan data kamu benar agar pengguna lain dapat mengenali penjual
+            atau pembeli dengan lebih jelas.
           </p>
         </div>
 
@@ -112,11 +125,9 @@ export default function ProfileCard({
             <input
               type="text"
               value={profile.name}
-              placeholder="Masukkan nama lengkap"
-              maxLength="80"
+              disabled={saving}
               onChange={(event) => onChange("name", event.target.value)}
             />
-            <small>Minimal 3 karakter dan maksimal 80 karakter.</small>
           </div>
 
           <div className="profile-group">
@@ -129,11 +140,11 @@ export default function ProfileCard({
             <label>Nomor HP</label>
             <input
               type="text"
-              value={profile.phone || ""}
-              placeholder="Contoh: 6281234567890"
+              value={profile.phone}
+              placeholder="6281234567890"
+              disabled={saving}
               onChange={(event) => onPhoneChange("phone", event.target.value)}
             />
-            <small>Opsional. Boleh disamakan dengan nomor WhatsApp.</small>
           </div>
 
           <div className="profile-group">
@@ -141,59 +152,66 @@ export default function ProfileCard({
             <input
               type="text"
               value={profile.whatsapp}
-              placeholder="Contoh: 6281234567890"
+              placeholder="6281234567890"
+              disabled={saving}
               onChange={(event) =>
                 onPhoneChange("whatsapp", event.target.value)
               }
             />
             <small>
-              Wajib diisi. Gunakan format 62 agar tombol WhatsApp langsung
+              Gunakan format internasional agar tombol WhatsApp bisa langsung
               terbuka.
             </small>
           </div>
 
           <div className="profile-group profile-group-full">
-            <label>Alamat Kos / Area COD</label>
-            <textarea
-              rows="5"
+            <label>Area COD</label>
+            <input
+              type="text"
               value={profile.address}
-              placeholder="Contoh: Area Tamantirto, dekat Kampus UMY"
-              maxLength="220"
+              placeholder="Contoh: Area Tamantirto dekat UMY"
+              disabled={saving}
               onChange={(event) => onChange("address", event.target.value)}
             />
             <small>
-              Tidak harus alamat lengkap. Cukup tulis area COD yang aman dan
-              mudah ditemukan. Maksimal 220 karakter.
+              Area ini boleh dibuat umum. Detail titik GPS tetap disembunyikan
+              sampai transaksi disetujui.
             </small>
           </div>
 
           <div className="profile-group profile-group-full">
             <label>Bio Singkat</label>
             <textarea
-              rows="4"
-              value={profile.bio || ""}
-              placeholder="Contoh: Mahasiswa UMY, biasa COD sekitar kampus atau kos."
-              maxLength="160"
+              value={profile.bio}
+              placeholder="Contoh: Mahasiswa UMY, sering COD area kampus."
+              disabled={saving}
               onChange={(event) => onChange("bio", event.target.value)}
             />
-            <small>{String(profile.bio || "").length}/160 karakter</small>
+            <small>Bio maksimal 160 karakter.</small>
+          </div>
+
+          <div className="profile-group profile-group-full">
+            <LocationPicker
+              latitude={profile.latitude}
+              longitude={profile.longitude}
+              locationLabel={profile.location_label}
+              disabled={saving}
+              onChange={onLocationChange}
+              onMessage={onMessage}
+            />
           </div>
         </div>
 
         <div className="profile-actions">
           <div>
-            <strong>Pastikan data sudah benar</strong>
+            <strong>Simpan perubahan profil</strong>
             <p>
-              Profil lengkap membantu proses transaksi SaveByUp jadi lebih aman
-              dan jelas.
+              Data lokasi akan disimpan sebagai titik privat untuk estimasi
+              jarak marketplace.
             </p>
           </div>
 
-          <button
-            type="submit"
-            className="sb-btn sb-btn-primary"
-            disabled={saving}
-          >
+          <button type="submit" className="sb-btn sb-btn-primary" disabled={saving}>
             {saving ? "Menyimpan..." : "Simpan Profil"}
           </button>
         </div>

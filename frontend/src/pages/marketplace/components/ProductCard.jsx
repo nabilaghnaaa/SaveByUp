@@ -32,6 +32,11 @@ export default function ProductCard({ product, currentUserId }) {
   const price = getProductPrice(product);
   const distanceTone = getDistanceTone(product.distance_km);
 
+  const sellerPublicArea =
+    product.seller_location_label ||
+    product.public_location_label ||
+    "Area COD belum diisi";
+
   return (
     <article className={`product-card ${isMine ? "product-card-own" : ""}`}>
       <div className="product-card-image">
@@ -107,9 +112,11 @@ export default function ProductCard({ product, currentUserId }) {
               {isMine ? " (Kamu)" : ""}
             </strong>
             <small>
-              {product.seller_location_label ||
-                product.seller_address ||
-                "Area COD belum diisi"}
+              {isMine
+                ? product.seller_location_label ||
+                  product.seller_address ||
+                  "Area COD belum diisi"
+                : sellerPublicArea}
             </small>
           </div>
         </div>

@@ -29,6 +29,21 @@ import {
 
 import "./styles/productDetail.css";
 
+const sanitizeProductForPrivacy = (product, productIsMine) => {
+  if (!product || productIsMine) return product;
+
+  return {
+    ...product,
+    seller_address: "",
+    seller_latitude: null,
+    seller_longitude: null,
+    seller_location_label:
+      product.seller_location_label ||
+      product.public_location_label ||
+      "Area COD disembunyikan",
+  };
+};
+
 export default function MarketplaceDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -83,28 +98,32 @@ export default function MarketplaceDetail() {
     fetchProduct();
   }, [id]);
 
-  const currentUserId = profile?.id;
+  const currentUserId = profile?.id || profile?.user_id || profile?.id_user;
   const productIsMine = product ? isOwnProduct(product, currentUserId) : false;
-  const productCanBeBought = product ? canBuyProduct(product, currentUserId) : false;
+  const safeProduct = sanitizeProductForPrivacy(product, productIsMine);
 
-  const productQuantity = toNumber(product?.quantity);
-  const productPrice = product ? getProductPrice(product) : 0;
+  const productCanBeBought = safeProduct
+    ? canBuyProduct(safeProduct, currentUserId)
+    : false;
+
+  const productQuantity = toNumber(safeProduct?.quantity);
+  const productPrice = safeProduct ? getProductPrice(safeProduct) : 0;
   const editQuantity = toNumber(editForm.quantity);
   const editPrice = toNumber(editForm.price);
   const editTotal = editQuantity * editPrice;
 
   const statusProgress = useMemo(() => {
-    return getStatusProgress(product?.status);
-  }, [product?.status]);
+    return getStatusProgress(safeProduct?.status);
+  }, [safeProduct?.status]);
 
   const getDisabledReason = () => {
-    if (!product) return "";
+    if (!safeProduct) return "";
 
     if (productIsMine) {
       return "Produk ini adalah produk yang kamu jual sendiri, jadi kamu tidak bisa mengajukan pembelian.";
     }
 
-    if (product.status !== "tersedia") {
+    if (safeProduct.status !== "tersedia") {
       return "Produk ini sedang tidak tersedia untuk pengajuan baru.";
     }
 
@@ -120,7 +139,7 @@ export default function MarketplaceDetail() {
       return "Kamu tidak bisa mengedit produk milik orang lain.";
     }
 
-    if (product?.status !== "tersedia") {
+    if (safeProduct?.status !== "tersedia") {
       return "Produk hanya bisa diedit ketika statusnya masih tersedia.";
     }
 
@@ -151,12 +170,12 @@ export default function MarketplaceDetail() {
       "Yakin ingin membatalkan produk ini dari marketplace?"
     );
 
-    if (!confirmCancel || !product) return;
+    if (!confirmCancel || !safeProduct) return;
 
     try {
       setMessage("");
 
-      await cancelMarketplaceProduct(product.id);
+      await cancelMarketplaceProduct(safeProduct.id);
 
       setMessage("Produk berhasil dibatalkan dari marketplace.");
 
@@ -187,7 +206,7 @@ export default function MarketplaceDetail() {
       setSavingEdit(true);
       setMessage("");
 
-      await updateMarketplaceProduct(product.id, {
+      await updateMarketplaceProduct(safeProduct.id, {
         quantity: editQuantity,
         price: editPrice,
         description: String(editForm.description || "").trim(),
@@ -219,11 +238,11 @@ export default function MarketplaceDetail() {
 
         <PageHeader
           label={productIsMine ? "Kelola Produk" : "Detail Produk"}
-          title={product?.name || "Detail Produk Marketplace"}
+          title={safeProduct?.name || "Detail Produk Marketplace"}
           description={
             productIsMine
               ? "Kelola produk yang kamu tawarkan, ubah jumlah jual, perbarui harga, atau batalkan dari marketplace."
-              : "Periksa kondisi, stok, tanggal kedaluwarsa, jarak penjual, dan profil penjual sebelum mengajukan pembelian."
+              : "Periksa kondisi, stok, tanggal kedaluwarsa, estimasi jarak, dan profil penjual sebelum mengajukan pembelian. Lokasi detail baru dibuka setelah transaksi disetujui."
           }
           action={
             <button
@@ -245,7 +264,7 @@ export default function MarketplaceDetail() {
             <h3>Memuat detail produk...</h3>
             <p>Sedang mengambil informasi produk marketplace.</p>
           </section>
-        ) : message && !product ? (
+        ) : message && !safeProduct ? (
           <section className="product-detail-loading">
             <div className="product-loader-icon product-loader-danger">
               <AppIcon name="warning" size={31} />
@@ -263,21 +282,30 @@ export default function MarketplaceDetail() {
             </button>
           </section>
         ) : (
-          product && (
+          safeProduct && (
             <>
               <section className="product-detail-page">
                 <MarketplaceProductAside
-                  product={product}
+                  product={safeProduct}
                   productIsMine={productIsMine}
                 />
 
                 <section className="product-detail-content">
                   <MarketplaceProductSummary
-                    product={product}
+                    product={safeProduct}
                     productIsMine={productIsMine}
                     productPrice={productPrice}
                     statusProgress={statusProgress}
                   />
+
+                  {!productIsMine && (
+                    <div className="product-detail-message">
+                      Lokasi detail penjual disembunyikan. Setelah pengajuan
+                      disetujui dan pembeli mengonfirmasi lokasi COD, pembeli
+                      dan penjual dapat melihat titik lokasi satu sama lain di
+                      halaman transaksi.
+                    </div>
+                  )}
 
                   {message && (
                     <div className="product-detail-message">{message}</div>
@@ -285,14 +313,14 @@ export default function MarketplaceDetail() {
 
                   {productIsMine ? (
                     <MarketplaceOwnerPanel
-                      product={product}
+                      product={safeProduct}
                       editMode={editMode}
                       onToggleEdit={() => setEditMode((prev) => !prev)}
                       onCancelSell={handleCancelSell}
                     />
                   ) : (
                     <MarketplaceBuyerPanel
-                      product={product}
+                      product={safeProduct}
                       productQuantity={productQuantity}
                       productCanBeBought={productCanBeBought}
                       disabledReason={disabledReason}
@@ -302,7 +330,7 @@ export default function MarketplaceDetail() {
 
                   {productIsMine && editMode && (
                     <MarketplaceEditProductForm
-                      product={product}
+                      product={safeProduct}
                       editForm={editForm}
                       editTotal={editTotal}
                       savingEdit={savingEdit}
@@ -316,7 +344,7 @@ export default function MarketplaceDetail() {
 
               {showNegotiation && (
                 <NegotiationModal
-                  product={product}
+                  product={safeProduct}
                   currentUserId={currentUserId}
                   onClose={() => setShowNegotiation(false)}
                   onSuccess={fetchProduct}
