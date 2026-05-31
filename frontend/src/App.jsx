@@ -8,6 +8,7 @@ import Register from "./pages/Auth/register/Register";
 import Dashboard from "./pages/Dashboard/Dashboard";
 
 import FoodForm from "./pages/Foods/FoodForm";
+import FoodStatusList from "./pages/Foods/FoodStatusList";
 
 import Marketplace from "./pages/marketplace/Marketplace";
 import MarketplaceDetail from "./pages/marketplace/MarketplaceDetail";
@@ -76,6 +77,15 @@ function App() {
         element={
           <ProtectedRoute>
             <FoodForm />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/foods/status/:status"
+        element={
+          <ProtectedRoute>
+            <FoodStatusList />
           </ProtectedRoute>
         }
       />

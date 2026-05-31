@@ -1,228 +1,275 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const FRAME_COUNT = 60;
 
-// Kalau awalnya kebalik, ubah true jadi false.
-// true = awal pakai lemari-open_060.jpg, akhir pakai lemari-open_001.jpg
-// false = awal pakai lemari-open_001.jpg, akhir pakai lemari-open_060.jpg
+// Kalau hasilnya masih kebalik, ubah true jadi false.
 const REVERSE_FRAMES = false;
 
-const getFrameSrc = (index) => {
+const currentFrame = (index) => {
   const realIndex = REVERSE_FRAMES ? FRAME_COUNT + 1 - index : index;
   const frameNumber = String(realIndex).padStart(3, "0");
 
-  return `/landing-frames/lemari-open_${frameNumber}.jpg`;
+  return new URL(
+    `../../../assets/landing-frames/lemari-open_${frameNumber}.jpg`,
+    import.meta.url
+  ).href;
 };
 
 export default function LandingFrameHero() {
   const sectionRef = useRef(null);
   const canvasRef = useRef(null);
-  const contentRef = useRef(null);
   const dimRef = useRef(null);
-  const hintRef = useRef(null);
+  const contentRef = useRef(null);
+  const scrollHintRef = useRef(null);
   const loaderRef = useRef(null);
-
-  const imagesRef = useRef([]);
-  const currentFrameRef = useRef(1);
-  const targetFrameRef = useRef(1);
-  const animationRef = useRef(null);
-  const isReadyRef = useRef(false);
 
   useEffect(() => {
     const section = sectionRef.current;
     const canvas = canvasRef.current;
-    const content = contentRef.current;
     const dim = dimRef.current;
-    const hint = hintRef.current;
+    const content = contentRef.current;
+    const scrollHint = scrollHintRef.current;
     const loader = loaderRef.current;
 
-    if (!section || !canvas || !content || !dim || !hint || !loader) return;
+    if (!section || !canvas || !dim || !content || !scrollHint || !loader) {
+      return;
+    }
 
-    const ctx = canvas.getContext("2d");
+    const context = canvas.getContext("2d");
+    const images = [];
+    const frame = { index: 1 };
+
+    let loadedImages = 0;
+    let gsapContext;
 
     const setCanvasSize = () => {
-      const ratio = window.devicePixelRatio || 1;
+      const pixelRatio = window.devicePixelRatio || 1;
 
-      canvas.width = window.innerWidth * ratio;
-      canvas.height = window.innerHeight * ratio;
+      canvas.width = window.innerWidth * pixelRatio;
+      canvas.height = window.innerHeight * pixelRatio;
 
       canvas.style.width = `${window.innerWidth}px`;
       canvas.style.height = `${window.innerHeight}px`;
 
-      ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+      context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
     };
 
-    const drawCover = (img) => {
-      if (!img) return;
+    const drawImageCover = (img) => {
+      if (!img || !img.complete) return;
 
       const canvasWidth = window.innerWidth;
       const canvasHeight = window.innerHeight;
 
-      const imgWidth = img.width;
-      const imgHeight = img.height;
+      const imageWidth = img.width;
+      const imageHeight = img.height;
 
-      const scale = Math.max(canvasWidth / imgWidth, canvasHeight / imgHeight);
+      const scale = Math.max(
+        canvasWidth / imageWidth,
+        canvasHeight / imageHeight
+      );
 
-      const drawWidth = imgWidth * scale;
-      const drawHeight = imgHeight * scale;
+      const drawWidth = imageWidth * scale;
+      const drawHeight = imageHeight * scale;
 
       const x = (canvasWidth - drawWidth) / 2;
       const y = (canvasHeight - drawHeight) / 2;
 
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      ctx.drawImage(img, x, y, drawWidth, drawHeight);
+      context.clearRect(0, 0, canvasWidth, canvasHeight);
+      context.drawImage(img, x, y, drawWidth, drawHeight);
     };
 
-    const render = () => {
-      const index = Math.round(currentFrameRef.current);
-      const safeIndex = Math.min(FRAME_COUNT, Math.max(1, index));
-      const img = imagesRef.current[safeIndex];
+    const renderFrame = (index = frame.index) => {
+      const currentIndex = Math.min(
+        FRAME_COUNT,
+        Math.max(1, Math.round(index))
+      );
 
-      if (img && img.complete) {
-        drawCover(img);
+      drawImageCover(images[currentIndex]);
+    };
+
+    const syncCurrentFrame = () => {
+      renderFrame(frame.index);
+    };
+
+    const setupAnimation = () => {
+      if (gsapContext) {
+        gsapContext.revert();
       }
 
-      const progress = (safeIndex - 1) / (FRAME_COUNT - 1);
+      gsapContext = gsap.context(() => {
+        gsap.set(content, {
+          opacity: 0,
+          y: 30,
+          scale: 0.98,
+          filter: "blur(8px)",
+          pointerEvents: "none",
+        });
 
-      if (progress >= 0.86) {
-        content.classList.add("is-visible");
-        dim.classList.add("is-visible");
-        hint.classList.add("is-hidden");
-      } else {
-        content.classList.remove("is-visible");
-        dim.classList.remove("is-visible");
-        hint.classList.remove("is-hidden");
-      }
-    };
+        gsap.set(dim, {
+          opacity: 0,
+        });
 
-    const animate = () => {
-      const current = currentFrameRef.current;
-      const target = targetFrameRef.current;
+        gsap.set(scrollHint, {
+          opacity: 1,
+          y: 0,
+        });
 
-      currentFrameRef.current += (target - current) * 0.18;
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: section,
+            start: "top top",
+            end: "+=1800",
+            scrub: 1,
+            pin: true,
+            pinSpacing: false,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+          },
+        });
 
-      if (Math.abs(target - current) < 0.03) {
-        currentFrameRef.current = target;
-      }
+        tl.to(frame, {
+          index: FRAME_COUNT,
+          snap: "index",
+          ease: "none",
+          duration: 4,
+          onUpdate: syncCurrentFrame,
+        });
 
-      render();
+        tl.to(
+          scrollHint,
+          {
+            opacity: 0,
+            y: 14,
+            duration: 0.35,
+            ease: "power2.out",
+          },
+          "-=0.65"
+        );
 
-      animationRef.current = requestAnimationFrame(animate);
-    };
+        tl.to(
+          dim,
+          {
+            opacity: 1,
+            duration: 0.45,
+            ease: "power2.out",
+          },
+          "-=0.45"
+        );
 
-    const updateTargetFrame = (delta) => {
-      if (!isReadyRef.current) return;
-
-      const nextFrame = targetFrameRef.current + delta;
-      targetFrameRef.current = Math.min(FRAME_COUNT, Math.max(1, nextFrame));
-    };
-
-    const handleWheel = (event) => {
-      event.preventDefault();
-
-      const direction = event.deltaY > 0 ? 1 : -1;
-
-      // Atur kecepatan scroll di sini
-      // makin besar makin cepat buka
-      updateTargetFrame(direction * 2.2);
-    };
-
-    let touchStartY = 0;
-
-    const handleTouchStart = (event) => {
-      touchStartY = event.touches[0].clientY;
-    };
-
-    const handleTouchMove = (event) => {
-      event.preventDefault();
-
-      const currentY = event.touches[0].clientY;
-      const diff = touchStartY - currentY;
-
-      updateTargetFrame(diff * 0.08);
-      touchStartY = currentY;
+        tl.to(
+          content,
+          {
+            opacity: 1,
+            y: 0,
+            scale: 1,
+            filter: "blur(0px)",
+            pointerEvents: "auto",
+            duration: 0.55,
+            ease: "power3.out",
+          },
+          "-=0.25"
+        );
+      }, section);
     };
 
     const preloadImages = () => {
-      let loaded = 0;
-
       for (let i = 1; i <= FRAME_COUNT; i++) {
         const img = new Image();
-        img.src = getFrameSrc(i);
+        img.decoding = "sync";
+        img.src = currentFrame(i);
 
         img.onload = () => {
-          loaded += 1;
+          loadedImages += 1;
 
           if (i === 1) {
-            drawCover(img);
-            loader.classList.add("is-hidden");
-            isReadyRef.current = true;
+            frame.index = 1;
+            syncCurrentFrame();
+
+            gsap.to(loader, {
+              opacity: 0,
+              duration: 0.35,
+              ease: "power2.out",
+              onComplete: () => {
+                loader.style.display = "none";
+              },
+            });
+
+            setupAnimation();
+            ScrollTrigger.refresh();
           }
 
-          if (loaded === FRAME_COUNT) {
-            isReadyRef.current = true;
+          if (Math.round(frame.index) === i) {
+            syncCurrentFrame();
+          }
+
+          if (loadedImages === FRAME_COUNT) {
+            syncCurrentFrame();
+            ScrollTrigger.refresh();
           }
         };
 
         img.onerror = () => {
-          console.error("Frame gagal load:", img.src);
+          console.error(`Gagal load frame: ${img.src}`);
         };
 
-        imagesRef.current[i] = img;
+        images[i] = img;
       }
     };
 
     setCanvasSize();
 
-    ctx.fillStyle = "#07140d";
-    ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
+    context.fillStyle = "#07140d";
+    context.fillRect(0, 0, window.innerWidth, window.innerHeight);
 
+    syncCurrentFrame();
     preloadImages();
 
-    animationRef.current = requestAnimationFrame(animate);
+    const handleResize = () => {
+      setCanvasSize();
+      syncCurrentFrame();
+      ScrollTrigger.refresh();
+    };
 
-    section.addEventListener("wheel", handleWheel, { passive: false });
-    section.addEventListener("touchstart", handleTouchStart, { passive: false });
-    section.addEventListener("touchmove", handleTouchMove, { passive: false });
-    window.addEventListener("resize", setCanvasSize);
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      section.removeEventListener("wheel", handleWheel);
-      section.removeEventListener("touchstart", handleTouchStart);
-      section.removeEventListener("touchmove", handleTouchMove);
-      window.removeEventListener("resize", setCanvasSize);
+      window.removeEventListener("resize", handleResize);
 
-      if (animationRef.current) {
-        cancelAnimationFrame(animationRef.current);
+      if (gsapContext) {
+        gsapContext.revert();
       }
     };
   }, []);
 
   return (
-    <section ref={sectionRef} className="landing-hero-section">
-      <canvas ref={canvasRef} className="landing-hero-canvas" />
+    <section className="landing-hero-section" ref={sectionRef}>
+      <canvas ref={canvasRef} className="landing-hero-canvas"></canvas>
 
-      <div ref={loaderRef} className="landing-loader">
+      <div className="landing-loader" ref={loaderRef}>
         <span>Memuat SaveByUp...</span>
       </div>
 
-      <div className="landing-hero-vignette" />
-      <div ref={dimRef} className="landing-hero-dim" />
+      <div className="landing-hero-vignette"></div>
+      <div className="landing-hero-dim" ref={dimRef}></div>
 
       <div className="landing-brand">
         <span className="brand-dot"></span>
         <span>SaveByUp</span>
       </div>
 
-      <div ref={hintRef} className="landing-scroll-hint">
+      <div className="landing-scroll-hint" ref={scrollHintRef}>
         <span>Scroll untuk membuka lemari</span>
         <div className="mouse-icon">
           <div className="mouse-wheel"></div>
         </div>
       </div>
 
-      <div ref={contentRef} className="landing-hero-content">
+      <div className="landing-hero-content" ref={contentRef}>
         <span className="landing-badge">Food Waste Prevention System</span>
 
         <h1>Kelola stok makananmu sebelum terbuang</h1>

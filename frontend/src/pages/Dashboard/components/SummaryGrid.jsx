@@ -1,3 +1,5 @@
+import { useNavigate } from "react-router-dom";
+
 import AppIcon from "../../../components/ui/AppIcon";
 
 const getPercent = (value, total) => {
@@ -10,6 +12,8 @@ const getPercent = (value, total) => {
 };
 
 export default function SummaryGrid({ summary, loading }) {
+  const navigate = useNavigate();
+
   const totalStok = Number(summary.total_stok || summary.total_foods || 0);
   const totalItems = Number(summary.total_items || 0);
 
@@ -34,6 +38,8 @@ export default function SummaryGrid({ summary, loading }) {
       tone: "earth",
       percent: totalStok > 0 ? 100 : 0,
       icon: "stock",
+      path: "/foods/status/semua",
+      actionLabel: "Lihat semua stok",
     },
     {
       title: "Aman Dikonsumsi",
@@ -42,6 +48,8 @@ export default function SummaryGrid({ summary, loading }) {
       tone: "green",
       percent: getPercent(totalAman, totalStok),
       icon: "safe",
+      path: "/foods/status/aman",
+      actionLabel: "Lihat stok aman",
     },
     {
       title: "Mendekati Kedaluwarsa",
@@ -50,6 +58,8 @@ export default function SummaryGrid({ summary, loading }) {
       tone: "warm",
       percent: getPercent(totalMendekati, totalStok),
       icon: "warning",
+      path: "/foods/status/mendekati_kedaluwarsa",
+      actionLabel: "Lihat prioritas",
     },
     {
       title: "Aktif Dijual",
@@ -58,6 +68,8 @@ export default function SummaryGrid({ summary, loading }) {
       tone: "blue",
       percent: getPercent(totalDijual, totalStok),
       icon: "sold",
+      path: "/marketplace?owner=tokoku&status=semua",
+      actionLabel: "Buka Tokoku",
     },
     {
       title: "Selesai / Waste",
@@ -66,8 +78,24 @@ export default function SummaryGrid({ summary, loading }) {
       tone: "brown",
       percent: getPercent(selesaiWaste, totalStok + selesaiWaste),
       icon: "waste",
+      path: "/foods/status/selesai-waste",
+      actionLabel: "Lihat riwayat",
     },
   ];
+
+  const handleOpenCard = (path) => {
+    if (loading) return;
+    navigate(path);
+  };
+
+  const handleKeyDown = (event, path) => {
+    if (loading) return;
+
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      navigate(path);
+    }
+  };
 
   return (
     <section className="summary-section">
@@ -75,17 +103,23 @@ export default function SummaryGrid({ summary, loading }) {
         <span>Ringkasan Inventaris</span>
         <h2>Status stok makanan kamu</h2>
         <p>
-          Ringkasan ini memisahkan kondisi makanan dan aktivitas stok. Jadi stok
-          yang dijual tetap bisa masuk kategori aman atau mendekati kedaluwarsa
-          jika tanggalnya memang masih sesuai.
+          Ringkasan ini memisahkan kondisi makanan dan aktivitas stok. Klik card
+          untuk melihat daftar makanan sesuai statusnya.
         </p>
       </div>
 
       <div className="summary-grid">
         {cards.map((card) => (
           <article
-            className={`summary-card summary-${card.tone}`}
+            className={`summary-card summary-${card.tone} summary-card-clickable ${
+              loading ? "summary-card-disabled" : ""
+            }`}
             key={card.title}
+            role="button"
+            tabIndex={loading ? -1 : 0}
+            aria-label={`${card.title}. ${card.actionLabel}`}
+            onClick={() => handleOpenCard(card.path)}
+            onKeyDown={(event) => handleKeyDown(event, card.path)}
           >
             <div className="summary-icon">
               <AppIcon name={card.icon} />
@@ -99,10 +133,13 @@ export default function SummaryGrid({ summary, loading }) {
             <p>{card.desc}</p>
 
             <div className="summary-progress">
-              <div style={{ width: `${card.percent}%` }} />
+              <div style={{ width: `${loading ? 0 : card.percent}%` }} />
             </div>
 
-            <small>{card.percent}% dari acuan stok</small>
+            <div className="summary-card-bottom">
+              <small>{loading ? "Memuat data..." : `${card.percent}% dari acuan stok`}</small>
+              <b>{card.actionLabel} →</b>
+            </div>
           </article>
         ))}
       </div>

@@ -216,6 +216,10 @@
 
 .marketplace-owner-filter button {
   min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   padding: 0 18px;
   border: 0;
   border-radius: 999px;
@@ -234,12 +238,26 @@
 .marketplace-owner-filter button:hover {
   color: #263f24;
   background: rgba(74, 121, 67, 0.09);
+  transform: translateY(-1px);
 }
 
 .marketplace-owner-filter button.active {
   color: #fff8ee;
   background: linear-gradient(135deg, #294e24, #5f8f4d);
   box-shadow: 0 12px 24px rgba(74, 121, 67, 0.2);
+}
+
+.marketplace-owner-filter button span {
+  min-width: 22px;
+  min-height: 22px;
+  display: inline-grid;
+  place-items: center;
+  padding: 0 7px;
+  border-radius: 999px;
+  color: #294e24;
+  background: #f7e8c9;
+  font-size: 12px;
+  font-weight: 950;
 }
 
 .product-filter {
