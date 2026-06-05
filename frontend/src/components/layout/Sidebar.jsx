@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import {
   HiOutlineBell,
+  HiOutlineChatBubbleLeftRight,
   HiOutlineClipboardDocumentList,
   HiOutlineClock,
   HiOutlineHome,
@@ -25,6 +26,16 @@ const formatBadge = (value) => {
   if (number > 99) return "99+";
 
   return String(number);
+};
+
+const getCurrentUserId = () => {
+  try {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+
+    return user.id || user.user_id || user.id_user || "";
+  } catch {
+    return "";
+  }
 };
 
 const normalizeRequestStatus = (status = "") => {
@@ -80,6 +91,7 @@ export default function Sidebar() {
 
   const [incomingBadge, setIncomingBadge] = useState(0);
   const [notificationBadge, setNotificationBadge] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState(getCurrentUserId());
 
   const currentPath = location.pathname;
 
@@ -145,12 +157,22 @@ export default function Sidebar() {
         badge: 0,
         isActive: (path) => path === "/profile",
       },
+      {
+        label: "Ulasan Saya",
+        path: currentUserId ? `/profile/${currentUserId}` : "/profile",
+        icon: <HiOutlineChatBubbleLeftRight />,
+        badge: 0,
+        isActive: (path) =>
+          currentUserId ? path === `/profile/${currentUserId}` : false,
+      },
     ],
-    [incomingBadge, notificationBadge]
+    [incomingBadge, notificationBadge, currentUserId]
   );
 
   const fetchSidebarBadges = async () => {
     try {
+      setCurrentUserId(getCurrentUserId());
+
       const [incomingResult, notificationResult] = await Promise.allSettled([
         getIncomingRequests(),
         getNotifications(),
@@ -226,7 +248,7 @@ export default function Sidebar() {
 
           return (
             <Link
-              key={item.path}
+              key={item.label}
               to={item.path}
               className={active ? "active" : ""}
             >

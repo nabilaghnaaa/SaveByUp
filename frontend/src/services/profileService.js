@@ -10,7 +10,7 @@ const getFileUrl = (filePath = "") => {
   const baseURL = API.defaults.baseURL || "http://localhost:5000/api";
   const appURL = baseURL.replace("/api", "");
 
-  return `${appURL}${filePath}`;
+  return `${appURL}${filePath.startsWith("/") ? filePath : `/${filePath}`}`;
 };
 
 const toNullableNumber = (value) => {
@@ -21,24 +21,37 @@ const toNullableNumber = (value) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-const normalizeReview = (review = {}) => ({
-  id: review.id,
-  transaction_id: review.transaction_id || review.id,
-  product_id: review.product_id,
-  product_name: review.product_name || "Produk Marketplace",
-  product_image: review.product_image || "",
+const normalizeReview = (review = {}) => {
+  const productImage =
+    review.product_image ||
+    review.image_url ||
+    review.image ||
+    review.photo ||
+    review.product_photo ||
+    review.product_image_url ||
+    "";
 
-  reviewer_id: review.reviewer_id,
-  reviewer_name: review.reviewer_name || "Pengguna SaveByUp",
+  return {
+    id: review.id,
+    transaction_id: review.transaction_id || review.id,
+    product_id: review.product_id,
+    product_name: review.product_name || "Produk Marketplace",
 
-  reviewed_user_id: review.reviewed_user_id,
-  reviewed_user_name: review.reviewed_user_name || "",
-  reviewed_role: review.reviewed_role || "",
+    product_image: productImage,
+    product_image_url: getFileUrl(productImage),
 
-  rating: Number(review.rating || 0),
-  review: review.review || "",
-  created_at: review.completed_at || review.created_at || "",
-});
+    reviewer_id: review.reviewer_id,
+    reviewer_name: review.reviewer_name || "Pengguna SaveByUp",
+
+    reviewed_user_id: review.reviewed_user_id,
+    reviewed_user_name: review.reviewed_user_name || "",
+    reviewed_role: review.reviewed_role || "",
+
+    rating: Number(review.rating || 0),
+    review: review.review || "",
+    created_at: review.completed_at || review.created_at || "",
+  };
+};
 
 const normalizeProfile = (profile = {}) => {
   const photoPath = profile.photo || profile.avatar_url || "";
@@ -56,18 +69,29 @@ const normalizeProfile = (profile = {}) => {
 
   const mergedReviews = [...reviewsAsSeller, ...reviewsAsBuyer];
 
-  const totalSellerReviews = reviewsAsSeller.length;
-  const totalBuyerReviews = reviewsAsBuyer.length;
-  const totalReviews = totalSellerReviews + totalBuyerReviews;
+  const totalSellerReviews = Number(
+    profile.total_seller_reviews ?? reviewsAsSeller.length ?? 0
+  );
+
+  const totalBuyerReviews = Number(
+    profile.total_buyer_reviews ?? reviewsAsBuyer.length ?? 0
+  );
+
+  const totalReviews = Number(
+    profile.total_reviews ?? totalSellerReviews + totalBuyerReviews
+  );
 
   const sellerRating = Number(profile.seller_rating || 0);
   const buyerRating = Number(profile.buyer_rating || 0);
 
   const averageRating =
-    totalReviews > 0
-      ? (sellerRating * totalSellerReviews + buyerRating * totalBuyerReviews) /
-        totalReviews
-      : 0;
+    profile.rating !== undefined && profile.rating !== null
+      ? Number(profile.rating || 0)
+      : totalReviews > 0
+        ? (sellerRating * totalSellerReviews +
+            buyerRating * totalBuyerReviews) /
+          totalReviews
+        : 0;
 
   const transactions = Array.isArray(profile.transactions)
     ? profile.transactions

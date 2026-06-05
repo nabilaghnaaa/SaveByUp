@@ -26,65 +26,128 @@ const renderStars = (rating = 0) => {
   ).join("");
 };
 
-function ReviewList({ title, subtitle, rating, total, reviews }) {
-  return (
-    <section className="public-review-section">
-      <div className="public-review-header">
-        <div>
-          <span>{subtitle}</span>
-          <h3>{title}</h3>
-        </div>
+const formatRating = (rating = 0) => {
+  return Number(rating || 0).toFixed(1);
+};
 
-        <div className="public-review-score">
-          <span>{renderStars(rating)}</span>
-          <strong>{Number(rating || 0).toFixed(1)}/5</strong>
-          <p>{total} ulasan</p>
+const getSafeLocationText = (profile = {}) => {
+  const rawText = String(profile.location_label || profile.address || "").trim();
+
+  const allText = String(
+    `${profile.location_label || ""} ${profile.address || ""}`
+  ).trim();
+
+  const accuracyMatch =
+    allText.match(
+      /akurasi\s*[:：]?\s*(±|\+\/-|\+-)?\s*\d+(?:[.,]\d+)?\s*(m|km)/i
+    ) || allText.match(/(±|\+\/-|\+-)\s*\d+(?:[.,]\d+)?\s*(m|km)/i);
+
+  if (accuracyMatch) {
+    const cleanAccuracy = accuracyMatch[0]
+      .replace(/\+\/-/g, "±")
+      .replace(/\+-/g, "±")
+      .replace(/akurasi\s*[:：]?/i, "")
+      .trim();
+
+    return `Akurasi ${cleanAccuracy}`;
+  }
+
+  const hasCoordinate =
+    /-?\d{1,2}\.\d+\s*,\s*-?\d{1,3}\.\d+/.test(rawText) ||
+    /Titik GPS tersimpan/i.test(rawText);
+
+  if (hasCoordinate) {
+    return "Lokasi tersimpan";
+  }
+
+  return rawText || "-";
+};
+
+function StatCard({ label, value, helper, highlight = false }) {
+  return (
+    <div
+      className={highlight ? "public-stat-card highlight" : "public-stat-card"}
+    >
+      <span>{label}</span>
+      <strong>{value}</strong>
+      {helper && <p>{helper}</p>}
+    </div>
+  );
+}
+
+function ProductReviewImage({ src, alt }) {
+  const [imageError, setImageError] = useState(false);
+
+  if (!src || imageError) {
+    return (
+      <div className="public-review-product-image is-placeholder">
+        <span>🍱</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="public-review-product-image">
+      <img
+        src={src}
+        alt={alt || "Produk Marketplace"}
+        onError={() => setImageError(true)}
+      />
+    </div>
+  );
+}
+
+function ReviewItem({ item }) {
+  return (
+    <article className="public-review-item">
+      <div className="public-review-item-main">
+        <ProductReviewImage
+          src={item.product_image_url}
+          alt={item.product_name}
+        />
+
+        <div className="public-review-content">
+          <div className="public-review-title-row">
+            <div>
+              <h4>{item.product_name || "Produk Marketplace"}</h4>
+              <p>
+                Diulas oleh{" "}
+                <strong>{item.reviewer_name || "Pengguna SaveByUp"}</strong>
+              </p>
+            </div>
+
+            <div className="public-review-score-chip">
+              <strong>{formatRating(item.rating)}</strong>
+              <span>{renderStars(item.rating)}</span>
+            </div>
+          </div>
+
+          <div className="public-review-text">
+            {String(item.review || "").trim()
+              ? `“${item.review}”`
+              : "Pengguna tidak menulis ulasan."}
+          </div>
+
+          <div className="public-review-footer">
+            <span>{formatDate(item.created_at)}</span>
+          </div>
         </div>
       </div>
+    </article>
+  );
+}
 
-      {reviews.length === 0 ? (
-        <div className="public-empty-review">
-          <h4>Belum ada ulasan</h4>
-          <p>Belum ada ulasan untuk peran ini.</p>
-        </div>
-      ) : (
-        <div className="public-review-list">
-          {reviews.map((item) => (
-            <article
-              className="public-review-card"
-              key={`${item.reviewed_role}-${item.transaction_id}-${item.created_at}`}
-            >
-              <div className="public-review-top">
-                <div>
-                  <h4>{item.product_name || "Produk Marketplace"}</h4>
-                  <p>
-                    Oleh{" "}
-                    <strong>
-                      {item.reviewer_name || "Pengguna SaveByUp"}
-                    </strong>
-                  </p>
-                </div>
-
-                <div className="public-review-rating">
-                  <span>{renderStars(item.rating)}</span>
-                  <strong>{Number(item.rating || 0)}/5</strong>
-                </div>
-              </div>
-
-              <p className="public-review-text">
-                {item.review
-                  ? `“${item.review}”`
-                  : "Pengguna tidak menulis ulasan."}
-              </p>
-
-              <span className="public-review-date">
-                {formatDate(item.created_at)}
-              </span>
-            </article>
-          ))}
-        </div>
-      )}
-    </section>
+function EmptyReview({ type }) {
+  return (
+    <div className="public-review-empty">
+      <div className="public-empty-icon">💬</div>
+      <h4>Belum ada ulasan</h4>
+      <p>
+        {type === "seller"
+          ? "Belum ada pembeli yang memberi ulasan kepada pengguna ini sebagai penjual."
+          : "Belum ada penjual yang memberi ulasan kepada pengguna ini sebagai pembeli."}
+      </p>
+    </div>
   );
 }
 
@@ -93,6 +156,7 @@ export default function PublicProfile() {
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState(null);
+  const [activeTab, setActiveTab] = useState("seller");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
@@ -139,16 +203,23 @@ export default function PublicProfile() {
   const totalBuyerReviews = Number(profile?.total_buyer_reviews || 0);
   const totalTransactions = Number(profile?.total_transactions || 0);
 
+  const safeLocationText = getSafeLocationText(profile || {});
+
+  const activeReviews =
+    activeTab === "seller" ? reviewsAsSeller : reviewsAsBuyer;
+
+  const activeRating = activeTab === "seller" ? sellerRating : buyerRating;
+
+  const activeTotal =
+    activeTab === "seller" ? totalSellerReviews : totalBuyerReviews;
+
   return (
     <AppShell>
       <main className="public-profile-page">
-        <div className="profile-orb profile-orb-one" />
-        <div className="profile-orb profile-orb-two" />
-
         <PageHeader
           label="Profil Pengguna"
-          title="Profil Publik SaveByUp"
-          description="Lihat identitas, reputasi sebagai penjual, dan reputasi sebagai pembeli sebelum melanjutkan transaksi."
+          title="Ulasan & Reputasi"
+          description="Lihat reputasi pengguna sebagai penjual dan pembeli berdasarkan transaksi di SaveByUp."
           action={
             <button
               type="button"
@@ -183,80 +254,160 @@ export default function PublicProfile() {
         ) : (
           profile && (
             <>
-              <section className="public-profile-card">
-                <div className="public-profile-avatar">
-                  {profile.photo_url ? (
-                    <img src={profile.photo_url} alt={profile.name} />
-                  ) : (
-                    <span>{getInitial(profile.name)}</span>
-                  )}
-                </div>
+              <section className="public-profile-hero">
+                <div className="public-profile-identity-card">
+                  <div className="public-avatar-box">
+                    <div className="public-profile-avatar">
+                      {profile.photo_url ? (
+                        <img src={profile.photo_url} alt={profile.name} />
+                      ) : (
+                        <span>{getInitial(profile.name)}</span>
+                      )}
+                    </div>
+                  </div>
 
-                <div className="public-profile-main">
-                  <span>Pengguna SaveByUp</span>
-                  <h2>{profile.name || "Pengguna SaveByUp"}</h2>
-                  <p>
-                    {profile.bio || "Pengguna ini belum menambahkan bio profil."}
-                  </p>
+                  <div className="public-identity-content">
+                    <span className="public-kicker">Pengguna SaveByUp</span>
 
-                  <div className="public-profile-rating">
-                    <strong>{averageRating.toFixed(1)}/5</strong>
-                    <span>{renderStars(averageRating)}</span>
-                    <p>{totalReviews} total ulasan</p>
+                    <h2>{profile.name || "Pengguna SaveByUp"}</h2>
+
+                    <p>
+                      {profile.bio ||
+                        "Pengguna ini belum menambahkan bio profil."}
+                    </p>
+
+                    <div className="public-main-rating-card">
+                      <div>
+                        <strong>{formatRating(averageRating)}/5</strong>
+                        <span>{renderStars(averageRating)}</span>
+                      </div>
+
+                      <p>{totalReviews} total ulasan</p>
+                    </div>
                   </div>
                 </div>
 
-                <div className="public-profile-info-grid">
-                  <div>
-                    <span>Email</span>
-                    <strong>{profile.email || "-"}</strong>
-                  </div>
+                <div className="public-profile-side">
+                  <StatCard
+                    label="Rating Penjual"
+                    value={`${formatRating(sellerRating)}/5`}
+                    helper={`${totalSellerReviews} ulasan dari pembeli`}
+                    highlight
+                  />
 
-                  <div>
-                    <span>WhatsApp</span>
-                    <strong>{profile.whatsapp || "-"}</strong>
-                  </div>
+                  <StatCard
+                    label="Rating Pembeli"
+                    value={`${formatRating(buyerRating)}/5`}
+                    helper={`${totalBuyerReviews} ulasan dari penjual`}
+                    highlight
+                  />
 
-                  <div>
-                    <span>Area COD</span>
-                    <strong>
-                      {profile.location_label || profile.address || "-"}
-                    </strong>
-                  </div>
+                  <StatCard
+                    label="Total Transaksi"
+                    value={totalTransactions}
+                    helper="Transaksi yang melibatkan akun ini"
+                  />
 
-                  <div>
-                    <span>Total Transaksi</span>
-                    <strong>{totalTransactions}</strong>
-                  </div>
-
-                  <div>
-                    <span>Rating Penjual</span>
-                    <strong>{sellerRating.toFixed(1)}/5</strong>
-                  </div>
-
-                  <div>
-                    <span>Rating Pembeli</span>
-                    <strong>{buyerRating.toFixed(1)}/5</strong>
-                  </div>
+                  <StatCard
+                    label="Akurasi Lokasi"
+                    value={safeLocationText}
+                    helper="Koordinat GPS tidak ditampilkan"
+                  />
                 </div>
               </section>
 
-              <section className="public-review-grid">
-                <ReviewList
-                  title="Ulasan sebagai Penjual"
-                  subtitle="Reputasi saat menjual"
-                  rating={sellerRating}
-                  total={totalSellerReviews}
-                  reviews={reviewsAsSeller}
-                />
+              <section className="public-contact-strip">
+                <div>
+                  <span>Email</span>
+                  <strong>{profile.email || "-"}</strong>
+                </div>
 
-                <ReviewList
-                  title="Ulasan sebagai Pembeli"
-                  subtitle="Reputasi saat membeli"
-                  rating={buyerRating}
-                  total={totalBuyerReviews}
-                  reviews={reviewsAsBuyer}
-                />
+                <div>
+                  <span>WhatsApp</span>
+                  <strong>{profile.whatsapp || "-"}</strong>
+                </div>
+
+                <div className="public-contact-note">
+                  <span>Catatan Reputasi</span>
+                  <p>
+                    Rating penjual berasal dari pembeli. Rating pembeli berasal
+                    dari penjual setelah transaksi selesai.
+                  </p>
+                </div>
+              </section>
+
+              <section className="public-review-board">
+                <div className="public-review-board-head">
+                  <div>
+                    <span>Review Center</span>
+                    <h3>Ulasan Pengguna</h3>
+                  </div>
+
+                  <button
+                    type="button"
+                    className="sb-btn profile-btn-outline"
+                    onClick={fetchPublicProfile}
+                  >
+                    Refresh
+                  </button>
+                </div>
+
+                <div className="public-review-tabs">
+                  <button
+                    type="button"
+                    className={activeTab === "seller" ? "active" : ""}
+                    onClick={() => setActiveTab("seller")}
+                  >
+                    <span>Sebagai Penjual</span>
+                    <strong>{formatRating(sellerRating)}/5</strong>
+                    <small>{totalSellerReviews} ulasan</small>
+                  </button>
+
+                  <button
+                    type="button"
+                    className={activeTab === "buyer" ? "active" : ""}
+                    onClick={() => setActiveTab("buyer")}
+                  >
+                    <span>Sebagai Pembeli</span>
+                    <strong>{formatRating(buyerRating)}/5</strong>
+                    <small>{totalBuyerReviews} ulasan</small>
+                  </button>
+                </div>
+
+                <div className="public-review-summary">
+                  <div>
+                    <span>
+                      {activeTab === "seller"
+                        ? "Reputasi saat menjual"
+                        : "Reputasi saat membeli"}
+                    </span>
+
+                    <h4>
+                      {activeTab === "seller"
+                        ? "Ulasan sebagai Penjual"
+                        : "Ulasan sebagai Pembeli"}
+                    </h4>
+                  </div>
+
+                  <div className="public-review-summary-score">
+                    <strong>{formatRating(activeRating)}/5</strong>
+                    <span>{renderStars(activeRating)}</span>
+                    <p>{activeTotal} ulasan</p>
+                  </div>
+                </div>
+
+                {activeReviews.length === 0 ? (
+                  <EmptyReview type={activeTab} />
+                ) : (
+                  <div className="public-review-list">
+                    {activeReviews.map((item) => (
+                      <ReviewItem
+                        key={`${item.reviewed_role}-${item.transaction_id}-${item.id}`}
+                        item={item}
+                      />
+                    ))}
+                  </div>
+                )}
               </section>
             </>
           )

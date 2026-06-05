@@ -31,6 +31,59 @@ const getProfileCompleteness = (user = {}) => {
   };
 };
 
+const getUserRatingSummary = async (userId) => {
+  const [sellerRatingSummary] = await db.query(
+    `SELECT 
+      COUNT(*) AS total_reviews,
+      AVG(rating) AS average_rating
+     FROM transaction_reviews
+     WHERE reviewed_user_id = ?
+     AND reviewed_role = 'seller'`,
+    [userId]
+  );
+
+  const [buyerRatingSummary] = await db.query(
+    `SELECT 
+      COUNT(*) AS total_reviews,
+      AVG(rating) AS average_rating
+     FROM transaction_reviews
+     WHERE reviewed_user_id = ?
+     AND reviewed_role = 'buyer'`,
+    [userId]
+  );
+
+  const sellerRating = Number(sellerRatingSummary[0]?.average_rating || 0);
+  const buyerRating = Number(buyerRatingSummary[0]?.average_rating || 0);
+
+  const totalSellerReviews = Number(
+    sellerRatingSummary[0]?.total_reviews || 0
+  );
+
+  const totalBuyerReviews = Number(
+    buyerRatingSummary[0]?.total_reviews || 0
+  );
+
+  const totalReviews = totalSellerReviews + totalBuyerReviews;
+
+  const averageRating =
+    totalReviews > 0
+      ? (
+          (sellerRating * totalSellerReviews +
+            buyerRating * totalBuyerReviews) /
+          totalReviews
+        ).toFixed(2)
+      : "0.00";
+
+  return {
+    rating: averageRating,
+    seller_rating: sellerRating.toFixed(2),
+    buyer_rating: buyerRating.toFixed(2),
+    total_reviews: totalReviews,
+    total_seller_reviews: totalSellerReviews,
+    total_buyer_reviews: totalBuyerReviews,
+  };
+};
+
 const validateProfilePayload = ({
   name,
   phone,
@@ -142,11 +195,20 @@ const getProfile = async (req, res) => {
     const user = users[0];
     const photoPath = user.photo || user.avatar_url || "";
     const completeness = getProfileCompleteness(user);
+    const ratingSummary = await getUserRatingSummary(userId);
+
+    await db.query(
+      `UPDATE users
+       SET rating = ?
+       WHERE id = ?`,
+      [ratingSummary.rating, userId]
+    );
 
     return res.status(200).json({
       message: "Profil berhasil diambil.",
       data: {
         ...user,
+        ...ratingSummary,
         photo: photoPath,
         avatar_url: photoPath,
         has_location: Boolean(user.latitude && user.longitude),
@@ -266,26 +328,6 @@ const getPublicProfile = async (req, res) => {
       [userId]
     );
 
-    const [sellerRatingSummary] = await db.query(
-      `SELECT 
-        COUNT(*) AS total_reviews,
-        AVG(rating) AS average_rating
-       FROM transaction_reviews
-       WHERE reviewed_user_id = ?
-       AND reviewed_role = 'seller'`,
-      [userId]
-    );
-
-    const [buyerRatingSummary] = await db.query(
-      `SELECT 
-        COUNT(*) AS total_reviews,
-        AVG(rating) AS average_rating
-       FROM transaction_reviews
-       WHERE reviewed_user_id = ?
-       AND reviewed_role = 'buyer'`,
-      [userId]
-    );
-
     const [transactionsSummary] = await db.query(
       `SELECT COUNT(*) AS total_transactions
        FROM transactions
@@ -293,27 +335,7 @@ const getPublicProfile = async (req, res) => {
       [userId, userId]
     );
 
-    const sellerRating = Number(sellerRatingSummary[0]?.average_rating || 0);
-    const buyerRating = Number(buyerRatingSummary[0]?.average_rating || 0);
-
-    const totalSellerReviews = Number(
-      sellerRatingSummary[0]?.total_reviews || 0
-    );
-
-    const totalBuyerReviews = Number(
-      buyerRatingSummary[0]?.total_reviews || 0
-    );
-
-    const totalReviews = totalSellerReviews + totalBuyerReviews;
-
-    const averageRating =
-      totalReviews > 0
-        ? (
-            (sellerRating * totalSellerReviews +
-              buyerRating * totalBuyerReviews) /
-            totalReviews
-          ).toFixed(2)
-        : "0.00";
+    const ratingSummary = await getUserRatingSummary(userId);
 
     return res.status(200).json({
       message: "Profil publik berhasil diambil.",
@@ -328,13 +350,7 @@ const getPublicProfile = async (req, res) => {
         avatar_url: photoPath,
         bio: user.bio || "",
 
-        rating: averageRating,
-        seller_rating: sellerRating.toFixed(2),
-        buyer_rating: buyerRating.toFixed(2),
-
-        total_reviews: totalReviews,
-        total_seller_reviews: totalSellerReviews,
-        total_buyer_reviews: totalBuyerReviews,
+        ...ratingSummary,
 
         total_transactions: Number(
           transactionsSummary[0]?.total_transactions || 0
@@ -485,11 +501,20 @@ const updateProfile = async (req, res) => {
     const user = users[0] || {};
     const finalPhotoPath = user.photo || user.avatar_url || "";
     const completeness = getProfileCompleteness(user);
+    const ratingSummary = await getUserRatingSummary(userId);
+
+    await db.query(
+      `UPDATE users
+       SET rating = ?
+       WHERE id = ?`,
+      [ratingSummary.rating, userId]
+    );
 
     return res.status(200).json({
       message: "Profil berhasil diperbarui.",
       data: {
         ...user,
+        ...ratingSummary,
         photo: finalPhotoPath,
         avatar_url: finalPhotoPath,
         has_location: Boolean(user.latitude && user.longitude),
