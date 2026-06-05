@@ -280,7 +280,7 @@ const getPublicProfile = async (req, res) => {
         t.product_id,
 
         COALESCE(mp.name, 'Produk Marketplace') AS product_name,
-        COALESCE(mp.image_url, '') AS product_image,
+        COALESCE(mp.image_url, mp.image, '') AS product_image,
 
         reviewer.id AS reviewer_id,
         reviewer.name AS reviewer_name,
@@ -310,7 +310,7 @@ const getPublicProfile = async (req, res) => {
         t.product_id,
 
         COALESCE(mp.name, 'Produk Marketplace') AS product_name,
-        COALESCE(mp.image_url, '') AS product_image,
+        COALESCE(mp.image_url, mp.image, '') AS product_image,
 
         reviewer.id AS reviewer_id,
         reviewer.name AS reviewer_name,

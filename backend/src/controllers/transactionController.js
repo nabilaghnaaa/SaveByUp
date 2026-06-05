@@ -306,7 +306,7 @@ const getTransactions = async (req, res) => {
         t.*,
 
         mp.name AS product_name,
-        mp.image_url AS product_image,
+        COALESCE(mp.image_url, mp.image, '') AS product_image,
 
         buyer.name AS buyer_name,
         buyer.whatsapp AS buyer_whatsapp,
@@ -341,14 +341,14 @@ const getTransactions = async (req, res) => {
     );
 
     return res.status(200).json({
-      message: "Riwayat transaksi berhasil diambil",
+      message: "Riwayat transaksi berhasil diambil.",
       data: transactions.map((item) => maskTransactionLocation(item, userId)),
     });
   } catch (error) {
     console.error("Get transactions error:", error);
 
     return res.status(500).json({
-      message: "Terjadi kesalahan pada server",
+      message: "Terjadi kesalahan pada server.",
       error: error.message,
     });
   }
@@ -509,7 +509,7 @@ const shareTransactionLocation = async (req, res) => {
     console.error("Share transaction location error:", error);
 
     return res.status(500).json({
-      message: "Terjadi kesalahan pada server",
+      message: "Terjadi kesalahan pada server.",
       error: error.message,
     });
   }
@@ -687,7 +687,7 @@ const completeTransaction = async (req, res) => {
     console.error("Complete transaction error:", error);
 
     return res.status(500).json({
-      message: "Terjadi kesalahan pada server",
+      message: "Terjadi kesalahan pada server.",
       error: error.message,
     });
   }
@@ -872,7 +872,7 @@ const completeTransactionWithRating = async (req, res) => {
     console.error("Complete transaction with rating error:", error);
 
     return res.status(error.statusCode || 500).json({
-      message: error.message || "Terjadi kesalahan pada server",
+      message: error.message || "Terjadi kesalahan pada server.",
       error: error.message,
     });
   }
@@ -938,7 +938,7 @@ const rateTransaction = async (req, res) => {
     console.error("Rate transaction error:", error);
 
     return res.status(error.statusCode || 500).json({
-      message: error.message || "Terjadi kesalahan pada server",
+      message: error.message || "Terjadi kesalahan pada server.",
       error: error.message,
     });
   }
