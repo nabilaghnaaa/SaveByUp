@@ -27,28 +27,51 @@ const formatBadge = (value) => {
   return String(number);
 };
 
-const isPendingRequest = (request = {}) => {
-  const status = String(request.status || "").toLowerCase();
+const normalizeRequestStatus = (status = "") => {
+  const value = String(status || "").toLowerCase();
 
-  return (
-    status === "pending" ||
-    status === "menunggu" ||
-    status === "waiting" ||
-    status === "menunggu_konfirmasi"
-  );
+  const map = {
+    menunggu: "pending",
+    pending: "pending",
+    waiting: "pending",
+    menunggu_konfirmasi: "pending",
+    menunggu_komunikasi: "pending",
+
+    disetujui: "accepted",
+    diterima: "accepted",
+    accepted: "accepted",
+
+    ditolak: "rejected",
+    rejected: "rejected",
+
+    selesai: "completed",
+    completed: "completed",
+
+    dibatalkan: "cancelled",
+    cancelled: "cancelled",
+  };
+
+  return map[value] || value || "pending";
+};
+
+const isPendingRequest = (request = {}) => {
+  const status = normalizeRequestStatus(request.status);
+
+  return status === "pending";
 };
 
 const isUnreadNotification = (notification = {}) => {
+  if (notification.is_read === true || notification.is_read === 1) return false;
+  if (notification.read === true || notification.read === 1) return false;
+
+  if (notification.is_read === false || notification.is_read === 0) return true;
+  if (notification.read === false || notification.read === 0) return true;
+
   const status = String(notification.status || "").toLowerCase();
 
-  return (
-    notification.is_read === false ||
-    notification.is_read === 0 ||
-    notification.read === false ||
-    notification.read === 0 ||
-    status === "unread" ||
-    status === "belum_dibaca"
-  );
+  if (status === "read" || status === "dibaca") return false;
+
+  return status === "unread" || status === "belum_dibaca" || !notification.is_read;
 };
 
 export default function Sidebar() {
@@ -120,7 +143,7 @@ export default function Sidebar() {
         path: "/profile",
         icon: <HiOutlineUserCircle />,
         badge: 0,
-        isActive: (path) => path === "/profile" || path.startsWith("/profile/"),
+        isActive: (path) => path === "/profile",
       },
     ],
     [incomingBadge, notificationBadge]
@@ -160,8 +183,21 @@ export default function Sidebar() {
       fetchSidebarBadges();
     }, 30000);
 
-    return () => clearInterval(interval);
+    const handleRefreshBadges = () => {
+      fetchSidebarBadges();
+    };
+
+    window.addEventListener("savebyup:badges-refresh", handleRefreshBadges);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("savebyup:badges-refresh", handleRefreshBadges);
+    };
   }, []);
+
+  useEffect(() => {
+    fetchSidebarBadges();
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     const ok = window.confirm("Yakin ingin logout dari SaveByUp?");

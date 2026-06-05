@@ -1,5 +1,45 @@
 import API from "./api";
 
+export const normalizeNotificationType = (type = "", notification = {}) => {
+  const rawType = String(type || notification.type || "").toLowerCase();
+  const title = String(notification.title || "").toLowerCase();
+  const message = String(notification.message || "").toLowerCase();
+
+  const text = `${rawType} ${title} ${message}`;
+
+  if (
+    text.includes("kedaluwarsa") ||
+    text.includes("expired") ||
+    text.includes("expiry") ||
+    text.includes("reminder")
+  ) {
+    return "expiry";
+  }
+
+  if (
+    text.includes("pengajuan") ||
+    text.includes("pembelian baru") ||
+    text.includes("purchase_request") ||
+    text.includes("request") ||
+    text.includes("negosiasi") ||
+    text.includes("penawaran")
+  ) {
+    return "request";
+  }
+
+  if (
+    text.includes("transaksi") ||
+    text.includes("transaction") ||
+    text.includes("cod") ||
+    text.includes("selesai") ||
+    text.includes("rating")
+  ) {
+    return "transaction";
+  }
+
+  return "system";
+};
+
 const normalizeBoolean = (value) => {
   if (value === true || value === 1) return true;
   if (value === false || value === 0) return false;
@@ -22,22 +62,25 @@ const normalizeBoolean = (value) => {
   return false;
 };
 
-const normalizeNotification = (notification = {}) => ({
-  id: notification.id,
-  user_id: notification.user_id,
-  title: notification.title || "",
-  message: notification.message || "",
-  type: notification.type || "system",
+const normalizeNotification = (notification = {}) => {
+  const normalizedType = normalizeNotificationType(notification.type, notification);
 
-  // Backend kamu pakai is_read, tapi ini dibuat fleksibel
-  // biar tetap aman kalau response memakai read/status.
-  is_read: normalizeBoolean(
-    notification.is_read ?? notification.read ?? notification.status
-  ),
+  return {
+    id: notification.id,
+    user_id: notification.user_id,
+    title: notification.title || "",
+    message: notification.message || "",
+    type: normalizedType,
+    original_type: notification.type || "system",
 
-  created_at: notification.created_at,
-  updated_at: notification.updated_at,
-});
+    is_read: normalizeBoolean(
+      notification.is_read ?? notification.read ?? notification.status
+    ),
+
+    created_at: notification.created_at,
+    updated_at: notification.updated_at,
+  };
+};
 
 export const getNotifications = async () => {
   try {

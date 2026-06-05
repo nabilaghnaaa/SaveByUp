@@ -28,6 +28,8 @@ export default function Notifications() {
 
       const data = await getNotifications();
       setNotifications(Array.isArray(data) ? data : []);
+
+      window.dispatchEvent(new Event("savebyup:badges-refresh"));
     } catch (error) {
       console.error("Gagal mengambil notifikasi:", error);
       setMessage(
@@ -54,23 +56,47 @@ export default function Notifications() {
     );
   }, [notifications, activeFilter]);
 
-  const unreadCount = notifications.filter(
-    (notification) => !notification.is_read
-  ).length;
+  const notificationStats = useMemo(() => {
+    return notifications.reduce(
+      (stats, notification) => {
+        stats.total += 1;
 
-  const expiryCount = notifications.filter(
-    (notification) => notification.type === "expiry"
-  ).length;
+        if (!notification.is_read) {
+          stats.unread += 1;
+        }
 
-  const requestCount = notifications.filter(
-    (notification) => notification.type === "request"
-  ).length;
+        if (notification.type === "expiry") {
+          stats.expiry += 1;
+        }
 
-  const transactionCount = notifications.filter(
-    (notification) => notification.type === "transaction"
-  ).length;
+        if (notification.type === "request") {
+          stats.request += 1;
+        }
+
+        if (notification.type === "transaction") {
+          stats.transaction += 1;
+        }
+
+        if (notification.type === "system") {
+          stats.system += 1;
+        }
+
+        return stats;
+      },
+      {
+        total: 0,
+        unread: 0,
+        expiry: 0,
+        request: 0,
+        transaction: 0,
+        system: 0,
+      }
+    );
+  }, [notifications]);
 
   const handleMarkAsRead = async (notification) => {
+    if (notification.is_read) return;
+
     try {
       await markNotificationAsRead(notification.id);
       await fetchNotifications();
@@ -138,7 +164,7 @@ export default function Notifications() {
 
           <div className="notifications-hero-card">
             <span>Belum Dibaca</span>
-            <strong>{loading ? "..." : unreadCount}</strong>
+            <strong>{loading ? "..." : notificationStats.unread}</strong>
             <p>Notifikasi yang masih perlu kamu cek.</p>
           </div>
         </section>
@@ -146,25 +172,25 @@ export default function Notifications() {
         <section className="notification-summary">
           <div className="notification-summary-card">
             <span>Total Notifikasi</span>
-            <strong>{loading ? "..." : notifications.length}</strong>
+            <strong>{loading ? "..." : notificationStats.total}</strong>
             <p>Semua informasi yang masuk ke akun kamu.</p>
           </div>
 
           <div className="notification-summary-card">
             <span>Reminder</span>
-            <strong>{loading ? "..." : expiryCount}</strong>
+            <strong>{loading ? "..." : notificationStats.expiry}</strong>
             <p>Pengingat makanan mendekati kedaluwarsa.</p>
           </div>
 
           <div className="notification-summary-card">
             <span>Pengajuan</span>
-            <strong>{loading ? "..." : requestCount}</strong>
+            <strong>{loading ? "..." : notificationStats.request}</strong>
             <p>Info terkait negosiasi dan pembelian.</p>
           </div>
 
           <div className="notification-summary-card">
             <span>Transaksi</span>
-            <strong>{loading ? "..." : transactionCount}</strong>
+            <strong>{loading ? "..." : notificationStats.transaction}</strong>
             <p>Perkembangan transaksi marketplace.</p>
           </div>
         </section>
