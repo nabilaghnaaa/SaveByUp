@@ -8,6 +8,8 @@ export default function RatingModal({ transaction, onClose, onSubmit }) {
   const [message, setMessage] = useState("");
 
   const isCompleteMode = transaction?.mode === "complete";
+  const isBuyer = transaction?.current_user_role === "buyer";
+  const targetLabel = isBuyer ? "penjual" : "pembeli";
 
   const handleSubmit = (event) => {
     event.preventDefault();
@@ -44,8 +46,8 @@ export default function RatingModal({ transaction, onClose, onSubmit }) {
 
         <p>
           {isCompleteMode
-            ? "Berikan rating dan ulasan terlebih dahulu. Setelah dikirim, transaksi akan otomatis ditandai selesai."
-            : "Berikan rating untuk membantu membangun kepercayaan antar pengguna SaveByUp setelah transaksi selesai."}
+            ? `Berikan rating dan ulasan untuk ${targetLabel}. Setelah dikirim, transaksi akan otomatis ditandai selesai.`
+            : `Berikan rating dan ulasan untuk ${targetLabel} agar reputasi pengguna di SaveByUp lebih jelas.`}
         </p>
 
         {message && <div className="rating-message">{message}</div>}
@@ -66,7 +68,7 @@ export default function RatingModal({ transaction, onClose, onSubmit }) {
         <textarea
           rows="4"
           value={review}
-          placeholder="Tulis pengalaman transaksi kamu..."
+          placeholder={`Tulis ulasan untuk ${targetLabel}...`}
           onChange={(event) => setReview(event.target.value)}
         />
 

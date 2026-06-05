@@ -208,67 +208,61 @@ const getPublicProfile = async (req, res) => {
 
     const [reviewsAsSeller] = await db.query(
       `SELECT
-        t.id,
-        t.id AS transaction_id,
+        tr.id,
+        tr.transaction_id,
+        tr.rating,
+        tr.review,
+        tr.created_at,
+        tr.reviewed_role,
+
         t.product_id,
-        t.rating,
-        t.review,
-        t.completed_at,
-        t.created_at,
 
-        mp.name AS product_name,
-        mp.image_url AS product_image,
+        COALESCE(mp.name, 'Produk Marketplace') AS product_name,
+        COALESCE(mp.image_url, '') AS product_image,
 
-        buyer.id AS reviewer_id,
-        buyer.name AS reviewer_name,
+        reviewer.id AS reviewer_id,
+        reviewer.name AS reviewer_name,
 
-        seller.id AS reviewed_user_id,
-        seller.name AS reviewed_user_name,
-
-        'seller' AS reviewed_role
-       FROM transactions t
+        reviewed.id AS reviewed_user_id,
+        reviewed.name AS reviewed_user_name
+       FROM transaction_reviews tr
+       JOIN transactions t ON tr.transaction_id = t.id
        LEFT JOIN marketplace_products mp ON t.product_id = mp.id
-       LEFT JOIN users buyer ON t.buyer_id = buyer.id
-       LEFT JOIN users seller ON t.seller_id = seller.id
-       WHERE t.seller_id = ?
-       AND t.rating IS NOT NULL
-       AND t.review IS NOT NULL
-       AND t.review <> ''
-       ORDER BY COALESCE(t.completed_at, t.created_at) DESC
-       LIMIT 20`,
+       LEFT JOIN users reviewer ON tr.reviewer_id = reviewer.id
+       LEFT JOIN users reviewed ON tr.reviewed_user_id = reviewed.id
+       WHERE tr.reviewed_user_id = ?
+       AND tr.reviewed_role = 'seller'
+       ORDER BY tr.created_at DESC`,
       [userId]
     );
 
     const [reviewsAsBuyer] = await db.query(
       `SELECT
-        t.id,
-        t.id AS transaction_id,
+        tr.id,
+        tr.transaction_id,
+        tr.rating,
+        tr.review,
+        tr.created_at,
+        tr.reviewed_role,
+
         t.product_id,
-        t.rating,
-        t.review,
-        t.completed_at,
-        t.created_at,
 
-        mp.name AS product_name,
-        mp.image_url AS product_image,
+        COALESCE(mp.name, 'Produk Marketplace') AS product_name,
+        COALESCE(mp.image_url, '') AS product_image,
 
-        seller.id AS reviewer_id,
-        seller.name AS reviewer_name,
+        reviewer.id AS reviewer_id,
+        reviewer.name AS reviewer_name,
 
-        buyer.id AS reviewed_user_id,
-        buyer.name AS reviewed_user_name,
-
-        'buyer' AS reviewed_role
-       FROM transactions t
+        reviewed.id AS reviewed_user_id,
+        reviewed.name AS reviewed_user_name
+       FROM transaction_reviews tr
+       JOIN transactions t ON tr.transaction_id = t.id
        LEFT JOIN marketplace_products mp ON t.product_id = mp.id
-       LEFT JOIN users buyer ON t.buyer_id = buyer.id
-       LEFT JOIN users seller ON t.seller_id = seller.id
-       WHERE t.buyer_id = ?
-       AND t.rating IS NOT NULL
-       AND t.review IS NOT NULL
-       AND t.review <> ''
-       ORDER BY COALESCE(t.completed_at, t.created_at) DESC
-       LIMIT 20`,
+       LEFT JOIN users reviewer ON tr.reviewer_id = reviewer.id
+       LEFT JOIN users reviewed ON tr.reviewed_user_id = reviewed.id
+       WHERE tr.reviewed_user_id = ?
+       AND tr.reviewed_role = 'buyer'
+       ORDER BY tr.created_at DESC`,
       [userId]
     );
 
@@ -276,11 +270,9 @@ const getPublicProfile = async (req, res) => {
       `SELECT 
         COUNT(*) AS total_reviews,
         AVG(rating) AS average_rating
-       FROM transactions
-       WHERE seller_id = ?
-       AND rating IS NOT NULL
-       AND review IS NOT NULL
-       AND review <> ''`,
+       FROM transaction_reviews
+       WHERE reviewed_user_id = ?
+       AND reviewed_role = 'seller'`,
       [userId]
     );
 
@@ -288,11 +280,9 @@ const getPublicProfile = async (req, res) => {
       `SELECT 
         COUNT(*) AS total_reviews,
         AVG(rating) AS average_rating
-       FROM transactions
-       WHERE buyer_id = ?
-       AND rating IS NOT NULL
-       AND review IS NOT NULL
-       AND review <> ''`,
+       FROM transaction_reviews
+       WHERE reviewed_user_id = ?
+       AND reviewed_role = 'buyer'`,
       [userId]
     );
 
@@ -303,13 +293,8 @@ const getPublicProfile = async (req, res) => {
       [userId, userId]
     );
 
-    const sellerRating = Number(
-      sellerRatingSummary[0]?.average_rating || 0
-    );
-
-    const buyerRating = Number(
-      buyerRatingSummary[0]?.average_rating || 0
-    );
+    const sellerRating = Number(sellerRatingSummary[0]?.average_rating || 0);
+    const buyerRating = Number(buyerRatingSummary[0]?.average_rating || 0);
 
     const totalSellerReviews = Number(
       sellerRatingSummary[0]?.total_reviews || 0
@@ -328,7 +313,7 @@ const getPublicProfile = async (req, res) => {
               buyerRating * totalBuyerReviews) /
             totalReviews
           ).toFixed(2)
-        : Number(user.rating || 0).toFixed(2);
+        : "0.00";
 
     return res.status(200).json({
       message: "Profil publik berhasil diambil.",
@@ -357,7 +342,6 @@ const getPublicProfile = async (req, res) => {
 
         reviews_as_seller: reviewsAsSeller,
         reviews_as_buyer: reviewsAsBuyer,
-
         reviews: [...reviewsAsSeller, ...reviewsAsBuyer],
       },
     });

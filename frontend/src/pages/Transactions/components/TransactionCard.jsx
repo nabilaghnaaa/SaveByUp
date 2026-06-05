@@ -52,6 +52,7 @@ export default function TransactionCard({
     : transaction.buyer_id;
 
   const contactRole = isBuyer ? "Penjual" : "Pembeli";
+  const reviewTargetLabel = isBuyer ? "Penjual" : "Pembeli";
 
   const whatsappUrl = buildWhatsappUrl({
     phone: contactPhone,
@@ -66,7 +67,7 @@ export default function TransactionCard({
 
   const canManageLocation = isWaiting;
   const canComplete = isWaiting;
-  const canRate = isCompleted && !transaction.rating;
+  const canRate = isCompleted && !transaction.current_user_has_reviewed;
 
   const currentUserHasShared = Boolean(
     transaction.current_user_has_shared_location
@@ -103,9 +104,15 @@ export default function TransactionCard({
                 : "Transaksi"}
           </span>
 
-          {transaction.rating && (
+          {transaction.current_user_has_reviewed && (
             <span className="transaction-rating-badge">
-              Rating {transaction.rating}/5
+              Ulasanmu {transaction.current_user_review_rating}/5
+            </span>
+          )}
+
+          {transaction.other_user_has_reviewed && (
+            <span className="transaction-rating-badge">
+              Lawan transaksi sudah mengulas
             </span>
           )}
         </div>
@@ -149,13 +156,18 @@ export default function TransactionCard({
           </div>
         )}
 
-        {transaction.review && (
-          <p className="transaction-review">“{transaction.review}”</p>
+        {transaction.current_user_has_reviewed && (
+          <p className="transaction-review">
+            Ulasanmu untuk {reviewTargetLabel}: “
+            {transaction.current_user_review_text ||
+              "Kamu tidak menulis ulasan."}
+            ”
+          </p>
         )}
 
-        {isCompleted && transaction.rating && (
+        {isCompleted && transaction.current_user_has_reviewed && (
           <div className="transaction-completed">
-            Transaksi sudah selesai dan sudah diberi ulasan.
+            Kamu sudah memberi ulasan untuk {reviewTargetLabel.toLowerCase()}.
           </div>
         )}
 
@@ -205,7 +217,7 @@ export default function TransactionCard({
             className="sb-btn transaction-btn-outline"
             onClick={onComplete}
           >
-            Berikan Ulasan & Tandai Selesai
+            Selesaikan & Ulas {reviewTargetLabel}
           </button>
         )}
 
@@ -215,17 +227,17 @@ export default function TransactionCard({
             className="sb-btn transaction-btn-outline"
             onClick={onRate}
           >
-            Berikan Ulasan
+            Ulas {reviewTargetLabel}
           </button>
         )}
 
-        {isCompleted && transaction.rating && (
+        {isCompleted && transaction.current_user_has_reviewed && (
           <button
             type="button"
             className="sb-btn transaction-btn-outline"
             disabled
           >
-            Sudah Selesai
+            Sudah Mengulas
           </button>
         )}
       </div>

@@ -79,8 +79,35 @@ const normalizeTransaction = (transaction = {}) => {
     seller_location: normalizeLocation(transaction.seller_location),
 
     status,
-    rating: transaction.rating,
-    review: transaction.review || "",
+
+    current_user_review_id: transaction.current_user_review_id || null,
+    current_user_has_reviewed: Boolean(transaction.current_user_review_id),
+    current_user_review_rating:
+      transaction.current_user_review_rating !== null &&
+      transaction.current_user_review_rating !== undefined
+        ? Number(transaction.current_user_review_rating)
+        : null,
+    current_user_review_text: transaction.current_user_review_text || "",
+    current_user_reviewed_role: transaction.current_user_reviewed_role || "",
+
+    other_user_review_id: transaction.other_user_review_id || null,
+    other_user_has_reviewed: Boolean(transaction.other_user_review_id),
+    other_user_review_rating:
+      transaction.other_user_review_rating !== null &&
+      transaction.other_user_review_rating !== undefined
+        ? Number(transaction.other_user_review_rating)
+        : null,
+    other_user_review_text: transaction.other_user_review_text || "",
+    other_user_reviewed_role: transaction.other_user_reviewed_role || "",
+
+    rating:
+      transaction.current_user_review_rating ||
+      transaction.rating ||
+      null,
+    review:
+      transaction.current_user_review_text ||
+      transaction.review ||
+      "",
 
     created_at: transaction.created_at,
     completed_at: transaction.completed_at,
@@ -101,13 +128,11 @@ export const getTransactions = async () => {
 
 export const shareTransactionLocation = async (id) => {
   const response = await API.patch(`/transactions/${id}/share-location`);
-
   return response.data;
 };
 
 export const completeTransaction = async (id) => {
   const response = await API.patch(`/transactions/${id}/complete`);
-
   return response.data;
 };
 

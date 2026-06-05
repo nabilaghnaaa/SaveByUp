@@ -6,6 +6,8 @@ const getUserId = (req) => {
 
 const createNotification = async (userId, title, message, type = "system") => {
   try {
+    if (!userId) return;
+
     await db.query(
       "INSERT INTO notifications (user_id, title, message, type) VALUES (?, ?, ?, ?)",
       [userId, title, message, type]
@@ -127,6 +129,107 @@ const normalizeTransactionStatus = (status = "") => {
   return map[value] || value || "menunggu_komunikasi";
 };
 
+const getReviewTarget = (transaction = {}, userId) => {
+  const isBuyer = Number(transaction.buyer_id) === Number(userId);
+  const isSeller = Number(transaction.seller_id) === Number(userId);
+
+  if (isBuyer) {
+    return {
+      reviewerId: transaction.buyer_id,
+      reviewedUserId: transaction.seller_id,
+      reviewedRole: "seller",
+      receiverId: transaction.seller_id,
+      targetLabel: "penjual",
+    };
+  }
+
+  if (isSeller) {
+    return {
+      reviewerId: transaction.seller_id,
+      reviewedUserId: transaction.buyer_id,
+      reviewedRole: "buyer",
+      receiverId: transaction.buyer_id,
+      targetLabel: "pembeli",
+    };
+  }
+
+  return null;
+};
+
+const saveTransactionReview = async ({
+  transaction,
+  userId,
+  rating,
+  review,
+}) => {
+  const target = getReviewTarget(transaction, userId);
+
+  if (!target) {
+    const error = new Error("Kamu tidak memiliki akses untuk memberi ulasan.");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  const [existingReviews] = await db.query(
+    `SELECT id
+     FROM transaction_reviews
+     WHERE transaction_id = ?
+     AND reviewer_id = ?
+     LIMIT 1`,
+    [transaction.id, userId]
+  );
+
+  if (existingReviews.length > 0) {
+    const error = new Error("Kamu sudah memberi ulasan untuk transaksi ini.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  await db.query(
+    `INSERT INTO transaction_reviews
+     (
+      transaction_id,
+      reviewer_id,
+      reviewed_user_id,
+      reviewed_role,
+      rating,
+      review
+     )
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [
+      transaction.id,
+      target.reviewerId,
+      target.reviewedUserId,
+      target.reviewedRole,
+      Number(rating),
+      review || null,
+    ]
+  );
+
+  const [avgRating] = await db.query(
+    `SELECT AVG(rating) AS avg_rating
+     FROM transaction_reviews
+     WHERE reviewed_user_id = ?`,
+    [target.reviewedUserId]
+  );
+
+  await db.query(
+    `UPDATE users
+     SET rating = ?
+     WHERE id = ?`,
+    [Number(avgRating[0]?.avg_rating || 0).toFixed(2), target.reviewedUserId]
+  );
+
+  await createNotification(
+    target.receiverId,
+    "Ulasan transaksi baru",
+    `Kamu menerima rating dan ulasan baru sebagai ${target.targetLabel}.`,
+    "transaction"
+  );
+
+  return target;
+};
+
 const maskTransactionLocation = (transaction = {}, currentUserId) => {
   const isBuyer = Number(transaction.buyer_id) === Number(currentUserId);
   const isSeller = Number(transaction.seller_id) === Number(currentUserId);
@@ -211,14 +314,30 @@ const getTransactions = async (req, res) => {
 
         seller.name AS seller_name,
         seller.whatsapp AS seller_whatsapp,
-        seller.address AS seller_address
+        seller.address AS seller_address,
+
+        my_review.id AS current_user_review_id,
+        my_review.rating AS current_user_review_rating,
+        my_review.review AS current_user_review_text,
+        my_review.reviewed_role AS current_user_reviewed_role,
+
+        other_review.id AS other_user_review_id,
+        other_review.rating AS other_user_review_rating,
+        other_review.review AS other_user_review_text,
+        other_review.reviewed_role AS other_user_reviewed_role
        FROM transactions t
        JOIN marketplace_products mp ON t.product_id = mp.id
        JOIN users buyer ON t.buyer_id = buyer.id
        JOIN users seller ON t.seller_id = seller.id
+       LEFT JOIN transaction_reviews my_review
+        ON my_review.transaction_id = t.id
+        AND my_review.reviewer_id = ?
+       LEFT JOIN transaction_reviews other_review
+        ON other_review.transaction_id = t.id
+        AND other_review.reviewer_id <> ?
        WHERE t.buyer_id = ? OR t.seller_id = ?
        ORDER BY t.created_at DESC`,
-      [userId, userId]
+      [userId, userId, userId, userId]
     );
 
     return res.status(200).json({
@@ -609,12 +728,6 @@ const completeTransactionWithRating = async (req, res) => {
     const transaction = transactions[0];
     const transactionStatus = String(transaction.status || "").toLowerCase();
 
-    if (["completed", "selesai"].includes(transactionStatus)) {
-      return res.status(400).json({
-        message: "Transaksi ini sudah selesai.",
-      });
-    }
-
     if (["cancelled", "dibatalkan"].includes(transactionStatus)) {
       return res.status(400).json({
         message: "Transaksi yang dibatalkan tidak bisa diselesaikan.",
@@ -658,107 +771,92 @@ const completeTransactionWithRating = async (req, res) => {
       food = foods[0] || null;
     }
 
-    await db.query(
-      `UPDATE transactions
-       SET
-        status = 'completed',
-        completed_at = NOW(),
-        rating = ?,
-        review = ?
-       WHERE id = ?`,
-      [Number(rating), review || null, id]
+    const alreadyCompleted = ["completed", "selesai"].includes(
+      transactionStatus
     );
 
-    if (transaction.purchase_request_id) {
+    if (!alreadyCompleted) {
       await db.query(
-        `UPDATE purchase_requests
+        `UPDATE transactions
          SET
           status = 'completed',
-          updated_at = NOW()
+          completed_at = NOW()
          WHERE id = ?`,
-        [transaction.purchase_request_id]
+        [id]
       );
-    }
 
-    await db.query(
-      `UPDATE marketplace_products
-       SET
-        status = 'selesai',
-        quantity = 0,
-        stock = 0
-       WHERE id = ?`,
-      [transaction.product_id]
-    );
-
-    if (food) {
-      const currentFoodQuantity = Number(food.quantity || 0);
-
-      remainingFoodQuantity = Math.max(
-        currentFoodQuantity - transactionQuantity,
-        0
-      );
+      if (transaction.purchase_request_id) {
+        await db.query(
+          `UPDATE purchase_requests
+           SET
+            status = 'completed',
+            updated_at = NOW()
+           WHERE id = ?`,
+          [transaction.purchase_request_id]
+        );
+      }
 
       await db.query(
-        `UPDATE foods
+        `UPDATE marketplace_products
          SET
-          quantity = ?,
-          status = CASE
-            WHEN ? <= 0 THEN 'terjual'
-            ELSE status
-          END,
-          priority = CASE
-            WHEN ? <= 0 THEN 'selesai'
-            ELSE priority
-          END
+          status = 'selesai',
+          quantity = 0,
+          stock = 0
          WHERE id = ?`,
-        [
-          remainingFoodQuantity,
-          remainingFoodQuantity,
-          remainingFoodQuantity,
-          product.food_id,
-        ]
+        [transaction.product_id]
       );
 
-      await createSoldStockLog({
-        foodId: product.food_id,
-        sellerId: transaction.seller_id,
-        quantity: transactionQuantity,
-        foodName: food.name,
-        unit: food.unit,
-      });
+      if (food) {
+        const currentFoodQuantity = Number(food.quantity || 0);
+
+        remainingFoodQuantity = Math.max(
+          currentFoodQuantity - transactionQuantity,
+          0
+        );
+
+        await db.query(
+          `UPDATE foods
+           SET
+            quantity = ?,
+            status = CASE
+              WHEN ? <= 0 THEN 'terjual'
+              ELSE status
+            END,
+            priority = CASE
+              WHEN ? <= 0 THEN 'selesai'
+              ELSE priority
+            END
+           WHERE id = ?`,
+          [
+            remainingFoodQuantity,
+            remainingFoodQuantity,
+            remainingFoodQuantity,
+            product.food_id,
+          ]
+        );
+
+        await createSoldStockLog({
+          foodId: product.food_id,
+          sellerId: transaction.seller_id,
+          quantity: transactionQuantity,
+          foodName: food.name,
+          unit: food.unit,
+        });
+      }
     }
 
-    const ratedUserId =
-      Number(transaction.buyer_id) === Number(userId)
-        ? transaction.seller_id
-        : transaction.buyer_id;
-
-    const receiverId = ratedUserId;
-
-    const [avgRating] = await db.query(
-      `SELECT AVG(rating) AS avg_rating
-       FROM transactions
-       WHERE (buyer_id = ? OR seller_id = ?)
-       AND rating IS NOT NULL`,
-      [ratedUserId, ratedUserId]
-    );
-
-    await db.query(
-      `UPDATE users
-       SET rating = ?
-       WHERE id = ?`,
-      [Number(avgRating[0].avg_rating || 0).toFixed(2), ratedUserId]
-    );
-
-    await createNotification(
-      receiverId,
-      "Transaksi selesai",
-      "Transaksi SaveByUp telah ditandai selesai dan diberi rating.",
-      "transaction"
-    );
+    const reviewedTarget = await saveTransactionReview({
+      transaction: {
+        ...transaction,
+        id: Number(id),
+      },
+      userId,
+      rating,
+      review,
+    });
 
     return res.status(200).json({
-      message: "Transaksi berhasil diselesaikan dan rating berhasil disimpan.",
+      message: "Transaksi berhasil diselesaikan dan ulasan berhasil disimpan.",
       data: {
         transaction_id: Number(id),
         product_id: transaction.product_id,
@@ -766,14 +864,15 @@ const completeTransactionWithRating = async (req, res) => {
         quantity_sold: transactionQuantity,
         remaining_food_quantity: remainingFoodQuantity,
         remaining_marketplace_quantity: 0,
-        rated_user_id: ratedUserId,
+        reviewed_user_id: reviewedTarget.reviewedUserId,
+        reviewed_role: reviewedTarget.reviewedRole,
       },
     });
   } catch (error) {
     console.error("Complete transaction with rating error:", error);
 
-    return res.status(500).json({
-      message: "Terjadi kesalahan pada server",
+    return res.status(error.statusCode || 500).json({
+      message: error.message || "Terjadi kesalahan pada server",
       error: error.message,
     });
   }
@@ -781,11 +880,11 @@ const completeTransactionWithRating = async (req, res) => {
 
 const rateTransaction = async (req, res) => {
   try {
-    const buyerId = getUserId(req);
+    const userId = getUserId(req);
     const { id } = req.params;
     const { rating, review } = req.body;
 
-    if (!buyerId) {
+    if (!userId) {
       return res.status(401).json({
         message: "User tidak terautentikasi.",
       });
@@ -798,13 +897,16 @@ const rateTransaction = async (req, res) => {
     }
 
     const [transactions] = await db.query(
-      "SELECT * FROM transactions WHERE id = ? AND buyer_id = ?",
-      [id, buyerId]
+      `SELECT *
+       FROM transactions
+       WHERE id = ?
+       AND (buyer_id = ? OR seller_id = ?)`,
+      [id, userId, userId]
     );
 
     if (transactions.length === 0) {
       return res.status(404).json({
-        message: "Transaksi tidak ditemukan.",
+        message: "Transaksi tidak ditemukan atau bukan milik kamu.",
       });
     }
 
@@ -817,35 +919,26 @@ const rateTransaction = async (req, res) => {
       });
     }
 
-    if (transaction.rating) {
-      return res.status(400).json({
-        message: "Transaksi ini sudah pernah diberi rating.",
-      });
-    }
-
-    await db.query(
-      "UPDATE transactions SET rating = ?, review = ? WHERE id = ?",
-      [Number(rating), review || null, id]
-    );
-
-    const [avgRating] = await db.query(
-      "SELECT AVG(rating) AS avg_rating FROM transactions WHERE seller_id = ? AND rating IS NOT NULL",
-      [transaction.seller_id]
-    );
-
-    await db.query("UPDATE users SET rating = ? WHERE id = ?", [
-      Number(avgRating[0].avg_rating || 0).toFixed(2),
-      transaction.seller_id,
-    ]);
+    const reviewedTarget = await saveTransactionReview({
+      transaction,
+      userId,
+      rating,
+      review,
+    });
 
     return res.status(200).json({
-      message: "Rating berhasil diberikan.",
+      message: "Rating dan ulasan berhasil diberikan.",
+      data: {
+        transaction_id: Number(id),
+        reviewed_user_id: reviewedTarget.reviewedUserId,
+        reviewed_role: reviewedTarget.reviewedRole,
+      },
     });
   } catch (error) {
     console.error("Rate transaction error:", error);
 
-    return res.status(500).json({
-      message: "Terjadi kesalahan pada server",
+    return res.status(error.statusCode || 500).json({
+      message: error.message || "Terjadi kesalahan pada server",
       error: error.message,
     });
   }

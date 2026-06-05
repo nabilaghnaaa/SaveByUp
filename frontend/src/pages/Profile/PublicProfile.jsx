@@ -28,14 +28,14 @@ const renderStars = (rating = 0) => {
 
 function ReviewList({ title, subtitle, rating, total, reviews }) {
   return (
-    <section className="profile-card public-review-section">
-      <div className="profile-section-header">
+    <section className="public-review-section">
+      <div className="public-review-header">
         <div>
           <span>{subtitle}</span>
           <h3>{title}</h3>
         </div>
 
-        <div className="profile-rating-box public-rating-mini">
+        <div className="public-review-score">
           <span>{renderStars(rating)}</span>
           <strong>{Number(rating || 0).toFixed(1)}/5</strong>
           <p>{total} ulasan</p>
@@ -43,7 +43,7 @@ function ReviewList({ title, subtitle, rating, total, reviews }) {
       </div>
 
       {reviews.length === 0 ? (
-        <div className="profile-empty-review">
+        <div className="public-empty-review">
           <h4>Belum ada ulasan</h4>
           <p>Belum ada ulasan untuk peran ini.</p>
         </div>
@@ -71,13 +71,11 @@ function ReviewList({ title, subtitle, rating, total, reviews }) {
                 </div>
               </div>
 
-              {item.review ? (
-                <p className="public-review-text">“{item.review}”</p>
-              ) : (
-                <p className="public-review-text">
-                  Pengguna tidak menulis ulasan.
-                </p>
-              )}
+              <p className="public-review-text">
+                {item.review
+                  ? `“${item.review}”`
+                  : "Pengguna tidak menulis ulasan."}
+              </p>
 
               <span className="public-review-date">
                 {formatDate(item.created_at)}
@@ -104,7 +102,6 @@ export default function PublicProfile() {
       setMessage("");
 
       const data = await getPublicProfile(userId);
-
       setProfile(data);
     } catch (error) {
       console.error("Gagal mengambil profil publik:", error);
@@ -144,14 +141,14 @@ export default function PublicProfile() {
 
   return (
     <AppShell>
-      <main className="profile-page">
+      <main className="public-profile-page">
         <div className="profile-orb profile-orb-one" />
         <div className="profile-orb profile-orb-two" />
 
         <PageHeader
           label="Profil Pengguna"
           title="Profil Publik SaveByUp"
-          description="Lihat identitas, rating, ulasan sebagai penjual, dan ulasan sebagai pembeli sebelum melanjutkan transaksi."
+          description="Lihat identitas, reputasi sebagai penjual, dan reputasi sebagai pembeli sebelum melanjutkan transaksi."
           action={
             <button
               type="button"
@@ -186,37 +183,30 @@ export default function PublicProfile() {
         ) : (
           profile && (
             <>
-              <section className="profile-card public-profile-card">
-                <div className="profile-cover">
-                  <div className="profile-avatar">
-                    {profile.photo_url ? (
-                      <img src={profile.photo_url} alt={profile.name} />
-                    ) : (
-                      <span>{getInitial(profile.name)}</span>
-                    )}
-                  </div>
+              <section className="public-profile-card">
+                <div className="public-profile-avatar">
+                  {profile.photo_url ? (
+                    <img src={profile.photo_url} alt={profile.name} />
+                  ) : (
+                    <span>{getInitial(profile.name)}</span>
+                  )}
                 </div>
 
-                <div className="profile-info">
-                  <div>
-                    <span className="profile-label">Pengguna SaveByUp</span>
-                    <h2>{profile.name || "Pengguna SaveByUp"}</h2>
+                <div className="public-profile-main">
+                  <span>Pengguna SaveByUp</span>
+                  <h2>{profile.name || "Pengguna SaveByUp"}</h2>
+                  <p>
+                    {profile.bio || "Pengguna ini belum menambahkan bio profil."}
+                  </p>
 
-                    {profile.bio ? (
-                      <p>{profile.bio}</p>
-                    ) : (
-                      <p>Pengguna ini belum menambahkan bio profil.</p>
-                    )}
-                  </div>
-
-                  <div className="profile-rating-box">
-                    <span>{renderStars(averageRating)}</span>
+                  <div className="public-profile-rating">
                     <strong>{averageRating.toFixed(1)}/5</strong>
+                    <span>{renderStars(averageRating)}</span>
                     <p>{totalReviews} total ulasan</p>
                   </div>
                 </div>
 
-                <div className="profile-detail-grid">
+                <div className="public-profile-info-grid">
                   <div>
                     <span>Email</span>
                     <strong>{profile.email || "-"}</strong>
@@ -240,18 +230,18 @@ export default function PublicProfile() {
                   </div>
 
                   <div>
-                    <span>Rating sebagai Penjual</span>
+                    <span>Rating Penjual</span>
                     <strong>{sellerRating.toFixed(1)}/5</strong>
                   </div>
 
                   <div>
-                    <span>Rating sebagai Pembeli</span>
+                    <span>Rating Pembeli</span>
                     <strong>{buyerRating.toFixed(1)}/5</strong>
                   </div>
                 </div>
               </section>
 
-              <div className="public-profile-review-grid">
+              <section className="public-review-grid">
                 <ReviewList
                   title="Ulasan sebagai Penjual"
                   subtitle="Reputasi saat menjual"
@@ -267,7 +257,7 @@ export default function PublicProfile() {
                   total={totalBuyerReviews}
                   reviews={reviewsAsBuyer}
                 />
-              </div>
+              </section>
             </>
           )
         )}

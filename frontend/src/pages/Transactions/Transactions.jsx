@@ -82,7 +82,7 @@ export default function Transactions() {
   ).length;
 
   const totalRating = transactions.filter(
-    (transaction) => transaction.rating
+    (transaction) => transaction.current_user_has_reviewed
   ).length;
 
   const handleShareLocation = async (transaction) => {
@@ -126,7 +126,7 @@ export default function Transactions() {
         await completeTransactionWithRating(selectedTransaction.id, payload);
 
         setMessage(
-          "Rating dan ulasan berhasil dikirim. Transaksi berhasil ditandai selesai."
+          "Ulasan berhasil dikirim. Transaksi berhasil ditandai selesai."
         );
       } else {
         await rateTransaction(selectedTransaction.id, payload);
@@ -206,7 +206,7 @@ export default function Transactions() {
           <div className="transaction-summary-card">
             <span>Sudah Dinilai</span>
             <strong>{loading ? "..." : totalRating}</strong>
-            <p>Transaksi yang sudah memiliki rating atau ulasan.</p>
+            <p>Transaksi yang sudah kamu beri rating atau ulasan.</p>
           </div>
         </section>
 

@@ -21,26 +21,24 @@ const toNullableNumber = (value) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-const normalizeReview = (review = {}) => {
-  return {
-    id: review.id,
-    transaction_id: review.transaction_id || review.id,
-    product_id: review.product_id,
-    product_name: review.product_name || "Produk Marketplace",
-    product_image: review.product_image || "",
+const normalizeReview = (review = {}) => ({
+  id: review.id,
+  transaction_id: review.transaction_id || review.id,
+  product_id: review.product_id,
+  product_name: review.product_name || "Produk Marketplace",
+  product_image: review.product_image || "",
 
-    reviewer_id: review.reviewer_id,
-    reviewer_name: review.reviewer_name || "Pengguna SaveByUp",
+  reviewer_id: review.reviewer_id,
+  reviewer_name: review.reviewer_name || "Pengguna SaveByUp",
 
-    reviewed_user_id: review.reviewed_user_id,
-    reviewed_user_name: review.reviewed_user_name || "",
-    reviewed_role: review.reviewed_role || "",
+  reviewed_user_id: review.reviewed_user_id,
+  reviewed_user_name: review.reviewed_user_name || "",
+  reviewed_role: review.reviewed_role || "",
 
-    rating: Number(review.rating || 0),
-    review: review.review || "",
-    created_at: review.completed_at || review.created_at || "",
-  };
-};
+  rating: Number(review.rating || 0),
+  review: review.review || "",
+  created_at: review.completed_at || review.created_at || "",
+});
 
 const normalizeProfile = (profile = {}) => {
   const photoPath = profile.photo || profile.avatar_url || "";
@@ -56,9 +54,20 @@ const normalizeProfile = (profile = {}) => {
     ? profile.reviews_as_buyer.map(normalizeReview)
     : [];
 
-  const reviews = Array.isArray(profile.reviews)
-    ? profile.reviews.map(normalizeReview)
-    : [...reviewsAsSeller, ...reviewsAsBuyer];
+  const mergedReviews = [...reviewsAsSeller, ...reviewsAsBuyer];
+
+  const totalSellerReviews = reviewsAsSeller.length;
+  const totalBuyerReviews = reviewsAsBuyer.length;
+  const totalReviews = totalSellerReviews + totalBuyerReviews;
+
+  const sellerRating = Number(profile.seller_rating || 0);
+  const buyerRating = Number(profile.buyer_rating || 0);
+
+  const averageRating =
+    totalReviews > 0
+      ? (sellerRating * totalSellerReviews + buyerRating * totalBuyerReviews) /
+        totalReviews
+      : 0;
 
   const transactions = Array.isArray(profile.transactions)
     ? profile.transactions
@@ -87,22 +96,16 @@ const normalizeProfile = (profile = {}) => {
 
     bio: profile.bio || "",
 
-    rating: Number(profile.rating || 0),
-    seller_rating: Number(profile.seller_rating || 0),
-    buyer_rating: Number(profile.buyer_rating || 0),
+    rating: averageRating,
+    seller_rating: sellerRating,
+    buyer_rating: buyerRating,
 
-    total_reviews: Number(profile.total_reviews || reviews.length || 0),
-    total_seller_reviews: Number(
-      profile.total_seller_reviews || reviewsAsSeller.length || 0
-    ),
-    total_buyer_reviews: Number(
-      profile.total_buyer_reviews || reviewsAsBuyer.length || 0
-    ),
-    total_transactions: Number(
-      profile.total_transactions || transactions.length || 0
-    ),
+    total_reviews: totalReviews,
+    total_seller_reviews: totalSellerReviews,
+    total_buyer_reviews: totalBuyerReviews,
+    total_transactions: Number(profile.total_transactions || 0),
 
-    reviews,
+    reviews: mergedReviews,
     reviews_as_seller: reviewsAsSeller,
     reviews_as_buyer: reviewsAsBuyer,
     transactions,
