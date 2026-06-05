@@ -5,6 +5,7 @@ const fs = require("fs");
 
 const {
   getProfile,
+  getPublicProfile,
   updateProfile,
 } = require("../controllers/profileController");
 
@@ -63,6 +64,8 @@ const upload = multer({
 router.use(authMiddleware);
 
 router.get("/", getProfile);
+
+router.get("/:userId", getPublicProfile);
 
 router.put("/", (req, res, next) => {
   upload.single("photo")(req, res, (error) => {

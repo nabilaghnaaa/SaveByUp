@@ -639,4 +639,23 @@
   .rating-actions .sb-btn {
     width: 100%;
   }
+
+  .transaction-profile-link {
+  display: inline-flex;
+  width: fit-content;
+  color: #6f4e37;
+  font-weight: 900;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(111, 78, 55, 0.35);
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.transaction-profile-link:hover {
+  color: #263f24;
+  border-bottom-color: #263f24;
+  transform: translateY(-1px);
+}
 }

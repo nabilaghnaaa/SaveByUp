@@ -1,3 +1,5 @@
+import { Link } from "react-router-dom";
+
 import { buildWhatsappUrl } from "../../../services/marketplaceService";
 import { formatCurrency } from "../../../utils/formatCurrency";
 import { formatDate } from "../../../utils/formatDate";
@@ -45,6 +47,12 @@ export default function TransactionCard({
     ? transaction.seller_whatsapp
     : transaction.buyer_whatsapp;
 
+  const contactUserId = isBuyer
+    ? transaction.seller_id
+    : transaction.buyer_id;
+
+  const contactRole = isBuyer ? "Penjual" : "Pembeli";
+
   const whatsappUrl = buildWhatsappUrl({
     phone: contactPhone,
     productName: transaction.product_name,
@@ -52,12 +60,13 @@ export default function TransactionCard({
     offerPrice: transaction.final_price,
   });
 
-  const canManageLocation =
-    transaction.status !== "selesai" && transaction.status !== "dibatalkan";
+  const isWaiting = transaction.status === "menunggu_komunikasi";
+  const isCompleted = transaction.status === "selesai";
+  const isCancelled = transaction.status === "dibatalkan";
 
-  const canComplete = transaction.status !== "selesai";
-  const canRate =
-    transaction.status === "selesai" && isBuyer && !transaction.rating;
+  const canManageLocation = isWaiting;
+  const canComplete = isWaiting;
+  const canRate = isCompleted && !transaction.rating;
 
   const currentUserHasShared = Boolean(
     transaction.current_user_has_shared_location
@@ -104,8 +113,17 @@ export default function TransactionCard({
         <h3>{transaction.product_name || "Produk Marketplace"}</h3>
 
         <p>
-          {isBuyer ? "Penjual" : "Pembeli"}:{" "}
-          <strong>{contactName || "Pengguna SaveByUp"}</strong>
+          {contactRole}:{" "}
+          {contactUserId ? (
+            <Link
+              to={`/profile/${contactUserId}`}
+              className="transaction-profile-link"
+            >
+              {contactName || "Pengguna SaveByUp"}
+            </Link>
+          ) : (
+            <strong>{contactName || "Pengguna SaveByUp"}</strong>
+          )}
         </p>
 
         <div className="transaction-grid">
@@ -134,10 +152,22 @@ export default function TransactionCard({
         {transaction.review && (
           <p className="transaction-review">“{transaction.review}”</p>
         )}
+
+        {isCompleted && transaction.rating && (
+          <div className="transaction-completed">
+            Transaksi sudah selesai dan sudah diberi ulasan.
+          </div>
+        )}
+
+        {isCancelled && (
+          <div className="transaction-completed">
+            Transaksi dibatalkan dan tidak dapat diproses lagi.
+          </div>
+        )}
       </div>
 
       <div className="transaction-actions">
-        {contactPhone && (
+        {contactPhone && !isCancelled && (
           <a
             className="sb-btn sb-btn-primary"
             href={whatsappUrl}
@@ -175,7 +205,7 @@ export default function TransactionCard({
             className="sb-btn transaction-btn-outline"
             onClick={onComplete}
           >
-            Tandai Selesai
+            Berikan Ulasan & Tandai Selesai
           </button>
         )}
 
@@ -185,7 +215,17 @@ export default function TransactionCard({
             className="sb-btn transaction-btn-outline"
             onClick={onRate}
           >
-            Beri Rating
+            Berikan Ulasan
+          </button>
+        )}
+
+        {isCompleted && transaction.rating && (
+          <button
+            type="button"
+            className="sb-btn transaction-btn-outline"
+            disabled
+          >
+            Sudah Selesai
           </button>
         )}
       </div>

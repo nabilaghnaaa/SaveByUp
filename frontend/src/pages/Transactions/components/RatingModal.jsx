@@ -7,6 +7,8 @@ export default function RatingModal({ transaction, onClose, onSubmit }) {
   const [review, setReview] = useState("");
   const [message, setMessage] = useState("");
 
+  const isCompleteMode = transaction?.mode === "complete";
+
   const handleSubmit = (event) => {
     event.preventDefault();
 
@@ -17,7 +19,7 @@ export default function RatingModal({ transaction, onClose, onSubmit }) {
 
     onSubmit({
       rating: Number(rating),
-      review,
+      review: String(review || "").trim(),
     });
   };
 
@@ -26,8 +28,13 @@ export default function RatingModal({ transaction, onClose, onSubmit }) {
       <form className="rating-modal" onSubmit={handleSubmit}>
         <div className="rating-header">
           <div>
-            <span>Rating Transaksi</span>
-            <h3>{transaction.product_name}</h3>
+            <span>
+              {isCompleteMode
+                ? "Selesaikan Transaksi"
+                : "Rating Transaksi"}
+            </span>
+
+            <h3>{transaction.product_name || "Produk Marketplace"}</h3>
           </div>
 
           <button type="button" onClick={onClose}>
@@ -36,8 +43,9 @@ export default function RatingModal({ transaction, onClose, onSubmit }) {
         </div>
 
         <p>
-          Berikan rating untuk membantu membangun kepercayaan antar pengguna
-          SaveByUp setelah transaksi selesai.
+          {isCompleteMode
+            ? "Berikan rating dan ulasan terlebih dahulu. Setelah dikirim, transaksi akan otomatis ditandai selesai."
+            : "Berikan rating untuk membantu membangun kepercayaan antar pengguna SaveByUp setelah transaksi selesai."}
         </p>
 
         {message && <div className="rating-message">{message}</div>}
@@ -72,7 +80,9 @@ export default function RatingModal({ transaction, onClose, onSubmit }) {
           </button>
 
           <button type="submit" className="sb-btn sb-btn-primary">
-            Kirim Rating
+            {isCompleteMode
+              ? "Kirim Ulasan & Selesaikan"
+              : "Kirim Ulasan"}
           </button>
         </div>
       </form>

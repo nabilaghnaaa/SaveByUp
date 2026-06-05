@@ -21,14 +21,42 @@ const toNullableNumber = (value) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
+const normalizeReview = (review = {}) => {
+  return {
+    id: review.id,
+    transaction_id: review.transaction_id || review.id,
+    product_id: review.product_id,
+    product_name: review.product_name || "Produk Marketplace",
+    product_image: review.product_image || "",
+
+    reviewer_id: review.reviewer_id || review.buyer_id || review.seller_id,
+    reviewer_name: review.reviewer_name || review.buyer_name || review.seller_name || "Pengguna SaveByUp",
+
+    rating: Number(review.rating || 0),
+    review: review.review || "",
+    created_at: review.created_at || review.completed_at || "",
+  };
+};
+
 const normalizeProfile = (profile = {}) => {
   const photoPath = profile.photo || profile.avatar_url || "";
 
   const latitude = toNullableNumber(profile.latitude);
   const longitude = toNullableNumber(profile.longitude);
 
+  const reviews = Array.isArray(profile.reviews)
+    ? profile.reviews.map(normalizeReview)
+    : [];
+
+  const transactions = Array.isArray(profile.transactions)
+    ? profile.transactions
+    : [];
+
   return {
     id: profile.id,
+    user_id: profile.user_id || profile.id,
+    id_user: profile.id_user || profile.id,
+
     name: profile.name || "",
     email: profile.email || "",
     phone: profile.phone || "",
@@ -48,6 +76,14 @@ const normalizeProfile = (profile = {}) => {
     bio: profile.bio || "",
     rating: Number(profile.rating || 0),
 
+    total_reviews: Number(profile.total_reviews || reviews.length || 0),
+    total_transactions: Number(
+      profile.total_transactions || transactions.length || 0
+    ),
+
+    reviews,
+    transactions,
+
     is_profile_complete: Boolean(profile.is_profile_complete),
     missing_fields: Array.isArray(profile.missing_fields)
       ? profile.missing_fields
@@ -57,6 +93,12 @@ const normalizeProfile = (profile = {}) => {
 
 export const getProfile = async () => {
   const response = await API.get("/profile");
+
+  return normalizeProfile(response.data.data || {});
+};
+
+export const getPublicProfile = async (userId) => {
+  const response = await API.get(`/profile/${userId}`);
 
   return normalizeProfile(response.data.data || {});
 };

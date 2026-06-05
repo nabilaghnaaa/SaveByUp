@@ -44,6 +44,17 @@ const sanitizeProductForPrivacy = (product, productIsMine) => {
   };
 };
 
+const getSellerProfileId = (product = {}) => {
+  return (
+    product.seller_id ||
+    product.user_id ||
+    product.id_user ||
+    product.owner_id ||
+    product.created_by ||
+    null
+  );
+};
+
 export default function MarketplaceDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -101,6 +112,8 @@ export default function MarketplaceDetail() {
   const currentUserId = profile?.id || profile?.user_id || profile?.id_user;
   const productIsMine = product ? isOwnProduct(product, currentUserId) : false;
   const safeProduct = sanitizeProductForPrivacy(product, productIsMine);
+
+  const sellerProfileId = safeProduct ? getSellerProfileId(safeProduct) : null;
 
   const productCanBeBought = safeProduct
     ? canBuyProduct(safeProduct, currentUserId)
@@ -299,11 +312,23 @@ export default function MarketplaceDetail() {
                   />
 
                   {!productIsMine && (
-                    <div className="product-detail-message">
-                      Lokasi detail penjual disembunyikan. Setelah pengajuan
-                      disetujui dan pembeli mengonfirmasi lokasi COD, pembeli
-                      dan penjual dapat melihat titik lokasi satu sama lain di
-                      halaman transaksi.
+                    <div className="product-detail-message product-seller-profile-box">
+                      <p>
+                        Lokasi detail penjual disembunyikan. Setelah pengajuan
+                        disetujui dan pembeli mengonfirmasi lokasi COD, pembeli
+                        dan penjual dapat melihat titik lokasi satu sama lain di
+                        halaman transaksi.
+                      </p>
+
+                      {sellerProfileId && (
+                        <button
+                          type="button"
+                          className="sb-btn marketplace-btn-outline"
+                          onClick={() => navigate(`/profile/${sellerProfileId}`)}
+                        >
+                          Lihat Profil Penjual
+                        </button>
+                      )}
                     </div>
                   )}
 

@@ -307,4 +307,13 @@
   .product-card-image {
     height: 190px;
   }
+
+  .product-seller-profile-box {
+  display: grid;
+  gap: 14px;
+}
+
+.product-seller-profile-box p {
+  margin: 0;
+}
 }

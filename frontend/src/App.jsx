@@ -20,6 +20,7 @@ import Notifications from "./pages/Notifications/Notifications";
 import Transactions from "./pages/Transactions/Transactions";
 
 import Profile from "./pages/Profile/Profile";
+import PublicProfile from "./pages/Profile/PublicProfile";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 import PublicRoute from "./routes/PublicRoute";
@@ -149,6 +150,15 @@ function App() {
         element={
           <ProtectedRoute>
             <Profile />
+          </ProtectedRoute>
+        }
+      />
+
+      <Route
+        path="/profile/:userId"
+        element={
+          <ProtectedRoute>
+            <PublicProfile />
           </ProtectedRoute>
         }
       />

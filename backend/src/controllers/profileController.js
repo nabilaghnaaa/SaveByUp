@@ -164,6 +164,141 @@ const getProfile = async (req, res) => {
   }
 };
 
+const getPublicProfile = async (req, res) => {
+  try {
+    const currentUserId = getUserId(req);
+    const { userId } = req.params;
+
+    if (!currentUserId) {
+      return res.status(401).json({
+        message: "User tidak terautentikasi.",
+      });
+    }
+
+    if (!userId || Number.isNaN(Number(userId))) {
+      return res.status(400).json({
+        message: "ID pengguna tidak valid.",
+      });
+    }
+
+    const [users] = await db.query(
+      `SELECT 
+        id,
+        name,
+        email,
+        whatsapp,
+        address,
+        location_label,
+        photo,
+        avatar_url,
+        bio,
+        rating
+       FROM users
+       WHERE id = ?`,
+      [userId]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({
+        message: "Profil pengguna tidak ditemukan.",
+      });
+    }
+
+    const user = users[0];
+    const photoPath = user.photo || user.avatar_url || "";
+
+    const [ratingSummary] = await db.query(
+      `SELECT 
+        COUNT(*) AS total_reviews,
+        AVG(rating) AS average_rating
+       FROM transactions
+       WHERE rating IS NOT NULL
+       AND review IS NOT NULL
+       AND review <> ''
+       AND (buyer_id = ? OR seller_id = ?)`,
+      [userId, userId]
+    );
+
+    const [reviews] = await db.query(
+      `SELECT
+        t.id,
+        t.id AS transaction_id,
+        t.product_id,
+        t.rating,
+        t.review,
+        t.completed_at,
+        t.created_at,
+
+        mp.name AS product_name,
+        mp.image_url AS product_image,
+
+        buyer.id AS buyer_id,
+        buyer.name AS buyer_name,
+
+        seller.id AS seller_id,
+        seller.name AS seller_name,
+
+        CASE
+          WHEN t.buyer_id = ? THEN seller.id
+          ELSE buyer.id
+        END AS reviewer_id,
+
+        CASE
+          WHEN t.buyer_id = ? THEN seller.name
+          ELSE buyer.name
+        END AS reviewer_name
+       FROM transactions t
+       LEFT JOIN marketplace_products mp ON t.product_id = mp.id
+       LEFT JOIN users buyer ON t.buyer_id = buyer.id
+       LEFT JOIN users seller ON t.seller_id = seller.id
+       WHERE t.rating IS NOT NULL
+       AND t.review IS NOT NULL
+       AND t.review <> ''
+       AND (t.buyer_id = ? OR t.seller_id = ?)
+       ORDER BY COALESCE(t.completed_at, t.created_at) DESC
+       LIMIT 20`,
+      [userId, userId, userId, userId]
+    );
+
+    const [transactionsSummary] = await db.query(
+      `SELECT COUNT(*) AS total_transactions
+       FROM transactions
+       WHERE buyer_id = ? OR seller_id = ?`,
+      [userId, userId]
+    );
+
+    return res.status(200).json({
+      message: "Profil publik berhasil diambil.",
+      data: {
+        id: user.id,
+        name: user.name || "",
+        email: user.email || "",
+        whatsapp: user.whatsapp || "",
+        address: user.address || "",
+        location_label: user.location_label || "",
+        photo: photoPath,
+        avatar_url: photoPath,
+        bio: user.bio || "",
+        rating: Number(
+          ratingSummary[0]?.average_rating || user.rating || 0
+        ).toFixed(2),
+        total_reviews: Number(ratingSummary[0]?.total_reviews || 0),
+        total_transactions: Number(
+          transactionsSummary[0]?.total_transactions || 0
+        ),
+        reviews,
+      },
+    });
+  } catch (error) {
+    console.error("Get public profile error:", error);
+
+    return res.status(500).json({
+      message: "Terjadi kesalahan pada server.",
+      error: error.message,
+    });
+  }
+};
+
 const updateProfile = async (req, res) => {
   try {
     const userId = getUserId(req);
@@ -320,5 +455,6 @@ const updateProfile = async (req, res) => {
 
 module.exports = {
   getProfile,
+  getPublicProfile,
   updateProfile,
 };
