@@ -574,6 +574,211 @@ const completeTransaction = async (req, res) => {
   }
 };
 
+const completeTransactionWithRating = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const { id } = req.params;
+    const { rating, review } = req.body;
+
+    if (!userId) {
+      return res.status(401).json({
+        message: "User tidak terautentikasi.",
+      });
+    }
+
+    if (!rating || Number(rating) < 1 || Number(rating) > 5) {
+      return res.status(400).json({
+        message: "Rating harus bernilai 1 sampai 5.",
+      });
+    }
+
+    const [transactions] = await db.query(
+      `SELECT *
+       FROM transactions
+       WHERE id = ?
+       AND (buyer_id = ? OR seller_id = ?)`,
+      [id, userId, userId]
+    );
+
+    if (transactions.length === 0) {
+      return res.status(404).json({
+        message: "Transaksi tidak ditemukan atau bukan milik kamu.",
+      });
+    }
+
+    const transaction = transactions[0];
+    const transactionStatus = String(transaction.status || "").toLowerCase();
+
+    if (["completed", "selesai"].includes(transactionStatus)) {
+      return res.status(400).json({
+        message: "Transaksi ini sudah selesai.",
+      });
+    }
+
+    if (["cancelled", "dibatalkan"].includes(transactionStatus)) {
+      return res.status(400).json({
+        message: "Transaksi yang dibatalkan tidak bisa diselesaikan.",
+      });
+    }
+
+    const transactionQuantity = Number(transaction.quantity || 0);
+
+    if (!Number.isFinite(transactionQuantity) || transactionQuantity <= 0) {
+      return res.status(400).json({
+        message: "Jumlah transaksi tidak valid.",
+      });
+    }
+
+    const [products] = await db.query(
+      `SELECT *
+       FROM marketplace_products
+       WHERE id = ?`,
+      [transaction.product_id]
+    );
+
+    if (products.length === 0) {
+      return res.status(404).json({
+        message: "Produk marketplace tidak ditemukan.",
+      });
+    }
+
+    const product = products[0];
+
+    let food = null;
+    let remainingFoodQuantity = null;
+
+    if (product.food_id) {
+      const [foods] = await db.query(
+        `SELECT *
+         FROM foods
+         WHERE id = ?`,
+        [product.food_id]
+      );
+
+      food = foods[0] || null;
+    }
+
+    await db.query(
+      `UPDATE transactions
+       SET
+        status = 'completed',
+        completed_at = NOW(),
+        rating = ?,
+        review = ?
+       WHERE id = ?`,
+      [Number(rating), review || null, id]
+    );
+
+    if (transaction.purchase_request_id) {
+      await db.query(
+        `UPDATE purchase_requests
+         SET
+          status = 'completed',
+          updated_at = NOW()
+         WHERE id = ?`,
+        [transaction.purchase_request_id]
+      );
+    }
+
+    await db.query(
+      `UPDATE marketplace_products
+       SET
+        status = 'selesai',
+        quantity = 0,
+        stock = 0
+       WHERE id = ?`,
+      [transaction.product_id]
+    );
+
+    if (food) {
+      const currentFoodQuantity = Number(food.quantity || 0);
+
+      remainingFoodQuantity = Math.max(
+        currentFoodQuantity - transactionQuantity,
+        0
+      );
+
+      await db.query(
+        `UPDATE foods
+         SET
+          quantity = ?,
+          status = CASE
+            WHEN ? <= 0 THEN 'terjual'
+            ELSE status
+          END,
+          priority = CASE
+            WHEN ? <= 0 THEN 'selesai'
+            ELSE priority
+          END
+         WHERE id = ?`,
+        [
+          remainingFoodQuantity,
+          remainingFoodQuantity,
+          remainingFoodQuantity,
+          product.food_id,
+        ]
+      );
+
+      await createSoldStockLog({
+        foodId: product.food_id,
+        sellerId: transaction.seller_id,
+        quantity: transactionQuantity,
+        foodName: food.name,
+        unit: food.unit,
+      });
+    }
+
+    const ratedUserId =
+      Number(transaction.buyer_id) === Number(userId)
+        ? transaction.seller_id
+        : transaction.buyer_id;
+
+    const receiverId = ratedUserId;
+
+    const [avgRating] = await db.query(
+      `SELECT AVG(rating) AS avg_rating
+       FROM transactions
+       WHERE (buyer_id = ? OR seller_id = ?)
+       AND rating IS NOT NULL`,
+      [ratedUserId, ratedUserId]
+    );
+
+    await db.query(
+      `UPDATE users
+       SET rating = ?
+       WHERE id = ?`,
+      [Number(avgRating[0].avg_rating || 0).toFixed(2), ratedUserId]
+    );
+
+    await createNotification(
+      receiverId,
+      "Transaksi selesai",
+      "Transaksi SaveByUp telah ditandai selesai dan diberi rating.",
+      "transaction"
+    );
+
+    return res.status(200).json({
+      message: "Transaksi berhasil diselesaikan dan rating berhasil disimpan.",
+      data: {
+        transaction_id: Number(id),
+        product_id: transaction.product_id,
+        food_id: product.food_id || null,
+        quantity_sold: transactionQuantity,
+        remaining_food_quantity: remainingFoodQuantity,
+        remaining_marketplace_quantity: 0,
+        rated_user_id: ratedUserId,
+      },
+    });
+  } catch (error) {
+    console.error("Complete transaction with rating error:", error);
+
+    return res.status(500).json({
+      message: "Terjadi kesalahan pada server",
+      error: error.message,
+    });
+  }
+};
+
 const rateTransaction = async (req, res) => {
   try {
     const buyerId = getUserId(req);
@@ -650,5 +855,6 @@ module.exports = {
   getTransactions,
   shareTransactionLocation,
   completeTransaction,
+  completeTransactionWithRating,
   rateTransaction,
 };

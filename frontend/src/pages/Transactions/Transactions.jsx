@@ -5,7 +5,7 @@ import EmptyState from "../../components/ui/EmptyState";
 import PageHeader from "../../components/ui/PageHeader";
 
 import {
-  completeTransaction,
+  completeTransactionWithRating,
   getTransactions,
   rateTransaction,
   shareTransactionLocation,
@@ -104,34 +104,44 @@ export default function Transactions() {
     }
   };
 
-  const handleComplete = async (transaction) => {
-    const ok = window.confirm("Tandai transaksi ini sebagai selesai?");
+  const handleComplete = (transaction) => {
+    setSelectedTransaction({
+      ...transaction,
+      mode: "complete",
+    });
+  };
 
-    if (!ok) return;
-
-    try {
-      await completeTransaction(transaction.id);
-      setMessage("Transaksi berhasil ditandai selesai.");
-      await fetchTransactions();
-    } catch (error) {
-      console.error("Gagal menyelesaikan transaksi:", error);
-      setMessage(
-        error.response?.data?.message || "Gagal menyelesaikan transaksi."
-      );
-    }
+  const handleOpenRating = (transaction) => {
+    setSelectedTransaction({
+      ...transaction,
+      mode: "rate",
+    });
   };
 
   const handleRate = async (payload) => {
     if (!selectedTransaction) return;
 
     try {
-      await rateTransaction(selectedTransaction.id, payload);
-      setMessage("Rating dan ulasan berhasil diberikan.");
+      if (selectedTransaction.mode === "complete") {
+        await completeTransactionWithRating(selectedTransaction.id, payload);
+
+        setMessage(
+          "Rating dan ulasan berhasil dikirim. Transaksi berhasil ditandai selesai."
+        );
+      } else {
+        await rateTransaction(selectedTransaction.id, payload);
+
+        setMessage("Rating dan ulasan berhasil diberikan.");
+      }
+
       setSelectedTransaction(null);
       await fetchTransactions();
     } catch (error) {
-      console.error("Gagal memberikan rating:", error);
-      setMessage(error.response?.data?.message || "Gagal memberikan rating.");
+      console.error("Gagal mengirim rating:", error);
+      setMessage(
+        error.response?.data?.message ||
+          "Gagal mengirim rating dan ulasan transaksi."
+      );
     }
   };
 
@@ -144,7 +154,7 @@ export default function Transactions() {
         <PageHeader
           label="Riwayat"
           title="Riwayat Transaksi"
-          description="Pantau transaksi pembelian dan penjualan, hubungi lewat WhatsApp, bagikan lokasi COD, lihat lokasi setelah kedua pihak membagikan lokasi, lalu selesaikan transaksi."
+          description="Pantau transaksi pembelian dan penjualan, hubungi lewat WhatsApp, bagikan lokasi COD, lihat lokasi setelah kedua pihak membagikan lokasi, lalu selesaikan transaksi melalui rating dan ulasan."
           action={
             <button
               type="button"
@@ -270,7 +280,7 @@ export default function Transactions() {
                 onShareLocation={() => handleShareLocation(transaction)}
                 onViewLocation={() => setLocationModalTransaction(transaction)}
                 onComplete={() => handleComplete(transaction)}
-                onRate={() => setSelectedTransaction(transaction)}
+                onRate={() => handleOpenRating(transaction)}
               />
             ))}
           </section>

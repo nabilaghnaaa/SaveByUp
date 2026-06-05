@@ -4,6 +4,7 @@ const {
   getTransactions,
   shareTransactionLocation,
   completeTransaction,
+  completeTransactionWithRating,
   rateTransaction,
 } = require("../controllers/transactionController");
 
@@ -18,6 +19,8 @@ router.get("/", getTransactions);
 router.patch("/:id/share-location", shareTransactionLocation);
 
 router.patch("/:id/complete", completeTransaction);
+
+router.patch("/:id/complete-with-rating", completeTransactionWithRating);
 
 router.patch("/:id/rate", rateTransaction);
 

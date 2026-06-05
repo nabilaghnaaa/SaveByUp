@@ -111,6 +111,15 @@ export const completeTransaction = async (id) => {
   return response.data;
 };
 
+export const completeTransactionWithRating = async (id, payload) => {
+  const response = await API.patch(`/transactions/${id}/complete-with-rating`, {
+    rating: Number(payload.rating),
+    review: payload.review || "",
+  });
+
+  return response.data;
+};
+
 export const rateTransaction = async (id, payload) => {
   const response = await API.patch(`/transactions/${id}/rate`, {
     rating: Number(payload.rating),
