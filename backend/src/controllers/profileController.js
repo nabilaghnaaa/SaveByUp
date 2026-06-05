@@ -91,7 +91,6 @@ const deleteUploadedFile = (filePath = "") => {
 
     if (filePath.startsWith("/uploads/profiles/")) {
       const fileName = filePath.replace("/uploads/profiles/", "");
-
       fullPath = path.join(__dirname, "../../uploads/profiles", fileName);
     }
 
@@ -207,19 +206,7 @@ const getPublicProfile = async (req, res) => {
     const user = users[0];
     const photoPath = user.photo || user.avatar_url || "";
 
-    const [ratingSummary] = await db.query(
-      `SELECT 
-        COUNT(*) AS total_reviews,
-        AVG(rating) AS average_rating
-       FROM transactions
-       WHERE rating IS NOT NULL
-       AND review IS NOT NULL
-       AND review <> ''
-       AND (buyer_id = ? OR seller_id = ?)`,
-      [userId, userId]
-    );
-
-    const [reviews] = await db.query(
+    const [reviewsAsSeller] = await db.query(
       `SELECT
         t.id,
         t.id AS transaction_id,
@@ -232,32 +219,81 @@ const getPublicProfile = async (req, res) => {
         mp.name AS product_name,
         mp.image_url AS product_image,
 
-        buyer.id AS buyer_id,
-        buyer.name AS buyer_name,
+        buyer.id AS reviewer_id,
+        buyer.name AS reviewer_name,
 
-        seller.id AS seller_id,
-        seller.name AS seller_name,
+        seller.id AS reviewed_user_id,
+        seller.name AS reviewed_user_name,
 
-        CASE
-          WHEN t.buyer_id = ? THEN seller.id
-          ELSE buyer.id
-        END AS reviewer_id,
-
-        CASE
-          WHEN t.buyer_id = ? THEN seller.name
-          ELSE buyer.name
-        END AS reviewer_name
+        'seller' AS reviewed_role
        FROM transactions t
        LEFT JOIN marketplace_products mp ON t.product_id = mp.id
        LEFT JOIN users buyer ON t.buyer_id = buyer.id
        LEFT JOIN users seller ON t.seller_id = seller.id
-       WHERE t.rating IS NOT NULL
+       WHERE t.seller_id = ?
+       AND t.rating IS NOT NULL
        AND t.review IS NOT NULL
        AND t.review <> ''
-       AND (t.buyer_id = ? OR t.seller_id = ?)
        ORDER BY COALESCE(t.completed_at, t.created_at) DESC
        LIMIT 20`,
-      [userId, userId, userId, userId]
+      [userId]
+    );
+
+    const [reviewsAsBuyer] = await db.query(
+      `SELECT
+        t.id,
+        t.id AS transaction_id,
+        t.product_id,
+        t.rating,
+        t.review,
+        t.completed_at,
+        t.created_at,
+
+        mp.name AS product_name,
+        mp.image_url AS product_image,
+
+        seller.id AS reviewer_id,
+        seller.name AS reviewer_name,
+
+        buyer.id AS reviewed_user_id,
+        buyer.name AS reviewed_user_name,
+
+        'buyer' AS reviewed_role
+       FROM transactions t
+       LEFT JOIN marketplace_products mp ON t.product_id = mp.id
+       LEFT JOIN users buyer ON t.buyer_id = buyer.id
+       LEFT JOIN users seller ON t.seller_id = seller.id
+       WHERE t.buyer_id = ?
+       AND t.rating IS NOT NULL
+       AND t.review IS NOT NULL
+       AND t.review <> ''
+       ORDER BY COALESCE(t.completed_at, t.created_at) DESC
+       LIMIT 20`,
+      [userId]
+    );
+
+    const [sellerRatingSummary] = await db.query(
+      `SELECT 
+        COUNT(*) AS total_reviews,
+        AVG(rating) AS average_rating
+       FROM transactions
+       WHERE seller_id = ?
+       AND rating IS NOT NULL
+       AND review IS NOT NULL
+       AND review <> ''`,
+      [userId]
+    );
+
+    const [buyerRatingSummary] = await db.query(
+      `SELECT 
+        COUNT(*) AS total_reviews,
+        AVG(rating) AS average_rating
+       FROM transactions
+       WHERE buyer_id = ?
+       AND rating IS NOT NULL
+       AND review IS NOT NULL
+       AND review <> ''`,
+      [userId]
     );
 
     const [transactionsSummary] = await db.query(
@@ -266,6 +302,33 @@ const getPublicProfile = async (req, res) => {
        WHERE buyer_id = ? OR seller_id = ?`,
       [userId, userId]
     );
+
+    const sellerRating = Number(
+      sellerRatingSummary[0]?.average_rating || 0
+    );
+
+    const buyerRating = Number(
+      buyerRatingSummary[0]?.average_rating || 0
+    );
+
+    const totalSellerReviews = Number(
+      sellerRatingSummary[0]?.total_reviews || 0
+    );
+
+    const totalBuyerReviews = Number(
+      buyerRatingSummary[0]?.total_reviews || 0
+    );
+
+    const totalReviews = totalSellerReviews + totalBuyerReviews;
+
+    const averageRating =
+      totalReviews > 0
+        ? (
+            (sellerRating * totalSellerReviews +
+              buyerRating * totalBuyerReviews) /
+            totalReviews
+          ).toFixed(2)
+        : Number(user.rating || 0).toFixed(2);
 
     return res.status(200).json({
       message: "Profil publik berhasil diambil.",
@@ -279,14 +342,23 @@ const getPublicProfile = async (req, res) => {
         photo: photoPath,
         avatar_url: photoPath,
         bio: user.bio || "",
-        rating: Number(
-          ratingSummary[0]?.average_rating || user.rating || 0
-        ).toFixed(2),
-        total_reviews: Number(ratingSummary[0]?.total_reviews || 0),
+
+        rating: averageRating,
+        seller_rating: sellerRating.toFixed(2),
+        buyer_rating: buyerRating.toFixed(2),
+
+        total_reviews: totalReviews,
+        total_seller_reviews: totalSellerReviews,
+        total_buyer_reviews: totalBuyerReviews,
+
         total_transactions: Number(
           transactionsSummary[0]?.total_transactions || 0
         ),
-        reviews,
+
+        reviews_as_seller: reviewsAsSeller,
+        reviews_as_buyer: reviewsAsBuyer,
+
+        reviews: [...reviewsAsSeller, ...reviewsAsBuyer],
       },
     });
   } catch (error) {
@@ -362,7 +434,6 @@ const updateProfile = async (req, res) => {
 
     if (req.file) {
       photoPath = `/uploads/profiles/${req.file.filename}`;
-
       deleteUploadedFile(oldUser.photo || oldUser.avatar_url || "");
     }
 

@@ -26,6 +26,70 @@ const renderStars = (rating = 0) => {
   ).join("");
 };
 
+function ReviewList({ title, subtitle, rating, total, reviews }) {
+  return (
+    <section className="profile-card public-review-section">
+      <div className="profile-section-header">
+        <div>
+          <span>{subtitle}</span>
+          <h3>{title}</h3>
+        </div>
+
+        <div className="profile-rating-box public-rating-mini">
+          <span>{renderStars(rating)}</span>
+          <strong>{Number(rating || 0).toFixed(1)}/5</strong>
+          <p>{total} ulasan</p>
+        </div>
+      </div>
+
+      {reviews.length === 0 ? (
+        <div className="profile-empty-review">
+          <h4>Belum ada ulasan</h4>
+          <p>Belum ada ulasan untuk peran ini.</p>
+        </div>
+      ) : (
+        <div className="public-review-list">
+          {reviews.map((item) => (
+            <article
+              className="public-review-card"
+              key={`${item.reviewed_role}-${item.transaction_id}-${item.created_at}`}
+            >
+              <div className="public-review-top">
+                <div>
+                  <h4>{item.product_name || "Produk Marketplace"}</h4>
+                  <p>
+                    Oleh{" "}
+                    <strong>
+                      {item.reviewer_name || "Pengguna SaveByUp"}
+                    </strong>
+                  </p>
+                </div>
+
+                <div className="public-review-rating">
+                  <span>{renderStars(item.rating)}</span>
+                  <strong>{Number(item.rating || 0)}/5</strong>
+                </div>
+              </div>
+
+              {item.review ? (
+                <p className="public-review-text">“{item.review}”</p>
+              ) : (
+                <p className="public-review-text">
+                  Pengguna tidak menulis ulasan.
+                </p>
+              )}
+
+              <span className="public-review-date">
+                {formatDate(item.created_at)}
+              </span>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function PublicProfile() {
   const { userId } = useParams();
   const navigate = useNavigate();
@@ -46,8 +110,7 @@ export default function PublicProfile() {
       console.error("Gagal mengambil profil publik:", error);
 
       setMessage(
-        error.response?.data?.message ||
-          "Gagal mengambil profil pengguna."
+        error.response?.data?.message || "Gagal mengambil profil pengguna."
       );
     } finally {
       setLoading(false);
@@ -58,12 +121,25 @@ export default function PublicProfile() {
     fetchPublicProfile();
   }, [userId]);
 
-  const reviews = useMemo(() => {
-    return Array.isArray(profile?.reviews) ? profile.reviews : [];
+  const reviewsAsSeller = useMemo(() => {
+    return Array.isArray(profile?.reviews_as_seller)
+      ? profile.reviews_as_seller
+      : [];
+  }, [profile]);
+
+  const reviewsAsBuyer = useMemo(() => {
+    return Array.isArray(profile?.reviews_as_buyer)
+      ? profile.reviews_as_buyer
+      : [];
   }, [profile]);
 
   const averageRating = Number(profile?.rating || 0);
-  const totalReviews = Number(profile?.total_reviews || reviews.length || 0);
+  const sellerRating = Number(profile?.seller_rating || 0);
+  const buyerRating = Number(profile?.buyer_rating || 0);
+
+  const totalReviews = Number(profile?.total_reviews || 0);
+  const totalSellerReviews = Number(profile?.total_seller_reviews || 0);
+  const totalBuyerReviews = Number(profile?.total_buyer_reviews || 0);
   const totalTransactions = Number(profile?.total_transactions || 0);
 
   return (
@@ -75,7 +151,7 @@ export default function PublicProfile() {
         <PageHeader
           label="Profil Pengguna"
           title="Profil Publik SaveByUp"
-          description="Lihat identitas, rating, ulasan, dan reputasi pengguna sebelum melanjutkan transaksi."
+          description="Lihat identitas, rating, ulasan sebagai penjual, dan ulasan sebagai pembeli sebelum melanjutkan transaksi."
           action={
             <button
               type="button"
@@ -136,7 +212,7 @@ export default function PublicProfile() {
                   <div className="profile-rating-box">
                     <span>{renderStars(averageRating)}</span>
                     <strong>{averageRating.toFixed(1)}/5</strong>
-                    <p>{totalReviews} ulasan pengguna</p>
+                    <p>{totalReviews} total ulasan</p>
                   </div>
                 </div>
 
@@ -162,73 +238,36 @@ export default function PublicProfile() {
                     <span>Total Transaksi</span>
                     <strong>{totalTransactions}</strong>
                   </div>
-                </div>
-              </section>
 
-              <section className="profile-card public-review-section">
-                <div className="profile-section-header">
                   <div>
-                    <span>Reputasi Pengguna</span>
-                    <h3>Rating dan Ulasan</h3>
+                    <span>Rating sebagai Penjual</span>
+                    <strong>{sellerRating.toFixed(1)}/5</strong>
                   </div>
 
-                  <button
-                    type="button"
-                    className="sb-btn profile-btn-outline"
-                    onClick={fetchPublicProfile}
-                  >
-                    Refresh
-                  </button>
+                  <div>
+                    <span>Rating sebagai Pembeli</span>
+                    <strong>{buyerRating.toFixed(1)}/5</strong>
+                  </div>
                 </div>
-
-                {reviews.length === 0 ? (
-                  <div className="profile-empty-review">
-                    <h4>Belum ada ulasan</h4>
-                    <p>
-                      Pengguna ini belum memiliki ulasan dari transaksi
-                      marketplace.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="public-review-list">
-                    {reviews.map((item) => (
-                      <article
-                        className="public-review-card"
-                        key={`${item.transaction_id}-${item.created_at}`}
-                      >
-                        <div className="public-review-top">
-                          <div>
-                            <h4>{item.product_name || "Produk Marketplace"}</h4>
-                            <p>
-                              Oleh{" "}
-                              <strong>
-                                {item.reviewer_name || "Pengguna SaveByUp"}
-                              </strong>
-                            </p>
-                          </div>
-
-                          <div className="public-review-rating">
-                            <span>{renderStars(item.rating)}</span>
-                            <strong>{Number(item.rating || 0)}/5</strong>
-                          </div>
-                        </div>
-
-                        {item.review ? (
-                          <p className="public-review-text">“{item.review}”</p>
-                        ) : (
-                          <p className="public-review-text">
-                            Pengguna tidak menulis ulasan.
-                          </p>
-                        )}
-
-                        <span className="public-review-date">
-                          {formatDate(item.created_at)}
-                        </span>
-                      </article>
-                    ))}
-                  </div>
-                )}
               </section>
+
+              <div className="public-profile-review-grid">
+                <ReviewList
+                  title="Ulasan sebagai Penjual"
+                  subtitle="Reputasi saat menjual"
+                  rating={sellerRating}
+                  total={totalSellerReviews}
+                  reviews={reviewsAsSeller}
+                />
+
+                <ReviewList
+                  title="Ulasan sebagai Pembeli"
+                  subtitle="Reputasi saat membeli"
+                  rating={buyerRating}
+                  total={totalBuyerReviews}
+                  reviews={reviewsAsBuyer}
+                />
+              </div>
             </>
           )
         )}

@@ -29,12 +29,16 @@ const normalizeReview = (review = {}) => {
     product_name: review.product_name || "Produk Marketplace",
     product_image: review.product_image || "",
 
-    reviewer_id: review.reviewer_id || review.buyer_id || review.seller_id,
-    reviewer_name: review.reviewer_name || review.buyer_name || review.seller_name || "Pengguna SaveByUp",
+    reviewer_id: review.reviewer_id,
+    reviewer_name: review.reviewer_name || "Pengguna SaveByUp",
+
+    reviewed_user_id: review.reviewed_user_id,
+    reviewed_user_name: review.reviewed_user_name || "",
+    reviewed_role: review.reviewed_role || "",
 
     rating: Number(review.rating || 0),
     review: review.review || "",
-    created_at: review.created_at || review.completed_at || "",
+    created_at: review.completed_at || review.created_at || "",
   };
 };
 
@@ -44,9 +48,17 @@ const normalizeProfile = (profile = {}) => {
   const latitude = toNullableNumber(profile.latitude);
   const longitude = toNullableNumber(profile.longitude);
 
+  const reviewsAsSeller = Array.isArray(profile.reviews_as_seller)
+    ? profile.reviews_as_seller.map(normalizeReview)
+    : [];
+
+  const reviewsAsBuyer = Array.isArray(profile.reviews_as_buyer)
+    ? profile.reviews_as_buyer.map(normalizeReview)
+    : [];
+
   const reviews = Array.isArray(profile.reviews)
     ? profile.reviews.map(normalizeReview)
-    : [];
+    : [...reviewsAsSeller, ...reviewsAsBuyer];
 
   const transactions = Array.isArray(profile.transactions)
     ? profile.transactions
@@ -74,14 +86,25 @@ const normalizeProfile = (profile = {}) => {
     avatar_url: photoPath,
 
     bio: profile.bio || "",
+
     rating: Number(profile.rating || 0),
+    seller_rating: Number(profile.seller_rating || 0),
+    buyer_rating: Number(profile.buyer_rating || 0),
 
     total_reviews: Number(profile.total_reviews || reviews.length || 0),
+    total_seller_reviews: Number(
+      profile.total_seller_reviews || reviewsAsSeller.length || 0
+    ),
+    total_buyer_reviews: Number(
+      profile.total_buyer_reviews || reviewsAsBuyer.length || 0
+    ),
     total_transactions: Number(
       profile.total_transactions || transactions.length || 0
     ),
 
     reviews,
+    reviews_as_seller: reviewsAsSeller,
+    reviews_as_buyer: reviewsAsBuyer,
     transactions,
 
     is_profile_complete: Boolean(profile.is_profile_complete),
