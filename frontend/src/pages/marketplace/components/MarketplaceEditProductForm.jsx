@@ -1,5 +1,4 @@
 import AppIcon from "../../../components/ui/AppIcon";
-
 import { formatCurrency } from "../../../utils/formatCurrency";
 
 export default function MarketplaceEditProductForm({
@@ -12,10 +11,10 @@ export default function MarketplaceEditProductForm({
   onSubmit,
 }) {
   return (
-    <form className="product-edit-form" onSubmit={onSubmit}>
+    <form className="product-edit-form product-edit-panel" onSubmit={onSubmit}>
       <div className="product-edit-header">
         <div>
-          <span>Edit Produk Jual</span>
+          <span className="product-edit-eyebrow">Edit Produk Jual</span>
           <h3>{product.name}</h3>
           <p>
             Perubahan hanya berlaku untuk produk yang sedang aktif di
@@ -23,18 +22,28 @@ export default function MarketplaceEditProductForm({
           </p>
         </div>
 
-        <button type="button" onClick={onClose} disabled={savingEdit}>
+        <button
+          type="button"
+          className="product-edit-close"
+          onClick={onClose}
+          disabled={savingEdit}
+          aria-label="Tutup form edit"
+        >
           ×
         </button>
       </div>
 
       <div className="product-edit-grid">
-        <label>
-          <span>Jumlah Dijual</span>
+        <div className="product-edit-group">
+          <label htmlFor="edit-quantity">Jumlah Dijual</label>
 
-          <div className="product-edit-input">
-            <AppIcon name="stock" />
+          <div className="product-input-with-icon">
+            <span>
+              <AppIcon name="stock" size={18} />
+            </span>
+
             <input
+              id="edit-quantity"
               type="number"
               min="1"
               value={editForm.quantity}
@@ -42,14 +51,20 @@ export default function MarketplaceEditProductForm({
               onChange={(event) => onChange("quantity", event.target.value)}
             />
           </div>
-        </label>
+        </div>
 
-        <label>
-          <span>Harga Jual per {product.unit || "pcs"}</span>
+        <div className="product-edit-group">
+          <label htmlFor="edit-price">
+            Harga Jual per {product.unit || "pcs"}
+          </label>
 
-          <div className="product-edit-input">
-            <AppIcon name="price" />
+          <div className="product-input-with-icon">
+            <span>
+              <AppIcon name="price" size={18} />
+            </span>
+
             <input
+              id="edit-price"
               type="number"
               min="1"
               value={editForm.price}
@@ -57,20 +72,24 @@ export default function MarketplaceEditProductForm({
               onChange={(event) => onChange("price", event.target.value)}
             />
           </div>
-        </label>
-      </div>
+        </div>
 
-      <label>
-        <span>Deskripsi Produk</span>
-        <textarea
-          rows="4"
-          maxLength="500"
-          value={editForm.description}
-          disabled={savingEdit}
-          placeholder="Contoh: masih tersegel, COD sekitar kos/kampus, kondisi aman dikonsumsi."
-          onChange={(event) => onChange("description", event.target.value)}
-        />
-      </label>
+        <div className="product-edit-group product-edit-full">
+          <label htmlFor="edit-description">Deskripsi Produk</label>
+
+          <textarea
+            id="edit-description"
+            rows="4"
+            maxLength="500"
+            value={editForm.description}
+            disabled={savingEdit}
+            placeholder="Contoh: masih tersegel, COD sekitar kos/kampus, kondisi aman dikonsumsi."
+            onChange={(event) => onChange("description", event.target.value)}
+          />
+
+          <small>{String(editForm.description || "").length}/500 karakter</small>
+        </div>
+      </div>
 
       <div className="product-edit-total">
         <span>Estimasi total jika semua stok terjual</span>
@@ -87,7 +106,11 @@ export default function MarketplaceEditProductForm({
           Batal
         </button>
 
-        <button type="submit" className="sb-btn sb-btn-primary" disabled={savingEdit}>
+        <button
+          type="submit"
+          className="sb-btn sb-btn-primary"
+          disabled={savingEdit}
+        >
           {savingEdit ? "Menyimpan..." : "Simpan Perubahan"}
         </button>
       </div>

@@ -1,3 +1,11 @@
+.product-edit-form {
+  margin-top: 18px;
+  padding: 24px;
+  border-radius: 28px;
+  border: 1px solid rgba(74, 121, 67, 0.14);
+  box-shadow: 0 18px 45px rgba(37, 60, 33, 0.08);
+}
+
 .product-edit-panel {
   background:
     radial-gradient(circle at 8% 0%, rgba(122, 79, 47, 0.08), transparent 35%),
@@ -8,13 +16,43 @@
   display: flex;
   justify-content: space-between;
   gap: 14px;
-  align-items: center;
+  align-items: flex-start;
 }
 
-.product-edit-header button {
+.product-edit-eyebrow {
+  display: block;
+  margin-bottom: 7px;
+  color: #7a4f2f;
+  font-size: 11px;
+  font-weight: 950;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.product-edit-header h3 {
+  margin: 0;
+  color: #173d20;
+  font-size: 28px;
+  font-weight: 950;
+  line-height: 1.1;
+  text-transform: lowercase;
+}
+
+.product-edit-header p {
+  margin: 8px 0 0;
+  color: #746a5f;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.product-edit-header button,
+.product-edit-close {
   width: 40px;
   height: 40px;
   flex: 0 0 40px;
+  display: grid;
+  place-items: center;
   border: 0;
   border-radius: 999px;
   color: #9f3f2d;
@@ -22,6 +60,24 @@
   font-size: 25px;
   line-height: 1;
   cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    background 0.2s ease,
+    color 0.2s ease;
+}
+
+.product-edit-header button:hover,
+.product-edit-close:hover {
+  transform: scale(1.04);
+  color: #7c2c1f;
+  background: rgba(170, 75, 48, 0.16);
+}
+
+.product-edit-header button:disabled,
+.product-edit-close:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
 }
 
 .product-edit-grid {
@@ -39,6 +95,7 @@
   display: block;
   margin-bottom: 8px;
   color: #263f24;
+  font-size: 13px;
   font-weight: 950;
 }
 
@@ -71,13 +128,16 @@
 .product-edit-group input,
 .product-edit-group textarea {
   width: 100%;
+  box-sizing: border-box;
   border: 1px solid rgba(95, 71, 47, 0.14);
   border-radius: 19px;
   padding: 15px 16px;
   color: #263f24;
   background: rgba(255, 255, 255, 0.86);
   outline: none;
+  font-size: 14px;
   font-weight: 760;
+  font-family: inherit;
   transition:
     border-color 0.2s ease,
     box-shadow 0.2s ease,
@@ -144,6 +204,7 @@
 .product-edit-total strong {
   color: #274622;
   font-size: 19px;
+  font-weight: 950;
 }
 
 .product-edit-actions {
@@ -158,6 +219,19 @@
 }
 
 @media (max-width: 720px) {
+  .product-edit-form {
+    padding: 18px;
+    border-radius: 22px;
+  }
+
+  .product-edit-header {
+    gap: 10px;
+  }
+
+  .product-edit-header h3 {
+    font-size: 23px;
+  }
+
   .product-edit-grid {
     grid-template-columns: 1fr;
   }
@@ -169,5 +243,13 @@
   .product-edit-total {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .product-edit-actions {
+    flex-direction: column-reverse;
+  }
+
+  .product-edit-actions .sb-btn {
+    width: 100%;
   }
 }
