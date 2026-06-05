@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import AppShell from "../../components/layout/AppShell";
 import EmptyState from "../../components/ui/EmptyState";
@@ -13,6 +13,30 @@ import RequestCard from "./components/RequestCard";
 
 import "./styles/incomingRequests.css";
 
+const normalizeRequestStatus = (status = "") => {
+  const value = String(status || "").toLowerCase();
+
+  const map = {
+    menunggu: "pending",
+    pending: "pending",
+
+    disetujui: "accepted",
+    diterima: "accepted",
+    accepted: "accepted",
+
+    ditolak: "rejected",
+    rejected: "rejected",
+
+    dibatalkan: "cancelled",
+    cancelled: "cancelled",
+
+    selesai: "completed",
+    completed: "completed",
+  };
+
+  return map[value] || value || "pending";
+};
+
 export default function IncomingRequests() {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -25,8 +49,13 @@ export default function IncomingRequests() {
 
       const data = await getIncomingRequests();
       setRequests(Array.isArray(data) ? data : []);
-    } catch {
+    } catch (error) {
+      console.error("Gagal mengambil pengajuan masuk:", error);
       setRequests([]);
+      setNotice(
+        error.response?.data?.message ||
+          "Gagal mengambil daftar pengajuan pembelian."
+      );
     } finally {
       setLoading(false);
     }
@@ -36,19 +65,46 @@ export default function IncomingRequests() {
     fetchRequests();
   }, []);
 
-  const pendingCount = requests.filter(
-    (request) => request.status === "menunggu"
-  ).length;
+  const requestStats = useMemo(() => {
+    const stats = {
+      total: requests.length,
+      pending: 0,
+      approved: 0,
+      rejected: 0,
+    };
 
-  const approvedCount = requests.filter(
-    (request) => request.status === "disetujui"
-  ).length;
+    requests.forEach((request) => {
+      const status = normalizeRequestStatus(request.status);
 
-  const rejectedCount = requests.filter(
-    (request) => request.status === "ditolak"
-  ).length;
+      if (status === "pending") {
+        stats.pending += 1;
+      }
+
+      if (status === "accepted" || status === "completed") {
+        stats.approved += 1;
+      }
+
+      if (status === "rejected" || status === "cancelled") {
+        stats.rejected += 1;
+      }
+    });
+
+    return stats;
+  }, [requests]);
 
   const handleApprove = async (request) => {
+    const status = normalizeRequestStatus(request.status);
+
+    if (status === "accepted" || status === "completed") {
+      setNotice("Pengajuan ini sudah disetujui atau sudah selesai.");
+      return;
+    }
+
+    if (status === "rejected" || status === "cancelled") {
+      setNotice("Pengajuan yang sudah ditolak atau dibatalkan tidak bisa disetujui.");
+      return;
+    }
+
     const ok = window.confirm(`Setujui pengajuan dari ${request.buyer_name}?`);
 
     if (!ok) return;
@@ -57,12 +113,28 @@ export default function IncomingRequests() {
       await approveRequest(request.id);
       setNotice("Pengajuan berhasil disetujui.");
       await fetchRequests();
-    } catch {
-      setNotice("Pengajuan belum bisa disetujui. Coba lagi nanti.");
+    } catch (error) {
+      console.error("Gagal menyetujui pengajuan:", error);
+      setNotice(
+        error.response?.data?.message ||
+          "Pengajuan belum bisa disetujui. Coba lagi nanti."
+      );
     }
   };
 
   const handleReject = async (request) => {
+    const status = normalizeRequestStatus(request.status);
+
+    if (status === "accepted" || status === "completed") {
+      setNotice("Pengajuan yang sudah disetujui atau selesai tidak bisa ditolak.");
+      return;
+    }
+
+    if (status === "rejected" || status === "cancelled") {
+      setNotice("Pengajuan ini sudah ditolak atau dibatalkan.");
+      return;
+    }
+
     const ok = window.confirm(`Tolak pengajuan dari ${request.buyer_name}?`);
 
     if (!ok) return;
@@ -71,8 +143,12 @@ export default function IncomingRequests() {
       await rejectRequest(request.id);
       setNotice("Pengajuan berhasil ditolak.");
       await fetchRequests();
-    } catch {
-      setNotice("Pengajuan belum bisa ditolak. Coba lagi nanti.");
+    } catch (error) {
+      console.error("Gagal menolak pengajuan:", error);
+      setNotice(
+        error.response?.data?.message ||
+          "Pengajuan belum bisa ditolak. Coba lagi nanti."
+      );
     }
   };
 
@@ -94,25 +170,25 @@ export default function IncomingRequests() {
         <section className="incoming-summary">
           <div className="incoming-summary-card">
             <span>Total Pengajuan</span>
-            <strong>{loading ? "..." : requests.length}</strong>
+            <strong>{loading ? "..." : requestStats.total}</strong>
             <p>Semua pengajuan pembelian yang masuk ke produk kamu.</p>
           </div>
 
           <div className="incoming-summary-card">
             <span>Menunggu</span>
-            <strong>{loading ? "..." : pendingCount}</strong>
+            <strong>{loading ? "..." : requestStats.pending}</strong>
             <p>Pengajuan yang masih perlu kamu cek dan putuskan.</p>
           </div>
 
           <div className="incoming-summary-card">
             <span>Disetujui</span>
-            <strong>{loading ? "..." : approvedCount}</strong>
+            <strong>{loading ? "..." : requestStats.approved}</strong>
             <p>Pengajuan yang sudah bisa dilanjutkan ke komunikasi.</p>
           </div>
 
           <div className="incoming-summary-card">
             <span>Ditolak</span>
-            <strong>{loading ? "..." : rejectedCount}</strong>
+            <strong>{loading ? "..." : requestStats.rejected}</strong>
             <p>Pengajuan yang tidak dilanjutkan ke proses transaksi.</p>
           </div>
         </section>
@@ -135,7 +211,10 @@ export default function IncomingRequests() {
             {requests.map((request) => (
               <RequestCard
                 key={request.id}
-                request={request}
+                request={{
+                  ...request,
+                  status: normalizeRequestStatus(request.status),
+                }}
                 onApprove={() => handleApprove(request)}
                 onReject={() => handleReject(request)}
               />
